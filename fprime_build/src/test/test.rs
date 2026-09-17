@@ -41,7 +41,7 @@ pub(crate) fn run_test(json_dictionary: &str, file_path: &str) {
 #[test] // Marks this function as a test
 fn ref_topology() {
     run_test(
-        "../../../../fprime_dictionary/src/test/RefTopologyDictionary",
+        "../../../fprime_dictionary/src/test/RefTopologyDictionary",
         "RefTopologyDictionary",
     )
 }

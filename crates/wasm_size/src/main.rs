@@ -126,11 +126,29 @@ fn read(path: &str) -> Result<Report, String> {
     serde_json::from_str(&contents).map_err(|err| format!("could not parse `{path}`: {err}"))
 }
 
-/// The workspace root, one level up from this crate.
+/// The workspace root: the nearest ancestor whose manifest declares a
+/// `[workspace]`.
+///
+/// Searched rather than counted as a fixed number of parents, because getting it
+/// wrong is not a loud failure. The default `--target-dir` hangs off this path,
+/// so a root one level too deep writes `crates/target`, which the `crates/*`
+/// member glob then claims as a workspace member with no manifest, and every
+/// later cargo invocation in the checkout fails.
 fn workspace_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("this crate is a workspace member, so it has a parent")
+    let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+
+    manifest
+        .ancestors()
+        .find(|dir| {
+            std::fs::read_to_string(dir.join("Cargo.toml"))
+                .is_ok_and(|manifest| manifest.contains("[workspace]"))
+        })
+        .unwrap_or_else(|| {
+            panic!(
+                "no `[workspace]` manifest at or above `{}`",
+                manifest.display()
+            )
+        })
         .to_path_buf()
 }
 
