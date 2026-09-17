@@ -39,7 +39,7 @@ jobs:
           restore-keys: test-${{ runner.os }}-
 
       - name: Test the host crates
-        run: cargo test -p fprime_dictionary -p fprime_build -p fprime_macros -p fprime_size
+        run: cargo test -p fprime_dictionary -p fprime_build -p fprime_macros -p wasm_size
 
       - name: Build the wasm crates
         run: cargo build --release --target wasm32v1-none -p bench -p example
