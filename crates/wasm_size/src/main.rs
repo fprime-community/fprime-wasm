@@ -6,10 +6,14 @@
 //! wasm_size compare [--base-label NAME] [--source-base URL] BASE.json HEAD.json
 //! ```
 //!
-//! `measure` builds the wasm crates, runs each module through `wasm-opt`, and
-//! prints a markdown table; with `--json` it also writes the machine readable
-//! form that `compare` consumes. CI measures the pull request and the merge base
-//! and compares the two.
+//! `measure` builds the wasm crates and prints a markdown table; with `--json` it
+//! also writes the machine readable form that `compare` consumes. CI measures the
+//! pull request and the merge base and compares the two.
+//!
+//! What it measures is already optimised: the release link step pipes each module
+//! through `wasm-opt`, by way of the linker wrapper named in `.cargo/config.toml`.
+//! So a release build leaves the flyable artefact in the target directory and this
+//! only has to read it.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -25,16 +29,6 @@ use report::{Binary, Report};
 const SUBJECTS: [&str; 2] = ["bench", "example"];
 
 const TARGET: &str = "wasm32v1-none";
-
-/// Where the optimised modules go, under the target directory.
-const OPT_DIR: &str = "wasm-opt";
-
-/// How the optimiser is run.
-///
-/// `--enable-custom-page-sizes` because the link step in `.cargo/config.toml`
-/// passes `--page-size=1`; wasm-opt rejects the module outright without it. `-Os`
-/// to match what the release profile is already asking rustc for.
-const WASM_OPT_ARGS: [&str; 2] = ["--enable-custom-page-sizes", "-Os"];
 
 const USAGE: &str = "\
 usage:
@@ -102,12 +96,7 @@ fn measure(args: &[String]) -> Result<(), String> {
 
     build(&root, &target_dir)?;
 
-    // Measured after the optimiser, because that is the artefact that would
-    // actually be flown.
-    let optimised = target_dir.join(OPT_DIR);
-    optimize(&target_dir.join(TARGET).join("release"), &optimised)?;
-
-    let report = collect(&optimised, &root)?;
+    let report = collect(&target_dir.join(TARGET).join("release"), &root)?;
 
     if let Some(path) = options.get("--json") {
         let json = serde_json::to_string_pretty(&report)
@@ -168,9 +157,14 @@ fn compare(args: &[String]) -> Result<(), String> {
     );
 
     // Every delta in the table is then mostly the optimiser's doing, which is not
-    // what a reader of a size report on a pull request assumes it is reading.
-    if base.optimized != head.optimized {
-        let (with, without) = match head.optimized {
+    // what a reader of a size report on a pull request assumes it is reading. Only
+    // when both sides actually reported: an older measurement says nothing either
+    // way, and treating that as "not optimised" would cry wolf on every comparison
+    // against a revision predating the field.
+    if let (Some(base), Some(head)) = (base.optimized, head.optimized)
+        && base != head
+    {
+        let (with, without) = match head {
             true => ("HEAD", label.as_str()),
             false => (label.as_str(), "HEAD"),
         };
@@ -291,58 +285,6 @@ fn wasm_files(dir: &Path) -> Result<Vec<PathBuf>, String> {
     paths.sort();
 
     Ok(paths)
-}
-
-/// Run every built module through `wasm-opt`, into a directory of their own.
-fn optimize(release_dir: &Path, opt_dir: &Path) -> Result<(), String> {
-    let wasm_opt = std::env::var("WASM_OPT").unwrap_or_else(|_| "wasm-opt".to_string());
-
-    let modules = wasm_files(release_dir)?;
-    if modules.is_empty() {
-        return Err(format!("no wasm modules in `{}`", release_dir.display()));
-    }
-
-    // Emptied first, not just created. CI caches the target directory, so a
-    // benchmark deleted in a later commit would otherwise leave its optimised
-    // module behind to be measured as a binary that no longer exists.
-    match std::fs::remove_dir_all(opt_dir) {
-        Ok(()) => {}
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
-        Err(err) => return Err(format!("could not clear `{}`: {err}", opt_dir.display())),
-    }
-
-    std::fs::create_dir_all(opt_dir)
-        .map_err(|err| format!("could not create `{}`: {err}", opt_dir.display()))?;
-
-    for module in modules {
-        let name = module
-            .file_name()
-            .ok_or_else(|| format!("`{}` has no usable name", module.display()))?;
-
-        let status = Command::new(&wasm_opt)
-            .args(WASM_OPT_ARGS)
-            .arg(&module)
-            .arg("-o")
-            .arg(opt_dir.join(name))
-            .status()
-            .map_err(|err| {
-                format!(
-                    "could not run `{wasm_opt}`: {err}\n\
-                     wasm-opt ships with binaryen; install it, or set WASM_OPT to its path.\n\
-                     It is not optional: sizes measured without it are not comparable with \
-                     sizes measured with it."
-                )
-            })?;
-
-        if !status.success() {
-            return Err(format!(
-                "`{wasm_opt}` failed with {status} on `{}`",
-                module.display()
-            ));
-        }
-    }
-
-    Ok(())
 }
 
 fn collect(release_dir: &Path, root: &Path) -> Result<Report, String> {

@@ -26,15 +26,17 @@ pub struct Binary {
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Report {
     pub binaries: Vec<Binary>,
-    /// Whether these sizes were measured after `wasm-opt`.
+    /// Whether these sizes were measured after `wasm-opt`, where known.
     ///
-    /// Defaulted for the same reason as [`Binary::source`] — CI's base
-    /// measurement is taken by the base revision's own copy of this tool — but
-    /// this one changes what the numbers *mean* rather than how they look. A
-    /// comparison that straddles the boundary is measuring the optimiser, and has
-    /// to say so instead of letting the reader credit the win to the change.
+    /// `None` for a measurement written by a tool old enough not to record it,
+    /// which is what CI's base side can be — and is deliberately not the same as
+    /// `Some(false)`. Unlike [`Binary::source`] this changes what the numbers
+    /// *mean* rather than how they look, so a comparison across a real mismatch
+    /// says so rather than letting the reader credit the optimiser's win to the
+    /// change. Guessing `false` here would produce that warning on comparisons
+    /// that are in fact like for like.
     #[serde(default)]
-    pub optimized: bool,
+    pub optimized: Option<bool>,
 }
 
 impl Report {
@@ -43,7 +45,7 @@ impl Report {
 
         Self {
             binaries,
-            optimized,
+            optimized: Some(optimized),
         }
     }
 
@@ -507,6 +509,6 @@ mod test {
         let report: Report = serde_json::from_str(json).expect("should deserialize");
 
         assert_eq!(report.binaries[0].source, None);
-        assert!(!report.optimized);
+        assert_eq!(report.optimized, None, "unknown, not known-unoptimised");
     }
 }

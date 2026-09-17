@@ -1,0 +1,34 @@
+name: Install binaryen
+description: >-
+  Put wasm-opt on the PATH. Every release build of a wasm crate needs it, because
+  the linker wrapper in .cargo/config.toml runs the module through it.
+
+inputs:
+  version:
+    description: Binaryen release tag.
+    default: version_132
+  sha256:
+    description: Digest of the x86_64-linux tarball for that release.
+    default: 195ddc94f9bc89f45abdabb0b9eea86023d727ba90eac8b35b80f2544fc30572
+
+runs:
+  using: composite
+  steps:
+    # Pinned to a release and checked against its published digest: this binary
+    # rewrites every artefact the build produces, so it is not something to pull
+    # from a moving tag on trust. Unpacked outside the checkout so it cannot
+    # interact with the workspace member globs.
+    - shell: bash
+      working-directory: ${{ runner.temp }}
+      env:
+        BINARYEN_VERSION: ${{ inputs.version }}
+        BINARYEN_SHA256: ${{ inputs.sha256 }}
+      run: |
+        tarball="binaryen-$BINARYEN_VERSION-x86_64-linux.tar.gz"
+
+        curl -fsSL --retry 3 -o "$tarball" \
+          "https://github.com/WebAssembly/binaryen/releases/download/$BINARYEN_VERSION/$tarball"
+        echo "$BINARYEN_SHA256  $tarball" | sha256sum --check --strict
+        tar -xzf "$tarball"
+
+        echo "$PWD/binaryen-$BINARYEN_VERSION/bin" >> "$GITHUB_PATH"

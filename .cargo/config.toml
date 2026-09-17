@@ -1,4 +1,10 @@
 [target.wasm32v1-none]
+# A pass-through wrapper around `rust-lld` that runs `wasm-opt` over the module
+# it produces, for release builds only. Cargo offers no post-build hook, so the
+# link step is the one place a plain `cargo build` can be made to emit an
+# optimised artefact. The path is relative to the directory holding `.cargo`,
+# not to this file, so it resolves the same from anywhere in the workspace.
+linker = "tools/wasm-link"
 rustflags = [
     "-Ctarget-cpu=mvp",
     "-Ctarget-feature=+mutable-globals",
