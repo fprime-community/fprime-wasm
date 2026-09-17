@@ -107,10 +107,13 @@ fn signed(delta: i64) -> String {
     }
 }
 
-/// Render a comparison as markdown, with unchanged rows folded away.
-pub fn markdown(changes: &[Change]) -> String {
-    let changed: Vec<&Change> = changes.iter().filter(|c| c.delta() != 0).collect();
-
+/// Render a comparison as markdown: every measured binary gets a row.
+///
+/// `base_label` names the revision the base measurement came from, so the column
+/// heading can read `main` where CI knows the branch. Nothing is folded away —
+/// the table doubles as the current absolute size of every benchmark, which is
+/// what it gets read for even on a pull request that moved nothing.
+pub fn markdown(changes: &[Change], base_label: &str) -> String {
     let base_total: usize = changes.iter().filter_map(|c| c.base).sum();
     let head_total: usize = changes.iter().filter_map(|c| c.head).sum();
     let total_delta = head_total as i64 - base_total as i64;
@@ -129,17 +132,12 @@ pub fn markdown(changes: &[Change]) -> String {
         }
     );
 
-    if changed.is_empty() {
-        let _ = writeln!(out, "No binary changed size.");
-
-        return out;
-    }
-
-    let _ = writeln!(out, "| Binary | Base | Head | Δ | Δ% |");
+    let _ = writeln!(out, "| Binary | `{base_label}` | `HEAD` | Δ | Δ% |");
     let _ = writeln!(out, "|---|--:|--:|--:|--:|");
 
-    for change in &changed {
+    for change in changes {
         let percent = match (change.base, change.head) {
+            (Some(_), Some(_)) if change.delta() == 0 => "0".to_string(),
             (Some(base), Some(_)) if base > 0 => {
                 format!("{:+.1}%", 100.0 * change.delta() as f64 / base as f64)
             }
@@ -157,11 +155,6 @@ pub fn markdown(changes: &[Change]) -> String {
             signed(change.delta()),
             percent
         );
-    }
-
-    let unchanged = changes.len() - changed.len();
-    if unchanged > 0 {
-        let _ = writeln!(out, "\n{unchanged} unchanged.");
     }
 
     out
@@ -197,7 +190,11 @@ mod test {
         let report = Report::new(vec![binary("b", 2), binary("a", 1)]);
 
         assert_eq!(
-            report.binaries.iter().map(|b| b.name.as_str()).collect::<Vec<_>>(),
+            report
+                .binaries
+                .iter()
+                .map(|b| b.name.as_str())
+                .collect::<Vec<_>>(),
             ["a", "b"]
         );
     }
@@ -229,7 +226,7 @@ mod test {
         let head = Report::new(vec![binary("fresh", 100)]);
 
         let changes = compare(&base, &head);
-        let table = markdown(&changes);
+        let table = markdown(&changes, "BASE");
 
         assert!(table.contains("`gone`"), "{table}");
         assert!(table.contains("removed"), "{table}");
@@ -237,25 +234,40 @@ mod test {
         assert!(table.contains("new"), "{table}");
     }
 
+    /// The table is the absolute size of every benchmark as much as it is a
+    /// diff, so a row that did not move still has to be there.
     #[test]
-    fn folds_away_unchanged_rows() {
+    fn keeps_unchanged_rows() {
         let base = Report::new(vec![binary("same", 100), binary("moved", 100)]);
         let head = Report::new(vec![binary("same", 100), binary("moved", 120)]);
 
-        let table = markdown(&compare(&base, &head));
+        let table = markdown(&compare(&base, &head), "BASE");
 
-        assert!(table.contains("`moved`"), "{table}");
-        assert!(!table.contains("`same`"), "{table}");
-        assert!(table.contains("1 unchanged."), "{table}");
+        assert!(
+            table.contains("| `moved` | 100 | 120 | +20 | +20.0% |"),
+            "{table}"
+        );
+        assert!(table.contains("| `same` | 100 | 100 | 0 | 0 |"), "{table}");
     }
 
     #[test]
-    fn says_so_when_nothing_moved() {
-        let report = Report::new(vec![binary("a", 100)]);
-        let table = markdown(&compare(&report, &report));
+    fn tables_every_binary_when_nothing_moved() {
+        let report = Report::new(vec![binary("a", 100), binary("b", 200)]);
+        let table = markdown(&compare(&report, &report), "BASE");
 
-        assert!(table.contains("No binary changed size."), "{table}");
         assert!(table.contains("no change"), "{table}");
+        assert!(table.contains("| `a` | 100 | 100 | 0 | 0 |"), "{table}");
+        assert!(table.contains("| `b` | 200 | 200 | 0 | 0 |"), "{table}");
+    }
+
+    #[test]
+    fn heads_the_base_column_with_the_label() {
+        let report = Report::new(vec![binary("a", 100)]);
+
+        assert!(
+            markdown(&compare(&report, &report), "main").contains("| Binary | `main` | `HEAD` |"),
+            "the label should reach the heading"
+        );
     }
 
     #[test]

@@ -28,7 +28,7 @@ const TARGET: &str = "wasm32v1-none";
 const USAGE: &str = "\
 usage:
     wasm_size measure [--target-dir DIR] [--json OUT]
-    wasm_size compare BASE.json HEAD.json
+    wasm_size compare [--base-label NAME] BASE.json HEAD.json
 ";
 
 fn main() -> ExitCode {
@@ -107,13 +107,34 @@ fn measure(args: &[String]) -> Result<(), String> {
 }
 
 fn compare(args: &[String]) -> Result<(), String> {
-    let [base, head] = args else {
+    let mut label = "BASE".to_string();
+    let mut files = vec![];
+    let mut args = args.iter();
+
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--base-label" => {
+                label = args
+                    .next()
+                    .ok_or_else(|| format!("`--base-label` needs a value\n\n{USAGE}"))?
+                    .clone();
+            }
+            // Same reasoning as `options`: an unrecognised flag is a mistake to
+            // report, not a filename to try to open.
+            flag if flag.starts_with("--") => {
+                return Err(format!("unexpected argument `{flag}`\n\n{USAGE}"));
+            }
+            file => files.push(file.to_string()),
+        }
+    }
+
+    let [base, head] = files.as_slice() else {
         return Err(format!("compare needs two files\n\n{USAGE}"));
     };
 
     print!(
         "{}",
-        report::markdown(&report::compare(&read(base)?, &read(head)?))
+        report::markdown(&report::compare(&read(base)?, &read(head)?), &label)
     );
 
     Ok(())

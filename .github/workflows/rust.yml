@@ -88,12 +88,16 @@ jobs:
 
       - name: Build the report
         id: report
+        # Through the environment rather than interpolated into the script: a
+        # branch name is attacker-chosen text on a fork pull request.
+        env:
+          BASE_LABEL: ${{ github.event.pull_request.base.ref || 'BASE' }}
         run: |
           {
             echo '## Wasm size'
             echo
             if [ -f base.json ]; then
-              cargo run -q -p wasm_size -- compare base.json head.json
+              cargo run -q -p wasm_size -- compare --base-label "$BASE_LABEL" base.json head.json
               echo
               echo "Compared against \`${{ github.event.pull_request.base.sha || github.sha }}\`."
             else
