@@ -28,7 +28,7 @@ const TARGET: &str = "wasm32v1-none";
 const USAGE: &str = "\
 usage:
     wasm_size measure [--target-dir DIR] [--json OUT]
-    wasm_size compare [--base-label NAME] BASE.json HEAD.json
+    wasm_size compare [--base-label NAME] [--source-base URL] BASE.json HEAD.json
 ";
 
 fn main() -> ExitCode {
@@ -91,7 +91,7 @@ fn measure(args: &[String]) -> Result<(), String> {
 
     build(&root, &target_dir)?;
 
-    let report = collect(&target_dir.join(TARGET).join("release"))?;
+    let report = collect(&target_dir.join(TARGET).join("release"), &root)?;
 
     if let Some(path) = options.get("--json") {
         let json = serde_json::to_string_pretty(&report)
@@ -108,16 +108,23 @@ fn measure(args: &[String]) -> Result<(), String> {
 
 fn compare(args: &[String]) -> Result<(), String> {
     let mut label = "BASE".to_string();
+    let mut source_base = None;
     let mut files = vec![];
     let mut args = args.iter();
 
     while let Some(arg) = args.next() {
+        let mut value = |flag: &str| {
+            args.next()
+                .cloned()
+                .ok_or_else(|| format!("`{flag}` needs a value\n\n{USAGE}"))
+        };
+
         match arg.as_str() {
-            "--base-label" => {
-                label = args
-                    .next()
-                    .ok_or_else(|| format!("`--base-label` needs a value\n\n{USAGE}"))?
-                    .clone();
+            "--base-label" => label = value("--base-label")?,
+            // Trailing slash trimmed so the caller can pass either form: the
+            // paths joined onto this are relative and carry their own separator.
+            "--source-base" => {
+                source_base = Some(value("--source-base")?.trim_end_matches('/').to_string());
             }
             // Same reasoning as `options`: an unrecognised flag is a mistake to
             // report, not a filename to try to open.
@@ -132,9 +139,14 @@ fn compare(args: &[String]) -> Result<(), String> {
         return Err(format!("compare needs two files\n\n{USAGE}"));
     };
 
+    let style = report::Style {
+        base_label: &label,
+        source_base: source_base.as_deref(),
+    };
+
     print!(
         "{}",
-        report::markdown(&report::compare(&read(base)?, &read(head)?), &label)
+        report::markdown(&report::compare(&read(base)?, &read(head)?), &style)
     );
 
     Ok(())
@@ -209,7 +221,21 @@ fn build(root: &Path, target_dir: &Path) -> Result<(), String> {
     }
 }
 
-fn collect(release_dir: &Path) -> Result<Report, String> {
+/// Where a measured bin's source lives, relative to the workspace root, for the
+/// table to link to.
+///
+/// Found by looking rather than recorded by cargo, which does not report it.
+/// `None` when nothing matches — a bin laid out some other way costs its link and
+/// nothing else, so this must not be an error.
+fn source(root: &Path, name: &str) -> Option<String> {
+    SUBJECTS.iter().find_map(|subject| {
+        let path = format!("crates/{subject}/src/bin/{name}.rs");
+
+        root.join(&path).is_file().then_some(path)
+    })
+}
+
+fn collect(release_dir: &Path, root: &Path) -> Result<Report, String> {
     let entries = std::fs::read_dir(release_dir)
         .map_err(|err| format!("could not read `{}`: {err}", release_dir.display()))?;
 
@@ -235,7 +261,7 @@ fn collect(release_dir: &Path) -> Result<Report, String> {
         let sections = wasm::sections(&bytes)
             .ok_or_else(|| format!("`{}` is not a wasm module", path.display()))?;
 
-        binaries.push(Binary::from_sections(name, sections));
+        binaries.push(Binary::from_sections(name, sections, source(root, name)));
     }
 
     if binaries.is_empty() {

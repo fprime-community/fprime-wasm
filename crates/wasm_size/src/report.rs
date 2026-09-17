@@ -13,6 +13,13 @@ pub struct Binary {
     pub total: usize,
     pub code: usize,
     pub data: usize,
+    /// The bin's source, relative to the workspace root, for linking the table.
+    ///
+    /// Defaulted rather than required because CI compares against a measurement
+    /// taken by the *base* revision's own copy of this tool, which predates the
+    /// field. A missing source costs a link, not the comparison.
+    #[serde(default)]
+    pub source: Option<String>,
 }
 
 /// A whole run's measurements, ordered by name so the JSON is diffable.
@@ -52,19 +59,41 @@ impl Report {
     }
 }
 
+/// The three numbers measured for one module.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Sizes {
+    pub total: usize,
+    pub code: usize,
+    pub data: usize,
+}
+
 /// One row of a comparison.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Change {
     pub name: String,
     /// `None` when the binary is new or was removed.
-    pub base: Option<usize>,
-    pub head: Option<usize>,
+    pub base: Option<Sizes>,
+    pub head: Option<Sizes>,
+    /// Preferred from the head measurement: a bin that moved between crates
+    /// should link to where it lives now, not where it used to.
+    pub source: Option<String>,
 }
 
 impl Change {
     /// Positive means the binary grew.
     pub fn delta(&self) -> i64 {
-        self.head.unwrap_or(0) as i64 - self.base.unwrap_or(0) as i64
+        self.head.map_or(0, |sizes| sizes.total as i64)
+            - self.base.map_or(0, |sizes| sizes.total as i64)
+    }
+
+    /// Whether anything about this binary moved.
+    ///
+    /// Every section is compared, not just the total: const-encoding a command
+    /// moves its payload out of code and into data, which leaves the total
+    /// identical and is exactly the shift this report exists to show. Folding
+    /// such a row away as "unchanged" would hide the finding.
+    pub fn moved(&self) -> bool {
+        self.base != self.head
     }
 }
 
@@ -83,21 +112,18 @@ pub fn compare(base: &Report, head: &Report) -> Vec<Change> {
         .into_keys()
         .map(|name| Change {
             name: name.to_string(),
-            base: base.get(name).map(|binary| binary.total),
-            head: head.get(name).map(|binary| binary.total),
+            base: base.get(name).map(Binary::sizes),
+            head: head.get(name).map(Binary::sizes),
+            source: head
+                .get(name)
+                .or_else(|| base.get(name))
+                .and_then(|binary| binary.source.clone()),
         })
         .collect();
 
     // Descending by delta, then by name so equal rows are stable.
     changes.sort_by(|a, b| b.delta().cmp(&a.delta()).then(a.name.cmp(&b.name)));
     changes
-}
-
-fn cell(size: Option<usize>) -> String {
-    match size {
-        Some(size) => size.to_string(),
-        None => "—".to_string(),
-    }
 }
 
 fn signed(delta: i64) -> String {
@@ -107,15 +133,92 @@ fn signed(delta: i64) -> String {
     }
 }
 
-/// Render a comparison as markdown: every measured binary gets a row.
+/// How to render a comparison.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Style<'a> {
+    /// Names the revision the base measurement came from, so a moved cell reads
+    /// `main → HEAD` rather than something anonymous.
+    pub base_label: &'a str,
+    /// Prefix that turns a [`Binary::source`] path into a URL, such as
+    /// `https://github.com/owner/repo/blob/<sha>`. Absolute rather than relative
+    /// because the table is posted as a pull request comment, and it should keep
+    /// pointing at the revision it describes once the branch has moved on.
+    /// Without it, names render as plain code spans.
+    pub source_base: Option<&'a str>,
+}
+
+/// One section's cell: the plain size when it held still, `base → head (Δ)` when
+/// it moved, so a reader scanning the table sees only the numbers that did.
+fn cell(base: Option<usize>, head: Option<usize>) -> String {
+    match (base, head) {
+        (Some(base), Some(head)) if base == head => head.to_string(),
+        (Some(base), Some(head)) => {
+            format!("{base} → {head} ({})", signed(head as i64 - base as i64))
+        }
+        (None, Some(head)) => format!("— → {head}"),
+        (Some(base), None) => format!("{base} → —"),
+        (None, None) => "—".to_string(),
+    }
+}
+
+/// The total carries the percentage as well, since that is the number a size
+/// regression gets judged on.
+fn total_cell(change: &Change) -> String {
+    let base = change.base.map(|sizes| sizes.total);
+    let head = change.head.map(|sizes| sizes.total);
+
+    match (base, head) {
+        (None, Some(head)) => format!("— → {head} (new)"),
+        (Some(base), None) => format!("{base} → — (removed)"),
+        (Some(base), Some(head)) if base != head && base > 0 => format!(
+            "{base} → {head} ({}, {:+.1}%)",
+            signed(change.delta()),
+            100.0 * change.delta() as f64 / base as f64
+        ),
+        _ => cell(base, head),
+    }
+}
+
+fn table(changes: &[&Change], style: &Style) -> String {
+    let mut out = String::from("| Binary | Total | Code | Data |\n|---|--:|--:|--:|\n");
+
+    for change in changes {
+        let name = match (style.source_base, &change.source) {
+            (Some(base), Some(source)) => format!("[`{}`]({base}/{source})", change.name),
+            _ => format!("`{}`", change.name),
+        };
+
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} |",
+            name,
+            total_cell(change),
+            cell(
+                change.base.map(|sizes| sizes.code),
+                change.head.map(|sizes| sizes.code)
+            ),
+            cell(
+                change.base.map(|sizes| sizes.data),
+                change.head.map(|sizes| sizes.data)
+            ),
+        );
+    }
+
+    out
+}
+
+/// Render a comparison as markdown.
 ///
-/// `base_label` names the revision the base measurement came from, so the column
-/// heading can read `main` where CI knows the branch. Nothing is folded away —
-/// the table doubles as the current absolute size of every benchmark, which is
-/// what it gets read for even on a pull request that moved nothing.
-pub fn markdown(changes: &[Change], base_label: &str) -> String {
-    let base_total: usize = changes.iter().filter_map(|c| c.base).sum();
-    let head_total: usize = changes.iter().filter_map(|c| c.head).sum();
+/// Two tables: what moved, then everything else behind a `<details>`. Every
+/// measured binary appears in one of them, because the report is read as the
+/// current absolute size of each benchmark as much as it is read as a diff — but
+/// forty untouched rows should not be what a reviewer has to scroll past first.
+pub fn markdown(changes: &[Change], style: &Style) -> String {
+    let (moved, held): (Vec<&Change>, Vec<&Change>) =
+        changes.iter().partition(|change| change.moved());
+
+    let base_total: usize = changes.iter().filter_map(|c| c.base).map(|s| s.total).sum();
+    let head_total: usize = changes.iter().filter_map(|c| c.head).map(|s| s.total).sum();
     let total_delta = head_total as i64 - base_total as i64;
 
     let mut out = String::new();
@@ -132,28 +235,26 @@ pub fn markdown(changes: &[Change], base_label: &str) -> String {
         }
     );
 
-    let _ = writeln!(out, "| Binary | `{base_label}` | `HEAD` | Δ | Δ% |");
-    let _ = writeln!(out, "|---|--:|--:|--:|--:|");
+    match moved.is_empty() {
+        true => {
+            let _ = writeln!(out, "No binary changed size.");
+        }
+        false => {
+            let _ = writeln!(
+                out,
+                "A cell that moved reads `{}` → `HEAD`.\n",
+                style.base_label
+            );
+            out.push_str(&table(&moved, style));
+        }
+    }
 
-    for change in changes {
-        let percent = match (change.base, change.head) {
-            (Some(_), Some(_)) if change.delta() == 0 => "0".to_string(),
-            (Some(base), Some(_)) if base > 0 => {
-                format!("{:+.1}%", 100.0 * change.delta() as f64 / base as f64)
-            }
-            (None, Some(_)) => "new".to_string(),
-            (Some(_), None) => "removed".to_string(),
-            _ => "—".to_string(),
-        };
-
+    if !held.is_empty() {
         let _ = writeln!(
             out,
-            "| `{}` | {} | {} | {} | {} |",
-            change.name,
-            cell(change.base),
-            cell(change.head),
-            signed(change.delta()),
-            percent
+            "\n<details>\n<summary>{} unchanged</summary>\n\n{}\n</details>",
+            held.len(),
+            table(&held, style)
         );
     }
 
@@ -161,12 +262,25 @@ pub fn markdown(changes: &[Change], base_label: &str) -> String {
 }
 
 impl Binary {
-    pub fn from_sections(name: impl Into<String>, sections: Sections) -> Self {
+    pub fn from_sections(
+        name: impl Into<String>,
+        sections: Sections,
+        source: Option<String>,
+    ) -> Self {
         Self {
             name: name.into(),
             total: sections.total,
             code: sections.code,
             data: sections.data,
+            source,
+        }
+    }
+
+    fn sizes(&self) -> Sizes {
+        Sizes {
+            total: self.total,
+            code: self.code,
+            data: self.data,
         }
     }
 }
@@ -182,6 +296,26 @@ mod test {
             total,
             code: total / 2,
             data: total / 4,
+            source: Some(format!("crates/bench/src/bin/{name}.rs")),
+        }
+    }
+
+    /// A binary whose sections are set independently of its total, for the cases
+    /// where the point is that the sections and the total disagree.
+    fn sectioned(name: &str, total: usize, code: usize, data: usize) -> Binary {
+        Binary {
+            name: name.to_string(),
+            total,
+            code,
+            data,
+            source: None,
+        }
+    }
+
+    fn style() -> Style<'static> {
+        Style {
+            base_label: "BASE",
+            source_base: None,
         }
     }
 
@@ -226,7 +360,7 @@ mod test {
         let head = Report::new(vec![binary("fresh", 100)]);
 
         let changes = compare(&base, &head);
-        let table = markdown(&changes, "BASE");
+        let table = markdown(&changes, &style());
 
         assert!(table.contains("`gone`"), "{table}");
         assert!(table.contains("removed"), "{table}");
@@ -234,40 +368,111 @@ mod test {
         assert!(table.contains("new"), "{table}");
     }
 
-    /// The table is the absolute size of every benchmark as much as it is a
-    /// diff, so a row that did not move still has to be there.
+    /// A row that moved shows every section as `base → head`, and the total
+    /// carries the percentage.
     #[test]
-    fn keeps_unchanged_rows() {
+    fn spells_out_each_section_of_a_changed_row() {
+        let base = Report::new(vec![sectioned("moved", 100, 60, 20)]);
+        let head = Report::new(vec![sectioned("moved", 120, 75, 25)]);
+
+        let table = markdown(&compare(&base, &head), &style());
+
+        assert!(
+            table.contains("| `moved` | 100 → 120 (+20, +20.0%) | 60 → 75 (+15) | 20 → 25 (+5) |"),
+            "{table}"
+        );
+    }
+
+    /// The table is the absolute size of every benchmark as much as it is a
+    /// diff, so a row that did not move still has to be there — folded away.
+    #[test]
+    fn folds_unchanged_rows_into_details() {
         let base = Report::new(vec![binary("same", 100), binary("moved", 100)]);
         let head = Report::new(vec![binary("same", 100), binary("moved", 120)]);
 
-        let table = markdown(&compare(&base, &head), "BASE");
+        let table = markdown(&compare(&base, &head), &style());
+        let (top, details) = table
+            .split_once("<details>")
+            .expect("the unchanged row needs somewhere to hide");
 
+        assert!(top.contains("`moved`"), "{table}");
+        assert!(!top.contains("`same`"), "{table}");
         assert!(
-            table.contains("| `moved` | 100 | 120 | +20 | +20.0% |"),
+            details.contains("<summary>1 unchanged</summary>"),
             "{table}"
         );
-        assert!(table.contains("| `same` | 100 | 100 | 0 | 0 |"), "{table}");
+        assert!(details.contains("| `same` | 100 | 50 | 25 |"), "{table}");
+    }
+
+    /// Const-encoding a command moves bytes from code into data and leaves the
+    /// total alone. That is a finding, not an unchanged row.
+    #[test]
+    fn treats_a_section_shift_as_a_change() {
+        let base = Report::new(vec![sectioned("shifted", 100, 80, 0)]);
+        let head = Report::new(vec![sectioned("shifted", 100, 60, 20)]);
+
+        let table = markdown(&compare(&base, &head), &style());
+
+        assert!(!table.contains("<details>"), "{table}");
+        assert!(
+            table.contains("| `shifted` | 100 | 80 → 60 (-20) | 0 → 20 (+20) |"),
+            "{table}"
+        );
     }
 
     #[test]
-    fn tables_every_binary_when_nothing_moved() {
+    fn says_so_when_nothing_moved() {
         let report = Report::new(vec![binary("a", 100), binary("b", 200)]);
-        let table = markdown(&compare(&report, &report), "BASE");
+        let table = markdown(&compare(&report, &report), &style());
 
         assert!(table.contains("no change"), "{table}");
-        assert!(table.contains("| `a` | 100 | 100 | 0 | 0 |"), "{table}");
-        assert!(table.contains("| `b` | 200 | 200 | 0 | 0 |"), "{table}");
+        assert!(table.contains("No binary changed size."), "{table}");
+        assert!(table.contains("<summary>2 unchanged</summary>"), "{table}");
+        assert!(table.contains("| `a` | 100 | 50 | 25 |"), "{table}");
     }
 
     #[test]
-    fn heads_the_base_column_with_the_label() {
-        let report = Report::new(vec![binary("a", 100)]);
+    fn labels_the_base_side_of_a_moved_cell() {
+        let base = Report::new(vec![binary("a", 100)]);
+        let head = Report::new(vec![binary("a", 120)]);
+        let style = Style {
+            base_label: "main",
+            source_base: None,
+        };
 
         assert!(
-            markdown(&compare(&report, &report), "main").contains("| Binary | `main` | `HEAD` |"),
-            "the label should reach the heading"
+            markdown(&compare(&base, &head), &style)
+                .contains("A cell that moved reads `main` → `HEAD`."),
+            "the label should reach the reader"
         );
+    }
+
+    #[test]
+    fn links_a_name_to_its_source() {
+        let report = Report::new(vec![binary("mixed_max", 100)]);
+        let style = Style {
+            base_label: "BASE",
+            source_base: Some("https://github.com/o/r/blob/abc"),
+        };
+
+        let table = markdown(&compare(&report, &report), &style);
+
+        assert!(
+            table.contains(
+                "[`mixed_max`](https://github.com/o/r/blob/abc/crates/bench/src/bin/mixed_max.rs)"
+            ),
+            "{table}"
+        );
+    }
+
+    /// Without somewhere to point, the name is still a name.
+    #[test]
+    fn leaves_a_name_plain_with_no_source_base() {
+        let report = Report::new(vec![binary("a", 100)]);
+        let table = markdown(&compare(&report, &report), &style());
+
+        assert!(table.contains("| `a` |"), "{table}");
+        assert!(!table.contains("]("), "{table}");
     }
 
     #[test]
@@ -279,5 +484,15 @@ mod test {
             serde_json::from_str::<Report>(&json).expect("should deserialize"),
             report
         );
+    }
+
+    /// CI compares against a measurement written by the base revision's own copy
+    /// of this tool, which has no `source` field. That must still parse.
+    #[test]
+    fn reads_a_measurement_from_before_sources_were_recorded() {
+        let json = r#"{"binaries":[{"name":"a","total":100,"code":50,"data":25}]}"#;
+        let report: Report = serde_json::from_str(json).expect("should deserialize");
+
+        assert_eq!(report.binaries[0].source, None);
     }
 }

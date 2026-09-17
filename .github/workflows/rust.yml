@@ -90,14 +90,21 @@ jobs:
         id: report
         # Through the environment rather than interpolated into the script: a
         # branch name is attacker-chosen text on a fork pull request.
+        #
+        # Sources are linked at the head repository and commit, so a fork's table
+        # points into the fork and every link keeps resolving once the branch has
+        # moved on.
         env:
           BASE_LABEL: ${{ github.event.pull_request.base.ref || 'BASE' }}
+          SOURCE_BASE: ${{ github.event.pull_request.head.repo.html_url || format('{0}/{1}', github.server_url, github.repository) }}/blob/${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           {
             echo '## Wasm size'
             echo
             if [ -f base.json ]; then
-              cargo run -q -p wasm_size -- compare --base-label "$BASE_LABEL" base.json head.json
+              cargo run -q -p wasm_size -- compare \
+                --base-label "$BASE_LABEL" --source-base "$SOURCE_BASE" \
+                base.json head.json
               echo
               echo "Compared against \`${{ github.event.pull_request.base.sha || github.sha }}\`."
             else
