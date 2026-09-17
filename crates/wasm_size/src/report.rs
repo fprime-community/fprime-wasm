@@ -26,13 +26,25 @@ pub struct Binary {
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Report {
     pub binaries: Vec<Binary>,
+    /// Whether these sizes were measured after `wasm-opt`.
+    ///
+    /// Defaulted for the same reason as [`Binary::source`] — CI's base
+    /// measurement is taken by the base revision's own copy of this tool — but
+    /// this one changes what the numbers *mean* rather than how they look. A
+    /// comparison that straddles the boundary is measuring the optimiser, and has
+    /// to say so instead of letting the reader credit the win to the change.
+    #[serde(default)]
+    pub optimized: bool,
 }
 
 impl Report {
-    pub fn new(mut binaries: Vec<Binary>) -> Self {
+    pub fn new(mut binaries: Vec<Binary>, optimized: bool) -> Self {
         binaries.sort_by(|a, b| a.name.cmp(&b.name));
 
-        Self { binaries }
+        Self {
+            binaries,
+            optimized,
+        }
     }
 
     /// The measured module named `name`, if it was measured.
@@ -321,7 +333,7 @@ mod test {
 
     #[test]
     fn orders_a_report_by_name() {
-        let report = Report::new(vec![binary("b", 2), binary("a", 1)]);
+        let report = Report::new(vec![binary("b", 2), binary("a", 1)], true);
 
         assert_eq!(
             report
@@ -335,8 +347,8 @@ mod test {
 
     #[test]
     fn puts_the_worst_regression_first() {
-        let base = Report::new(vec![binary("small", 100), binary("big", 100)]);
-        let head = Report::new(vec![binary("small", 105), binary("big", 200)]);
+        let base = Report::new(vec![binary("small", 100), binary("big", 100)], true);
+        let head = Report::new(vec![binary("small", 105), binary("big", 200)], true);
 
         let changes = compare(&base, &head);
 
@@ -347,8 +359,8 @@ mod test {
 
     #[test]
     fn reports_a_shrink_as_negative() {
-        let base = Report::new(vec![binary("a", 200)]);
-        let head = Report::new(vec![binary("a", 150)]);
+        let base = Report::new(vec![binary("a", 200)], true);
+        let head = Report::new(vec![binary("a", 150)], true);
 
         assert_eq!(compare(&base, &head)[0].delta(), -50);
     }
@@ -356,8 +368,8 @@ mod test {
     /// A benchmark that stopped building must not silently vanish from the table.
     #[test]
     fn keeps_added_and_removed_binaries() {
-        let base = Report::new(vec![binary("gone", 100)]);
-        let head = Report::new(vec![binary("fresh", 100)]);
+        let base = Report::new(vec![binary("gone", 100)], true);
+        let head = Report::new(vec![binary("fresh", 100)], true);
 
         let changes = compare(&base, &head);
         let table = markdown(&changes, &style());
@@ -372,8 +384,8 @@ mod test {
     /// carries the percentage.
     #[test]
     fn spells_out_each_section_of_a_changed_row() {
-        let base = Report::new(vec![sectioned("moved", 100, 60, 20)]);
-        let head = Report::new(vec![sectioned("moved", 120, 75, 25)]);
+        let base = Report::new(vec![sectioned("moved", 100, 60, 20)], true);
+        let head = Report::new(vec![sectioned("moved", 120, 75, 25)], true);
 
         let table = markdown(&compare(&base, &head), &style());
 
@@ -387,8 +399,8 @@ mod test {
     /// diff, so a row that did not move still has to be there — folded away.
     #[test]
     fn folds_unchanged_rows_into_details() {
-        let base = Report::new(vec![binary("same", 100), binary("moved", 100)]);
-        let head = Report::new(vec![binary("same", 100), binary("moved", 120)]);
+        let base = Report::new(vec![binary("same", 100), binary("moved", 100)], true);
+        let head = Report::new(vec![binary("same", 100), binary("moved", 120)], true);
 
         let table = markdown(&compare(&base, &head), &style());
         let (top, details) = table
@@ -408,8 +420,8 @@ mod test {
     /// total alone. That is a finding, not an unchanged row.
     #[test]
     fn treats_a_section_shift_as_a_change() {
-        let base = Report::new(vec![sectioned("shifted", 100, 80, 0)]);
-        let head = Report::new(vec![sectioned("shifted", 100, 60, 20)]);
+        let base = Report::new(vec![sectioned("shifted", 100, 80, 0)], true);
+        let head = Report::new(vec![sectioned("shifted", 100, 60, 20)], true);
 
         let table = markdown(&compare(&base, &head), &style());
 
@@ -422,7 +434,7 @@ mod test {
 
     #[test]
     fn says_so_when_nothing_moved() {
-        let report = Report::new(vec![binary("a", 100), binary("b", 200)]);
+        let report = Report::new(vec![binary("a", 100), binary("b", 200)], true);
         let table = markdown(&compare(&report, &report), &style());
 
         assert!(table.contains("no change"), "{table}");
@@ -433,8 +445,8 @@ mod test {
 
     #[test]
     fn labels_the_base_side_of_a_moved_cell() {
-        let base = Report::new(vec![binary("a", 100)]);
-        let head = Report::new(vec![binary("a", 120)]);
+        let base = Report::new(vec![binary("a", 100)], true);
+        let head = Report::new(vec![binary("a", 120)], true);
         let style = Style {
             base_label: "main",
             source_base: None,
@@ -449,7 +461,7 @@ mod test {
 
     #[test]
     fn links_a_name_to_its_source() {
-        let report = Report::new(vec![binary("mixed_max", 100)]);
+        let report = Report::new(vec![binary("mixed_max", 100)], true);
         let style = Style {
             base_label: "BASE",
             source_base: Some("https://github.com/o/r/blob/abc"),
@@ -468,7 +480,7 @@ mod test {
     /// Without somewhere to point, the name is still a name.
     #[test]
     fn leaves_a_name_plain_with_no_source_base() {
-        let report = Report::new(vec![binary("a", 100)]);
+        let report = Report::new(vec![binary("a", 100)], true);
         let table = markdown(&compare(&report, &report), &style());
 
         assert!(table.contains("| `a` |"), "{table}");
@@ -477,7 +489,7 @@ mod test {
 
     #[test]
     fn round_trips_through_json() {
-        let report = Report::new(vec![binary("a", 100), binary("b", 200)]);
+        let report = Report::new(vec![binary("a", 100), binary("b", 200)], true);
         let json = serde_json::to_string(&report).expect("should serialize");
 
         assert_eq!(
@@ -487,12 +499,14 @@ mod test {
     }
 
     /// CI compares against a measurement written by the base revision's own copy
-    /// of this tool, which has no `source` field. That must still parse.
+    /// of this tool, which has neither `source` nor `optimized`. That must still
+    /// parse, and must not claim to have been optimised.
     #[test]
-    fn reads_a_measurement_from_before_sources_were_recorded() {
+    fn reads_a_measurement_from_an_older_revision() {
         let json = r#"{"binaries":[{"name":"a","total":100,"code":50,"data":25}]}"#;
         let report: Report = serde_json::from_str(json).expect("should deserialize");
 
         assert_eq!(report.binaries[0].source, None);
+        assert!(!report.optimized);
     }
 }
