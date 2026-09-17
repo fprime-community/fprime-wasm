@@ -14,10 +14,6 @@ inputs:
 runs:
   using: composite
   steps:
-    # Pinned to a release and checked against its published digest: this binary
-    # rewrites every artefact the build produces, so it is not something to pull
-    # from a moving tag on trust. Unpacked outside the checkout so it cannot
-    # interact with the workspace member globs.
     - shell: bash
       working-directory: ${{ runner.temp }}
       env:
