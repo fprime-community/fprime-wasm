@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -eu
+
+# `rust-lld` is not on the ambient PATH: rustc prepends its own bin directories
+# when it invokes the linker, which is where this finds it. Arguments pass
+# straight through, `-flavor wasm` among them — rustc supplies that itself.
+rust-lld "$@"
+
+# The module to optimise is whatever the link step was told to write.
+output=""
+previous=""
+for argument in "$@"; do
+    case "$previous" in
+        -o) output="$argument" ;;
+    esac
+    previous="$argument"
+done
+
+if [ -z "$output" ]; then
+    echo "wasm-link: no -o argument, nothing to optimise" >&2
+    exit 0
+fi
+
+# Release only
+case "$output" in
+    */release/*) ;;
+    *) exit 0 ;;
+esac
+
+if ! command -v wasm-opt >/dev/null 2>&1; then
+    echo "wasm-link: wasm-opt not found on PATH" >&2
+    echo "wasm-link: it ships with binaryen: https://github.com/WebAssembly/binaryen" >&2
+    exit 1
+fi
+
+wasm-opt --enable-custom-page-sizes -Os "$output" -o "$output.opt"
+mv "$output.opt" "$output"

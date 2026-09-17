@@ -1,16 +1,16 @@
-name: wasm size
+name: Rust
 
 on:
   pull_request:
   push:
-    branches: [master]
+    branches: [main]
 
 # Least privilege by default; the job that comments raises its own.
 permissions:
   contents: read
 
 concurrency:
-  group: wasm-size-${{ github.ref }}
+  group: rust-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -29,6 +29,10 @@ jobs:
           rustup default stable
           rustup target add wasm32v1-none
 
+      # The wasm build below is a release build, so the linker wrapper runs the
+      # optimiser and needs it present.
+      - uses: ./.github/actions/binaryen
+
       - uses: actions/cache@v4
         with:
           path: |
@@ -39,7 +43,7 @@ jobs:
           restore-keys: test-${{ runner.os }}-
 
       - name: Test the host crates
-        run: cargo test -p fprime_dictionary -p fprime_build -p fprime_macros -p fprime_size
+        run: cargo test -p fprime_dictionary -p fprime_build -p fprime_macros -p wasm_size
 
       - name: Build the wasm crates
         run: cargo build --release --target wasm32v1-none -p bench -p example
@@ -59,6 +63,8 @@ jobs:
           rustup default stable
           rustup target add wasm32v1-none
 
+      - uses: ./.github/actions/binaryen
+
       - uses: actions/cache@v4
         with:
           path: |
@@ -70,7 +76,7 @@ jobs:
           restore-keys: size-${{ runner.os }}-
 
       - name: Measure this revision
-        run: cargo run -q -p fprime_size -- measure --json head.json
+        run: cargo run -q -p wasm_size -- measure --json head.json
 
       - name: Check out the base revision
         if: github.event_name == 'pull_request'
@@ -79,34 +85,42 @@ jobs:
           ref: ${{ github.event.pull_request.base.sha }}
           path: base
 
-      # Measured with the base revision's own tooling, so a pull request that
-      # changes how measuring works still compares like for like. Allowed to fail:
-      # on the pull request that first adds `fprime_size` there is nothing to run
-      # on the base side, and an absolute table is still worth posting.
       - name: Measure the base revision
         if: github.event_name == 'pull_request'
         id: base
         continue-on-error: true
         working-directory: base
-        run: cargo run -q -p fprime_size -- measure --target-dir ../base-target --json ../base.json
+        run: cargo run -q -p wasm_size -- measure --target-dir ../base-target --json ../base.json
 
       - name: Build the report
         id: report
+        # Through the environment rather than interpolated into the script: a
+        # branch name is attacker-chosen text on a fork pull request.
+        #
+        # Sources are linked at the head repository and commit, so a fork's table
+        # points into the fork and every link keeps resolving once the branch has
+        # moved on.
+        env:
+          BASE_LABEL: ${{ github.event.pull_request.base.ref || 'BASE' }}
+          SOURCE_BASE: ${{ github.event.pull_request.head.repo.html_url || format('{0}/{1}', github.server_url, github.repository) }}/blob/${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           {
             echo '## Wasm size'
             echo
             if [ -f base.json ]; then
-              cargo run -q -p fprime_size -- compare base.json head.json
+              cargo run -q -p wasm_size -- compare \
+                --base-label "$BASE_LABEL" --source-base "$SOURCE_BASE" \
+                base.json head.json
               echo
               echo "Compared against \`${{ github.event.pull_request.base.sha || github.sha }}\`."
             else
               echo 'No baseline to compare against, reporting absolute sizes.'
               echo
-              cargo run -q -p fprime_size -- measure
+              cargo run -q -p wasm_size -- measure
             fi
             echo
-            echo '<sub>`Code` is function bodies, `Data` is initialised memory. A'
+            echo '<sub>Measured after `wasm-opt --enable-custom-page-sizes -Os`.'
+            echo '`Code` is function bodies, `Data` is initialised memory. A'
             echo 'const-encoded command moves its payload from code into data.</sub>'
           } > report.md
 
