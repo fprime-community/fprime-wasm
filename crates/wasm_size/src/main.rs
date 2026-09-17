@@ -2,8 +2,8 @@
 //! measurements.
 //!
 //! ```text
-//! fprime_size measure [--target-dir DIR] [--json OUT]
-//! fprime_size compare BASE.json HEAD.json
+//! wasm_size measure [--target-dir DIR] [--json OUT]
+//! wasm_size compare BASE.json HEAD.json
 //! ```
 //!
 //! `measure` prints a markdown table and, with `--json`, writes the machine
@@ -27,8 +27,8 @@ const TARGET: &str = "wasm32v1-none";
 
 const USAGE: &str = "\
 usage:
-    fprime_size measure [--target-dir DIR] [--json OUT]
-    fprime_size compare BASE.json HEAD.json
+    wasm_size measure [--target-dir DIR] [--json OUT]
+    wasm_size compare BASE.json HEAD.json
 ";
 
 fn main() -> ExitCode {
@@ -47,7 +47,7 @@ fn main() -> ExitCode {
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
-            eprintln!("fprime_size: {error}");
+            eprintln!("wasm_size: {error}");
             ExitCode::FAILURE
         }
     }
@@ -84,8 +84,9 @@ fn measure(args: &[String]) -> Result<(), String> {
     // `--target-dir` would otherwise name two different directories.
     let target_dir = match options.get("--target-dir") {
         None => root.join("target"),
-        Some(dir) => std::path::absolute(dir)
-            .map_err(|err| format!("could not resolve `{dir}`: {err}"))?,
+        Some(dir) => {
+            std::path::absolute(dir).map_err(|err| format!("could not resolve `{dir}`: {err}"))?
+        }
     };
 
     build(&root, &target_dir)?;
@@ -110,7 +111,10 @@ fn compare(args: &[String]) -> Result<(), String> {
         return Err(format!("compare needs two files\n\n{USAGE}"));
     };
 
-    print!("{}", report::markdown(&report::compare(&read(base)?, &read(head)?)));
+    print!(
+        "{}",
+        report::markdown(&report::compare(&read(base)?, &read(head)?))
+    );
 
     Ok(())
 }

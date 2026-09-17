@@ -70,7 +70,7 @@ jobs:
           restore-keys: size-${{ runner.os }}-
 
       - name: Measure this revision
-        run: cargo run -q -p fprime_size -- measure --json head.json
+        run: cargo run -q -p wasm_size -- measure --json head.json
 
       - name: Check out the base revision
         if: github.event_name == 'pull_request'
@@ -79,16 +79,12 @@ jobs:
           ref: ${{ github.event.pull_request.base.sha }}
           path: base
 
-      # Measured with the base revision's own tooling, so a pull request that
-      # changes how measuring works still compares like for like. Allowed to fail:
-      # on the pull request that first adds `fprime_size` there is nothing to run
-      # on the base side, and an absolute table is still worth posting.
       - name: Measure the base revision
         if: github.event_name == 'pull_request'
         id: base
         continue-on-error: true
         working-directory: base
-        run: cargo run -q -p fprime_size -- measure --target-dir ../base-target --json ../base.json
+        run: cargo run -q -p wasm_size -- measure --target-dir ../base-target --json ../base.json
 
       - name: Build the report
         id: report
@@ -97,13 +93,13 @@ jobs:
             echo '## Wasm size'
             echo
             if [ -f base.json ]; then
-              cargo run -q -p fprime_size -- compare base.json head.json
+              cargo run -q -p wasm_size -- compare base.json head.json
               echo
               echo "Compared against \`${{ github.event.pull_request.base.sha || github.sha }}\`."
             else
               echo 'No baseline to compare against, reporting absolute sizes.'
               echo
-              cargo run -q -p fprime_size -- measure
+              cargo run -q -p wasm_size -- measure
             fi
             echo
             echo '<sub>`Code` is function bodies, `Data` is initialised memory. A'
