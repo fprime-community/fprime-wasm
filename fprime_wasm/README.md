@@ -16,9 +16,9 @@ fprime-wasm init
 
 Fills the directory with a sequence crate: the `wasm32v1-none` target, the linker
 arguments that make guest memory sizeable in bytes, a `build.rs` that turns the
-deployment's dictionary into a typed Rust API, and one starter sequence. If no
-dictionary is given with `--dictionary`, and the project does not already have
-one, it asks for the path.
+deployment's dictionary into a typed Rust API, a `sequencer.toml` holding the limits
+to verify against, and one starter sequence. If no dictionary is given with
+`--dictionary`, and the project does not already have one, it asks for the path.
 
 ## `add`
 
@@ -44,7 +44,7 @@ interpreter — the same one `Svc::WasmSequencer` embeds — registers the same
 `fprime_v1` host interface, runs it, and reports what it needed:
 
 ```
-Limits: memory 8192 B, heap 8 pages, code 256 pages, operand stack 1024 words, page 8192 B
+Limits (sequencer.toml): memory 8192 B, heap 8 pages, code 256 pages, operand stack 1024 words, page 8192 B
 
   Module                   Bytes  Memory  Stack  Heap  Code  Operand  Status
   -----------------------  -----  ------  -----  ----  ----  -------  ------
@@ -63,11 +63,9 @@ under `Stack` means the module declares no stack pointer at all, which is not th
 same as declaring one and using none of it.
 
 Every column names something you configure, so the table is what you size the
-component with. The defaults are the on-board defaults, so plain `verify` answers
-"does this fit a stock sequencer?"; pass `--heap-pages`, `--guest-memory`,
-`--page-size` and so on to measure against your deployment's. The exit status is
-non-zero if a module overruns a budget or does not run, which makes it usable as a
-CI gate.
+component with. What it is measured against comes from `sequencer.toml` (below), and
+the first line names the file it came from. The exit status is non-zero if a module
+overruns a budget or does not run, which makes it usable as a CI gate.
 
 `--verbose` expands each module: every budget with its utilisation, the guest and
 interpreter figures, and the commands, channels and parameters it touched.
@@ -129,6 +127,38 @@ Three things worth knowing about the schema:
 - **`calls` is only present with `--trace`.** A long sequence's trace dwarfs the
   rest of the report, so it is opt-in; when absent the key is omitted rather than
   null.
+
+## `sequencer.toml`
+
+`init` writes one at the crate root, holding the limits `verify` measures against.
+As generated they are a stock sequencer; edit them to match the deployment that will
+fly the sequences, and the file records what that deployment configures:
+
+```toml
+# Per WasmSequencer component instance (Svc::WasmSequencer::Config)
+[config]
+heap_pages = 8            # heapPages
+guest_memory = 8192       # guestMemorySize, bytes
+stack_size = 1024         # stackSize, 32-bit words
+max_code_pages = 256      # maxCodePages
+max_guest_modules = 8     # maxGuestModules
+
+# Build-time configuration (set across deployment/project)
+[constants]
+page_size = 8192          # WASM_SEQ_SPACEWASM_PAGE_SIZE
+event_message_max = 128   # Wasm.GUEST_EVENT_MESSAGE_SIZE
+serial_ports = 5          # Wasm.MAX_SERIAL_IN_PORTS / MAX_SERIAL_OUT_PORTS
+
+# fprime-wasm verify settings
+[verify]
+max_instructions = 10000000
+stack_sample = 1
+```
+
+A key you leave out keeps its default, so a file need only name what your deployment
+changes. A key you misspell is an error rather than a line that quietly does nothing.
+`--limits <path>` measures against a different file, for trying a configuration out
+without editing the tracked one.
 
 ## License
 

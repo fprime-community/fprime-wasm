@@ -28,6 +28,13 @@ pub const SEQUENCE: Template = Template {
     body: include_str!("../../templates/sequence.rs.tmpl"),
 };
 
+/// The limits a project is verified against, named here so [`crate::config`] can hold
+/// the generated file to its own defaults.
+pub const SEQUENCER: Template = Template {
+    path: "sequencer.toml",
+    body: include_str!("../../templates/sequencer.toml.tmpl"),
+};
+
 /// Everything `init` writes, in the order it reports them.
 pub const PROJECT: &[Template] = &[
     Template {
@@ -38,6 +45,7 @@ pub const PROJECT: &[Template] = &[
         path: ".cargo/config.toml",
         body: include_str!("../../templates/cargo-config.toml.tmpl"),
     },
+    SEQUENCER,
     Template {
         path: "build.rs",
         body: include_str!("../../templates/build.rs.tmpl"),

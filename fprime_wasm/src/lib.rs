@@ -3,6 +3,7 @@
 //!
 //! * [`abi`] — the `fprime_v1` host interface, shared with `Svc::WasmSequencer`
 //! * [`harness`] — a `spacewasm` interpreter standing in for the on-board one
+//! * [`config`] — `sequencer.toml`, the limits it is held to
 //! * [`verify`] — its measurements, as budgets, tables and JSON
 //! * [`wasm`] — a static read of a module, for what `spacewasm` discards
 //! * [`scaffold`], [`project`] — generating a sequence crate, and editing one
@@ -13,6 +14,7 @@
 //! parallel unit tests.
 
 pub mod abi;
+pub mod config;
 pub mod harness;
 pub mod project;
 pub mod scaffold;

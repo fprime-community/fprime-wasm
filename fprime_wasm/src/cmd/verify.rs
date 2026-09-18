@@ -4,6 +4,7 @@
 use super::cli::Verify;
 use super::{dictionary, hex};
 use anyhow::{Context, Result, bail};
+use fprime_wasm::config;
 use fprime_wasm::harness::Responses;
 use fprime_wasm::project::{Project, TARGET};
 use fprime_wasm::verify;
@@ -23,14 +24,15 @@ pub fn run(args: &Verify) -> Result<bool> {
     };
 
     let dictionary = dictionary::load(args.dictionary.as_deref(), project.as_ref().ok())?;
-    let limits = args.limits.to_limits();
+    let sequencer = config::load(args.limits.as_deref(), project.as_ref().ok())?;
+    let limits = sequencer.sequencer.limits;
     let responses = Responses {
         args: hex::bytes(args.args.as_deref().unwrap_or("")).context("--args must be hex bytes")?,
         telemetry: hex::keyed(&args.telemetry, "--tlm")?,
         parameters: hex::keyed(&args.parameters, "--prm")?,
         serial: hex::keyed(&args.serial, "--serial")?,
-        event_message_max: args.limits.event_message_max,
-        serial_ports: args.limits.serial_ports,
+        event_message_max: sequencer.sequencer.event_message_max,
+        serial_ports: sequencer.sequencer.serial_ports,
     };
 
     let mut checked: Vec<verify::Verified> = Vec::new();
@@ -81,7 +83,15 @@ pub fn run(args: &Verify) -> Result<bool> {
         return Ok(failures.is_empty());
     }
 
-    report(args, &checked, &modules, &failures, &limits, &dictionary);
+    report(
+        args,
+        &checked,
+        &modules,
+        &failures,
+        &limits,
+        &sequencer.source,
+        &dictionary,
+    );
     Ok(failures.is_empty())
 }
 
@@ -116,11 +126,10 @@ fn report(
     modules: &[PathBuf],
     failures: &[(PathBuf, Vec<String>)],
     limits: &fprime_wasm::harness::Limits,
+    source: &config::Source,
     dictionary: &Option<fprime_dictionary::Dictionary>,
 ) {
-    // The limits are the same for every module, so they are stated once here and left
-    // out of the rows.
-    println!("{}", verify::limits_line(limits));
+    println!("{}", verify::limits_line(limits, &source.label()));
     println!();
     print!("{}", verify::summary(checked));
 

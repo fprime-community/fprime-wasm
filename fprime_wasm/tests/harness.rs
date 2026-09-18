@@ -699,10 +699,11 @@ fn the_summary_omits_the_limits_it_states_once() {
     let limits = Limits::default();
     let modules = [run(&fixture::Body::Empty, 941, Some(512), "narrow")];
 
-    let line = verify::limits_line(&limits);
+    let line = verify::limits_line(&limits, "sequencer.toml");
     assert!(line.contains(&limits.guest_memory.to_string()), "{line}");
     assert!(line.contains("8 pages"), "{line}");
     assert!(line.contains("1024 words"), "{line}");
+    assert!(line.contains("sequencer.toml"), "{line}");
 
     let summary = verify::summary(&modules);
     // The needed figure is there...

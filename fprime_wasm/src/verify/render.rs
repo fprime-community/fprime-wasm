@@ -71,9 +71,9 @@ fn joined(blocks: &[Block]) -> String {
         .join("\n")
 }
 
-pub fn limits_line(limits: &Limits) -> String {
+pub fn limits_line(limits: &Limits, source: &str) -> String {
     format!(
-        "Limits: memory {} B, heap {}, code {}, operand stack {}, page {} B",
+        "Limits ({source}): memory {} B, heap {}, code {}, operand stack {}, page {} B",
         limits.guest_memory,
         plural(u64::from(limits.heap_pages), "page"),
         plural(limits.max_code_pages as u64, "page"),

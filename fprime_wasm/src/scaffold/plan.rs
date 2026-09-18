@@ -129,6 +129,7 @@ mod tests {
             vec![
                 "Cargo.toml",
                 ".cargo/config.toml",
+                "sequencer.toml",
                 "build.rs",
                 "src/lib.rs",
                 "src/bin/startup.rs",
