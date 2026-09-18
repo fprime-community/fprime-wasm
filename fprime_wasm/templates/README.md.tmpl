@@ -1,0 +1,51 @@
+# {{crate_name}}
+
+F Prime sequences for this deployment, compiled to WebAssembly and run on board by
+[`Svc::WasmSequencer`](https://github.com/nasa/fprime).
+
+## Building
+
+```shell
+rustup target add {{target}}
+cargo build --release
+```
+
+## Adding a sequence
+
+```shell
+fprime-wasm add <name>
+```
+
+This writes `src/bin/<name>.rs` and hooks it into the `cargo` build system.
+
+## Building sequences
+
+```shell
+cargo build --release
+```
+
+Builds final `.wasm` binaries to `target/{{target}}/release/*.wasm`.
+These binaries can be uplinked and executed on-board using the WasmSequencer.
+
+## Verifying a sequence
+
+```shell
+fprime-wasm verify
+```
+
+Dry-run each module with the on-board Wasm interpreter to collect memory usage metrics.
+Memory-usage metrics are validated against the `sequencer.toml` limits to make sure the
+configured settings on-board _can_ execute the module.
+
+### Limits
+
+`sequencer.toml` holds the default set of memory settings of the WasmSequencer. These
+settings may be tuned to match your project's setting. Note that some of these settings
+are mapped to per-sequencer-instance settings and therefore multiple `.toml` files may
+be needed to model each instance.
+
+## Dictionary
+
+`{{dictionary}}` is this deployment's dictionary, and `build.rs` turns it into the
+typed API the sequences call. Replace it from a newer release build and re-run
+`cargo build --release`.

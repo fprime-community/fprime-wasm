@@ -1,7 +1,14 @@
 [package]
 name = "fprime_macros"
-version = "0.1.0"
-edition = "2024"
+description = "Procedural macros backing the fprime-wasm sequencing DSL and Wasm entry point"
+readme = "README.md"
+keywords = ["fprime", "wasm", "macros", "spacecraft", "no-std"]
+categories = ["aerospace", "no-std", "development-tools::procedural-macro-helpers"]
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
 
 [lib]
 proc-macro = true
@@ -9,7 +16,7 @@ name = "fprime_macros"
 path = "src/lib.rs"
 
 [dependencies]
-fprime_dictionary = { path = "../fprime_dictionary" }
+fprime_dictionary = { path = "../fprime_dictionary", version = "=0.0.0" }
 proc-macro2 = "1.0.103"
 quote = "1.0.41"
 syn = { version = "2.0.108", features = ["full"] }

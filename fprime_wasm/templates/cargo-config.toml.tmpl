@@ -1,0 +1,22 @@
+[build]
+target = "{{target}}"
+
+[target.{{target}}]
+# `rust-lld`, then `wasm-opt` for smallest possible binaries.
+linker = ".cargo/wasm-link"
+
+rustflags = [
+    # `spacewasm` implements WebAssembly 1.0. Keep the guest to the MVP
+    # instruction set plus mutable globals, which it does support.
+    "-Ctarget-cpu=mvp",
+    "-Ctarget-feature=+mutable-globals",
+
+    # Guest stack, reserved at the bottom of linear memory. `fprime-wasm verify`
+    # reports how much of it a sequence actually uses.
+    "-Clink-arg=-zstack-size={{stack_size}}",
+
+    # One-byte pages, from the custom-page-sizes proposal. Without this a module
+    # declares memory in 64 KiB pages and the smallest sequence demands 64 KiB of
+    # guest memory; with it, memory is sized to the byte.
+    "-Clink-arg=--page-size=1",
+]

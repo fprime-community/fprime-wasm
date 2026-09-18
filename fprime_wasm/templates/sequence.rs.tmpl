@@ -1,0 +1,21 @@
+//! TODO `{{sequence}}` sequence docs.
+
+#![no_std]
+#![no_main]
+
+use {{lib_name}}::*;
+
+#[fprime_main]
+pub fn main() {
+    // `Checked` panics the sequence if any command returns something other than
+    // OK. `Permissive` lets a response through to be inspected instead.
+    set_fail_mode(FailMode::Checked);
+
+    // Replace this with the sequence. Commands, telemetry channels and
+    // parameters are addressed the way the dictionary names them, for example:
+    //
+    //     CdhCore.cmdDisp.CMD_NO_OP();
+    //     let (dropped, _) = CdhCore.events.EventsDropped();
+    //
+    // `cargo build --release` writes `{{sequence}}.wasm`; `fprime-wasm verify` runs it.
+}

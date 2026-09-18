@@ -1,6 +1,7 @@
-/// Section ids from the WebAssembly core specification.
-const CODE_SECTION: u8 = 10;
-const DATA_SECTION: u8 = 11;
+//! Section byte counts, read with `wasmparser`.
+
+use std::ops::Range;
+use wasmparser::{Parser, Payload};
 
 /// The section byte counts of one module.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -14,65 +15,32 @@ pub struct Sections {
     pub data: usize,
 }
 
-/// Read a LEB128 unsigned integer at `offset`, returning it and the offset past
-/// it.
-fn leb128(bytes: &[u8], mut offset: usize) -> Option<(usize, usize)> {
-    let mut value: usize = 0;
-    let mut shift = 0;
-
-    loop {
-        let byte = *bytes.get(offset)?;
-        offset += 1;
-
-        // A section length wider than this is not something we produce, and
-        // shifting past the width of the accumulator would be a silent wrap.
-        if shift >= usize::BITS {
-            return None;
-        }
-
-        value |= ((byte & 0x7F) as usize) << shift;
-        shift += 7;
-
-        if byte & 0x80 == 0 {
-            return Some((value, offset));
-        }
-    }
+/// Length of a section range. `wasmparser` reports offsets as `u64`; the module is
+/// already in memory as a slice, so any range within it fits a `usize`.
+fn span(range: Range<u64>) -> usize {
+    (range.end - range.start) as usize
 }
 
-/// Walk the section headers of a wasm module.
+/// Read the section sizes of a wasm module.
 ///
-/// Returns `None` if `bytes` is not a wasm module or is truncated, rather than
-/// guessing: a size report that silently reads zero would be worse than no
-/// report.
+/// Returns `None` if `bytes` is not a readable wasm module, rather than guessing:
+/// a size report that silently reads zero would be worse than no report.
 pub fn sections(bytes: &[u8]) -> Option<Sections> {
-    // 4 byte magic `\0asm` then a 4 byte version.
-    if bytes.len() < 8 || &bytes[0..4] != b"\0asm" {
-        return None;
-    }
-
     let mut out = Sections {
         total: bytes.len(),
         ..Sections::default()
     };
 
-    let mut offset = 8;
-    while offset < bytes.len() {
-        let id = bytes[offset];
-        let (length, payload) = leb128(bytes, offset + 1)?;
-
-        // A length that runs off the end means we have lost sync.
-        let end = payload.checked_add(length)?;
-        if end > bytes.len() {
-            return None;
-        }
-
-        match id {
-            CODE_SECTION => out.code += length,
-            DATA_SECTION => out.data += length,
+    for payload in Parser::new(0).parse_all(bytes) {
+        // `range` spans the whole section payload, vector count included, which
+        // is the convention this tool reports in. Note it is not
+        // `CodeSectionStart::size`, which excludes that count and would
+        // under-report the code section by the width of it.
+        match payload.ok()? {
+            Payload::CodeSectionStart { range, .. } => out.code += span(range),
+            Payload::DataSection(reader) => out.data += span(reader.range()),
             _ => {}
         }
-
-        offset = end;
     }
 
     Some(out)
@@ -82,30 +50,81 @@ pub fn sections(bytes: &[u8]) -> Option<Sections> {
 mod test {
     use super::*;
 
-    /// `\0asm`, version 1, then one section of the given id and payload.
-    fn module(id: u8, payload: &[u8]) -> Vec<u8> {
-        let mut bytes = b"\0asm\x01\0\0\0".to_vec();
-        bytes.push(id);
-        bytes.push(payload.len() as u8);
-        bytes.extend_from_slice(payload);
+    const HEADER: [u8; 8] = [b'\0', b'a', b's', b'm', 1, 0, 0, 0];
+
+    /// One `() -> ()` type, the function that uses it, and one page of memory.
+    /// A code section without the first two, or a data section without the third,
+    /// does not parse.
+    const TYPE_UNIT: [u8; 4] = [1, 0x60, 0, 0];
+    const FUNC_ONE: [u8; 2] = [1, 0];
+    const MEMORY_ONE: [u8; 3] = [1, 0, 1];
+
+    /// A module of `(id, payload)` sections.
+    ///
+    /// Section lengths are computed rather than written out, and the ids have to be
+    /// passed in the order the core specification lays down — wasmparser rejects
+    /// them out of order, which is not something this reader should paper over.
+    fn module(sections: &[(u8, &[u8])]) -> Vec<u8> {
+        let mut bytes = HEADER.to_vec();
+
+        for (id, payload) in sections {
+            bytes.push(*id);
+            leb128(&mut bytes, payload.len());
+            bytes.extend_from_slice(payload);
+        }
+
         bytes
+    }
+
+    /// A code section payload carrying one function body.
+    fn code(body: &[u8]) -> Vec<u8> {
+        let mut payload = vec![1]; // one body
+        leb128(&mut payload, body.len());
+        payload.extend_from_slice(body);
+        payload
+    }
+
+    fn leb128(out: &mut Vec<u8>, mut value: usize) {
+        loop {
+            let byte = (value & 0x7F) as u8;
+            value >>= 7;
+
+            match value {
+                0 => return out.push(byte),
+                _ => out.push(byte | 0x80),
+            }
+        }
     }
 
     #[test]
     fn reads_the_code_and_data_sections() {
-        let mut bytes = module(CODE_SECTION, &[1, 2, 3, 4]);
-        bytes.extend_from_slice(&module(DATA_SECTION, &[9, 9])[8..]);
+        let code = code(&[0x00, 0x0B]); // no locals, then `end`
+        // One active segment at offset 0 carrying two bytes.
+        let data: &[u8] = &[1, 0, 0x41, 0, 0x0B, 2, b'h', b'i'];
+
+        let bytes = module(&[
+            (1, &TYPE_UNIT),
+            (3, &FUNC_ONE),
+            (5, &MEMORY_ONE),
+            (10, &code),
+            (11, data),
+        ]);
 
         let sections = sections(&bytes).expect("should parse");
+
+        // The vector count is part of the payload, so these are the full section
+        // bodies rather than `size`, which would be one less on the code section.
+        assert_eq!(sections.code, code.len());
         assert_eq!(sections.code, 4);
-        assert_eq!(sections.data, 2);
+        assert_eq!(sections.data, data.len());
         assert_eq!(sections.total, bytes.len());
     }
 
     #[test]
     fn ignores_other_sections() {
-        // Section 1 is the type section; it should count toward the total only.
-        let bytes = module(1, &[0, 0, 0]);
+        // A custom section named "a" should count toward the total only.
+        let bytes = module(&[(0, &[1, b'a', b'b', b'c'])]);
+
         let sections = sections(&bytes).expect("should parse");
 
         assert_eq!(sections.code, 0);
@@ -113,16 +132,21 @@ mod test {
         assert_eq!(sections.total, bytes.len());
     }
 
+    /// A section long enough to need two LEB128 length bytes, so the arithmetic is
+    /// exercised past the one-byte case that every small module happens to hit.
+    /// A section long enough to need two LEB128 length bytes, so the arithmetic is
+    /// exercised past the one-byte case every small module happens to hit.
     #[test]
     fn reads_a_multi_byte_length() {
-        // 200 bytes needs two LEB128 bytes, so this catches a single-byte read.
-        let payload = vec![0u8; 200];
-        let mut bytes = b"\0asm\x01\0\0\0".to_vec();
-        bytes.push(CODE_SECTION);
-        bytes.extend_from_slice(&[0xC8, 0x01]);
-        bytes.extend_from_slice(&payload);
+        let mut body = vec![0x00]; // no locals
+        body.extend(std::iter::repeat_n(0x01, 200)); // 200 nops
+        body.push(0x0B); // end
 
-        assert_eq!(sections(&bytes).expect("should parse").code, 200);
+        let code = code(&body);
+        let bytes = module(&[(1, &TYPE_UNIT), (3, &FUNC_ONE), (10, &code)]);
+
+        assert!(code.len() > 0x7F, "should need a multi-byte length");
+        assert_eq!(sections(&bytes).expect("should parse").code, code.len());
     }
 
     #[test]
@@ -131,13 +155,11 @@ mod test {
         assert_eq!(sections(b""), None);
     }
 
+    /// Claims 40 bytes of payload but carries four.
     #[test]
     fn rejects_a_truncated_section() {
-        // Claims 40 bytes of payload but carries 4.
-        let mut bytes = b"\0asm\x01\0\0\0".to_vec();
-        bytes.push(CODE_SECTION);
-        bytes.push(40);
-        bytes.extend_from_slice(&[1, 2, 3, 4]);
+        let mut bytes = HEADER.to_vec();
+        bytes.extend_from_slice(&[10, 40, 1, 2, 0x00, 0x0B]);
 
         assert_eq!(sections(&bytes), None);
     }

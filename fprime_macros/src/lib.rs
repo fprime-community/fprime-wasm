@@ -92,7 +92,7 @@ pub fn fprime(attr: TokenStream, item: TokenStream) -> TokenStream {
     infer_enum_paths(attr.into(), item.into()).into()
 }
 
-/// Wire up the WASM entry point, and also enable the sequencing DSL (see
+/// Wire up the Wasm entry point, and also enable the sequencing DSL (see
 /// [`fprime`]) in the function body.
 #[proc_macro_attribute]
 pub fn fprime_main(attr: TokenStream, item: TokenStream) -> TokenStream {

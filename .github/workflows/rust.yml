@@ -43,10 +43,29 @@ jobs:
           restore-keys: test-${{ runner.os }}-
 
       - name: Test the host crates
-        run: cargo test -p fprime_dictionary -p fprime_build -p fprime_macros -p wasm_size
+        run: cargo test -p fprime_dictionary -p fprime_build -p fprime_macros -p wasm_size -p fprime-wasm
 
+      # A sequence bin cannot link for the host, so every one in `crates/bench` and
+      # `crates/example` is declared `required-features = ["wasm"]` and a host build
+      # of the workspace skips it. Nothing else enforces that: a new bin added
+      # without the gate breaks this command and no other step notices, because
+      # every other step names its packages explicitly.
+      - name: Build the workspace for the host
+        run: cargo build --workspace
+
+      # `--features wasm` is not optional: the sequence bins are gated behind it
+      # so that `cargo build --workspace` on a host target skips them instead of
+      # failing to link a `#![no_main]` Wasm module. Without it this step builds
+      # the two dictionary libs and no `.wasm` at all, and the verify below has
+      # nothing to look at.
       - name: Build the wasm crates
-        run: cargo build --release --target wasm32v1-none -p bench -p example
+        run: cargo build --release --target wasm32v1-none -p bench -p example --features wasm
+
+      - name: Verify the sequences against the on-board interpreter
+        run: |
+          cargo run -p fprime-wasm -- verify \
+            --dictionary fprime_dictionary/src/test/RefTopologyDictionary.json \
+            target/wasm32v1-none/release/*.wasm
 
   size:
     name: size

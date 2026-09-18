@@ -1,8 +1,14 @@
 [package]
 name = "example"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 publish = false
+
+[features]
+# The sequence bins are `#![no_std] #![no_main]` Wasm modules: they cannot link
+# for the host, so a bare `cargo build --workspace` must skip them. This feature
+# is what `required-features` on each `[[bin]]` keys off.
+wasm = []
 
 [dependencies]
 fprime_core = { path = "../../fprime_core" }
@@ -16,10 +22,12 @@ bench = false
 
 [[bin]]
 name = "example"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "no_op"
+required-features = ["wasm"]
 test = false
 bench = false

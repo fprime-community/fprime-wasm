@@ -1,10 +1,17 @@
 [package]
 name = "fprime_build"
-version = "0.1.0"
-edition = "2024"
+description = "build.rs code generator turning an F Prime JSON dictionary into the Rust API a Wasm sequence calls"
+readme = "README.md"
+keywords = ["fprime", "wasm", "codegen", "spacecraft", "build"]
+categories = ["aerospace", "development-tools::build-utils", "wasm"]
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
 
 [dependencies]
-fprime_dictionary = { path = "../fprime_dictionary" }
+fprime_dictionary = { path = "../fprime_dictionary", version = "=0.0.0" }
 proc-macro2 = "1.0.103"
 quote = "1.0.42"
 convert_case = "0.10.0"

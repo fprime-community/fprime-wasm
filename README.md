@@ -4,6 +4,14 @@ This repository includes compile-time and runtime-time
 dependencies for interfacing Rust with F Prime running
 inside a Wasm interpreter.
 
+| Crate | |
+|---|---|
+| [`fprime-wasm`](fprime_wasm) | The `fprime-wasm` command: scaffold a sequence project, add sequences, size a module against the on-board interpreter |
+| [`fprime_core`](fprime_core) | `no_std` runtime a sequence links against, and the guest side of the `fprime_v1` host ABI |
+| [`fprime_build`](fprime_build) | `build.rs` code generator, turning an F Prime JSON dictionary into a typed Rust API |
+| [`fprime_macros`](fprime_macros) | `#[fprime_main]` and the sequencing DSL |
+| [`fprime_dictionary`](fprime_dictionary) | Deserialisation of F Prime JSON dictionaries |
+
 ## Installation
 
 1. Install Rust: https://doc.rust-lang.org/cargo/getting-started/installation.html
@@ -12,49 +20,46 @@ inside a Wasm interpreter.
 
 ```shell
 rustup target add wasm32v1-none
+cargo install wasm-opt # (optional) for optimizing --release builds
 ```
 
-## Building
+3. Install the tool:
 
-This repository includes an example project with works with the `Ref` fprime deployment.
-
-To build, run:
 ```shell
-cd example
-cargo build --release
+cargo install fprime-wasm
 ```
 
-The Wasm target comes from `example/.cargo/config.toml`, so `--target` is not
-needed. This generates one binary per sequence under
-`target/wasm32v1-none/release/`, e.g. `example.wasm` and `no_op.wasm`.
+## Starting a project
 
-### Adding a sequence
+```shell
+mkdir my-sequences && cd my-sequences
+fprime-wasm init          # asks for the deployment's JSON dictionary
+cargo build --release
+fprime-wasm verify
+```
 
-Each sequence is its own bin, so each one builds to its own `.wasm`:
+See [`fprime_wasm/README.md`](fprime_wasm/README.md) for what `init`, `add` and
+`verify` do.
 
-1. Add `example/src/bin/<name>.rs`:
+## This repository
 
-   ```rust
-   #![no_std]
-   #![no_main]
+Besides the five published crates, `crates/` holds what exercises them:
 
-   use example::*;
+| Crate | |
+|---|---|
+| [`crates/example`](crates/example) | A small project against the `Ref` F Prime deployment |
+| [`crates/bench`](crates/bench) | One sequence per command/telemetry/parameter shape |
+| [`crates/wasm_size`](crates/wasm_size) | Measures and compares the size of the sequences `bench` and `example` build |
 
-   #[fprime_main]
-   pub fn main() {
-       CdhCore.cmdDisp.CMD_NO_OP();
-   }
-   ```
+`example` and `bench` build for `wasm32v1-none` behind a `wasm` feature, so a
+host build of the workspace skips their sequence bins:
 
-2. Declare it in `example/Cargo.toml` so Cargo does not try to build a test
-   harness for a `#![no_main]` bin:
+```shell
+cargo test --workspace
+cd crates/example
+cargo build --release --features wasm
+```
 
-   ```toml
-   [[bin]]
-   name = "<name>"
-   test = false
-   bench = false
-   ```
-
-The dictionary is generated once by `build.rs` and shared through the `example`
-library target, so extra sequences do not re-expand it.
+`spacewasm`, the on-board interpreter, only implements WebAssembly 1.0 plus
+`mutable-globals` and `custom-page-sizes`. `.cargo/wasm-link` pins `wasm-opt` to
+that same set, and `fprime-wasm verify` checks the result.

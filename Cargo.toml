@@ -2,6 +2,17 @@
 resolver = "3"
 members = ["crates/*", "fprime_*"]
 
+# The version is a placeholder that `.github/workflows/release.yml` rewrites from
+# the release tag. It stays `0.0.0` on `main` so nothing in the tree claims to be
+# a released version, and so the workflow can detect that the substitution
+# actually happened. Internal path dependencies carry a matching `= "=0.0.0"`.
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/fprime-community/fprime-wasm"
+rust-version = "1.87"
+
 [profile.release]
 lto = true
 opt-level = "s"
@@ -9,3 +20,10 @@ codegen-units = 1
 panic = "abort"
 debug = false
 strip = true
+
+# The workspace release profile is tuned for the `wasm32v1-none` sequences, where
+# every byte is a page of on-board memory. `fprime-wasm` is a host tool: it wants
+# ordinary optimisation, and stripping it costs a usable backtrace for no gain.
+[profile.release.package.fprime-wasm]
+opt-level = 2
+strip = false

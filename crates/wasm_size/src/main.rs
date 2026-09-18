@@ -28,6 +28,9 @@ use report::{Binary, Report};
 /// `example` is tracked too because it is the closest thing to a real sequence.
 const SUBJECTS: [&str; 2] = ["bench", "example"];
 
+/// The feature every subject gates its sequence bins behind. See [`build`].
+const FEATURE: &str = "wasm";
+
 const TARGET: &str = "wasm32v1-none";
 
 const USAGE: &str = "\
@@ -228,6 +231,12 @@ fn build(root: &Path, target_dir: &Path) -> Result<(), String> {
     for subject in SUBJECTS {
         command.arg("-p").arg(subject);
     }
+
+    // Each subject gates its sequence bins behind a `wasm` feature, so that
+    // `cargo build --workspace` on a host target skips them rather than failing
+    // to link a `#![no_main]` Wasm module. Without this the build succeeds and
+    // produces no `.wasm`, which reads as "every sequence is 0 bytes".
+    command.arg("--features").arg(FEATURE);
 
     // `RUSTFLAGS` *replaces* `[target.wasm32v1-none] rustflags` from the root
     // `.cargo/config.toml` rather than adding to it. Inheriting one from the

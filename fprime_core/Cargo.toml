@@ -1,12 +1,19 @@
 [package]
 name = "fprime_core"
-version = "0.1.0"
-edition = "2024"
+description = "no_std runtime for F Prime sequences compiled to WebAssembly: commands, telemetry, parameters and the fprime_v1 host ABI"
+readme = "README.md"
+keywords = ["fprime", "wasm", "spacecraft", "no-std", "sequencer"]
+categories = ["aerospace", "no-std", "wasm", "embedded"]
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
 
 [lib]
 test = false
 bench = false
 
 [dependencies]
-fprime_macros = { path = "../fprime_macros" }
+fprime_macros = { path = "../fprime_macros", version = "=0.0.0" }
 heapless = { version = "0.9.2", features = [] }
