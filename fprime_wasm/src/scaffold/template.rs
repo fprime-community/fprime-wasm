@@ -69,6 +69,17 @@ pub const PROJECT: &[Template] = &[
     // Named `gitignore.tmpl` in the source tree: a real `.gitignore` there would
     // apply to this repository.
     Template::plain(".gitignore", include_str!("../../templates/gitignore.tmpl")),
+    // Same rust-analyzer completion settings this repository uses, so a generated
+    // no_std crate doesn't drown in suggestions (`core::convert::Into`, postfix
+    // completions, autoimport) that don't fit it.
+    Template::plain(
+        ".vscode/settings.json",
+        include_str!("../../templates/vscode-settings.json.tmpl"),
+    ),
+    Template::plain(
+        ".vscode/extensions.json",
+        include_str!("../../templates/vscode-extensions.json.tmpl"),
+    ),
     Template::plain("README.md", include_str!("../../templates/README.md.tmpl")),
 ];
 

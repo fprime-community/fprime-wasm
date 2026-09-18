@@ -41,6 +41,9 @@ fprime-wasm verify
 See [`fprime_wasm/README.md`](fprime_wasm/README.md) for what `init`, `add` and
 `verify` do.
 
+[VS Code](https://code.visualstudio.com) is the recommended editor for
+a generated sequences project.
+
 ## This repository
 
 Besides the five published crates, `crates/` holds what exercises them:

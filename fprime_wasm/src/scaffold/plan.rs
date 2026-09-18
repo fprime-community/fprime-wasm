@@ -136,6 +136,8 @@ mod tests {
                 "src/lib.rs",
                 "src/bin/startup.rs",
                 ".gitignore",
+                ".vscode/settings.json",
+                ".vscode/extensions.json",
                 "README.md",
             ]
         );

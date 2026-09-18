@@ -19,6 +19,9 @@ fprime-wasm init
 
 Scaffolds a sequence crate with all the supporting boilerplate.
 
+[VS Code](https://code.visualstudio.com) is the recommended editor for
+a generated sequences project.
+
 ## `add`
 
 To add a new sequence:
