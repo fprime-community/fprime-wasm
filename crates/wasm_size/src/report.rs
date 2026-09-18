@@ -256,7 +256,7 @@ pub fn markdown(changes: &[Change], style: &Style) -> String {
         false => {
             let _ = writeln!(
                 out,
-                "A cell that moved reads `{}` → `HEAD`.\n",
+                "`{}` → `HEAD`.\n",
                 style.base_label
             );
             out.push_str(&table(&moved, style));
@@ -456,7 +456,7 @@ mod test {
 
         assert!(
             markdown(&compare(&base, &head), &style)
-                .contains("A cell that moved reads `main` → `HEAD`."),
+                .contains("`main` → `HEAD`."),
             "the label should reach the reader"
         );
     }
