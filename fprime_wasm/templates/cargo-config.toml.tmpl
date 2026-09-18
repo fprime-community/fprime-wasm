@@ -2,6 +2,9 @@
 target = "{{target}}"
 
 [target.{{target}}]
+# `rust-lld`, then `wasm-opt` for smallest possible binaries.
+linker = ".cargo/wasm-link"
+
 rustflags = [
     # `spacewasm` implements WebAssembly 1.0. Keep the guest to the MVP
     # instruction set plus mutable globals, which it does support.

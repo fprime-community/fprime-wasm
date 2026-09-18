@@ -8,51 +8,68 @@ pub struct Template {
     /// sequence can land at `src/bin/{{sequence}}.rs`.
     pub path: &'static str,
     pub body: &'static str,
+    pub executable: bool,
+}
+
+impl Template {
+    /// A file to be read.
+    pub const fn plain(path: &'static str, body: &'static str) -> Self {
+        Template {
+            path,
+            body,
+            executable: false,
+        }
+    }
+
+    /// A file to be run, so it needs the executable bit.
+    pub const fn program(path: &'static str, body: &'static str) -> Self {
+        Template {
+            path,
+            body,
+            executable: true,
+        }
+    }
 }
 
 /// The starter sequence, also used by `add` for every later one.
-pub const SEQUENCE: Template = Template {
-    path: "src/bin/{{sequence}}.rs",
-    body: include_str!("../../templates/sequence.rs.tmpl"),
-};
+pub const SEQUENCE: Template = Template::plain(
+    "src/bin/{{sequence}}.rs",
+    include_str!("../../templates/sequence.rs.tmpl"),
+);
 
 /// The limits a project is verified against, named here so [`crate::config`] can hold
 /// the generated file to its own defaults.
-pub const SEQUENCER: Template = Template {
-    path: "sequencer.toml",
-    body: include_str!("../../templates/sequencer.toml.tmpl"),
-};
+pub const SEQUENCER: Template = Template::plain(
+    "sequencer.toml",
+    include_str!("../../templates/sequencer.toml.tmpl"),
+);
+
+/// The release linker, named here so the generated cargo config can be held to the
+/// path it is actually written at.
+pub const WASM_LINK: Template = Template::program(
+    ".cargo/wasm-link",
+    include_str!("../../templates/wasm-link.tmpl"),
+);
 
 /// Everything `init` writes, in the order it reports them.
 pub const PROJECT: &[Template] = &[
-    Template {
-        path: "Cargo.toml",
-        body: include_str!("../../templates/Cargo.toml.tmpl"),
-    },
-    Template {
-        path: ".cargo/config.toml",
-        body: include_str!("../../templates/cargo-config.toml.tmpl"),
-    },
+    Template::plain(
+        "Cargo.toml",
+        include_str!("../../templates/Cargo.toml.tmpl"),
+    ),
+    Template::plain(
+        ".cargo/config.toml",
+        include_str!("../../templates/cargo-config.toml.tmpl"),
+    ),
+    WASM_LINK,
     SEQUENCER,
-    Template {
-        path: "build.rs",
-        body: include_str!("../../templates/build.rs.tmpl"),
-    },
-    Template {
-        path: "src/lib.rs",
-        body: include_str!("../../templates/lib.rs.tmpl"),
-    },
+    Template::plain("build.rs", include_str!("../../templates/build.rs.tmpl")),
+    Template::plain("src/lib.rs", include_str!("../../templates/lib.rs.tmpl")),
     SEQUENCE,
-    Template {
-        // Named `gitignore.tmpl` in the source tree: a real `.gitignore` there
-        // would apply to this repository.
-        path: ".gitignore",
-        body: include_str!("../../templates/gitignore.tmpl"),
-    },
-    Template {
-        path: "README.md",
-        body: include_str!("../../templates/README.md.tmpl"),
-    },
+    // Named `gitignore.tmpl` in the source tree: a real `.gitignore` there would
+    // apply to this repository.
+    Template::plain(".gitignore", include_str!("../../templates/gitignore.tmpl")),
+    Template::plain("README.md", include_str!("../../templates/README.md.tmpl")),
 ];
 
 /// Every placeholder any template may use.
@@ -68,7 +85,6 @@ pub const KEYS: &[&str] = &[
     "dictionary",
     "dictionary_slashes",
     "crate_version",
-    "dependency",
 ];
 
 /// Substitute `{{key}}` occurrences in `text`.

@@ -5,6 +5,7 @@ projects.
 
 ```shell
 cargo install fprime-wasm
+cargo install wasm-opt
 ```
 
 ## `init`
@@ -14,11 +15,7 @@ mkdir ref-sequences && cd ref-sequences
 fprime-wasm init
 ```
 
-Fills the directory with a sequence crate: the `wasm32v1-none` target, the linker
-arguments that make guest memory sizeable in bytes, a `build.rs` that turns the
-deployment's dictionary into a typed Rust API, a `sequencer.toml` holding the limits
-to verify against, and one starter sequence. If no dictionary is given with
-`--dictionary`, and the project does not already have one, it asks for the path.
+Fills the directory with a sequence crate and all the supporting boilerplate configuration.
 
 ## `add`
 

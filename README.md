@@ -116,7 +116,7 @@ library target, so extra sequences do not re-expand it.
 `mutable-globals` and `custom-page-sizes`. Nothing else will load, and the failure
 happens when the module is loaded rather than when it is built.
 
-`tools/wasm-link` — the release linker wrapper that runs `wasm-opt` — therefore
+`.cargo/wasm-link` — the release linker wrapper that runs `wasm-opt` — therefore
 pins the optimiser to that feature set. It is not enough to compile for
 `wasm32v1-none`: `wasm-opt` will *introduce* post-MVP instructions while
 optimising even when the compiler emitted none. `fprime-wasm verify` runs in CI to

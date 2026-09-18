@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 pub struct File {
     pub path: PathBuf,
     pub contents: String,
+    pub executable: bool,
 }
 
 /// What `init` was asked to build.
@@ -62,7 +63,6 @@ impl Plan {
                     DependencySpec::Path(_) => "0.0.0".to_string(),
                 },
             ),
-            ("dependency", self.dependency.describe()),
         ]
     }
 
@@ -84,6 +84,7 @@ impl Plan {
                     // templates are written with.
                     path: path.split('/').collect(),
                     contents,
+                    executable: entry.executable,
                 })
             })
             .collect::<Result<_>>()?;
@@ -129,6 +130,7 @@ mod tests {
             vec![
                 "Cargo.toml",
                 ".cargo/config.toml",
+                ".cargo/wasm-link",
                 "sequencer.toml",
                 "build.rs",
                 "src/lib.rs",
@@ -245,6 +247,71 @@ mod tests {
         // `build-std` needs nightly, so enabling it would break `cargo build` on
         // stable in a scaffolded project.
         assert!(config.get("unstable").is_none(), "build-std must stay off");
+    }
+
+    /// The config has to name the script the same plan writes; asserted against the
+    /// template rather than a literal, so renaming one and not the other fails here
+    /// instead of at someone's first release build.
+    #[test]
+    fn the_cargo_config_wires_the_release_linker() {
+        let config: toml_edit::DocumentMut = file(&plan(), ".cargo/config.toml")
+            .parse()
+            .expect("valid TOML");
+        assert_eq!(
+            config["target"][TARGET]["linker"].as_str(),
+            Some(template::WASM_LINK.path)
+        );
+    }
+
+    /// `wasm-opt` introduces post-MVP instructions while optimising even when the
+    /// compiler emitted none, and the module then fails when the sequencer loads it.
+    /// Pinning the optimiser to what `spacewasm` implements is the whole point of the
+    /// script.
+    #[test]
+    fn the_release_linker_pins_the_interpreters_feature_set() {
+        let script = file(&plan(), ".cargo/wasm-link");
+        for flag in [
+            "--mvp-features",
+            "--enable-mutable-globals",
+            "--enable-custom-page-sizes",
+        ] {
+            assert!(script.contains(flag), "{flag} missing from:\n{script}");
+        }
+        assert!(script.contains("rust-lld"), "{script}");
+        // Optimising a debug build would make it unreadable in a debugger.
+        assert!(script.contains("*/release/*"), "{script}");
+    }
+
+    /// A missing optimiser must not fail the build: the module is linked and valid,
+    /// just larger, and `verify` measures what is actually on disk.
+    #[test]
+    fn a_missing_optimiser_does_not_fail_the_build() {
+        let script = file(&plan(), ".cargo/wasm-link");
+        let (_, after) = script
+            .split_once("command -v wasm-opt")
+            .expect("the script should probe for wasm-opt");
+        let branch = after
+            .split_once("fi\n")
+            .expect("the probe should be an if block")
+            .0;
+        assert!(
+            branch.contains("exit 0"),
+            "a missing wasm-opt must warn and continue:\n{branch}"
+        );
+    }
+
+    #[test]
+    fn only_the_release_linker_is_executable() {
+        for file in plan().files().expect("templates render") {
+            let expected = file.path == PathBuf::from(".cargo").join("wasm-link");
+            assert_eq!(
+                file.executable,
+                expected,
+                "{} should{} be executable",
+                file.path.display(),
+                if expected { "" } else { " not" }
+            );
+        }
     }
 
     #[test]
