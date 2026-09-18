@@ -1,0 +1,54 @@
+name: Inject release version
+description: >-
+  Rewrite the workspace's 0.0.0 version placeholders to a release version, and
+  verify the substitution actually happened.
+
+inputs:
+  version:
+    description: >-
+      Version to inject. A leading "v" is stripped, so a tag name can be passed
+      straight through.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Inject version
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        # Tags are `vX.Y.Z` but a Cargo version is not, so accept either.
+        VERSION="${VERSION#v}"
+        echo "Releasing version: $VERSION"
+
+        # `[workspace.package] version` is the single placeholder every
+        # publishable crate inherits through `version.workspace = true`.
+        sed -i 's/^version = "0\.0\.0"$/version = "'"$VERSION"'"/' Cargo.toml
+
+        # Internal path dependencies carry a `version = "=0.0.0"` requirement so
+        # that a published crate depends on exactly this release rather than on
+        # whatever floats to the top of the index later.
+        find . -name Cargo.toml -not -path './target/*' \
+          -exec sed -i 's/version = "=0\.0\.0"/version = "='"$VERSION"'"/g' {} +
+
+        # Fail loudly rather than publishing 0.0.0: if the placeholder is ever
+        # renamed or reformatted, the sed above silently does nothing.
+        resolved=$(cargo metadata --no-deps --format-version 1 \
+          | jq -r '.packages[] | select(.name == "fprime_core") | .version')
+        if [ "$resolved" != "$VERSION" ]; then
+          echo "::error::Failed to inject the workspace version. Expected $VERSION but fprime_core resolves to '$resolved'. Is the 0.0.0 placeholder in Cargo.toml still present and exactly 'version = \"0.0.0\"'?"
+          exit 1
+        fi
+
+        # Likewise for the internal requirements: a stale `=0.0.0` would make a
+        # published crate depend on a version that does not exist.
+        stale=$(cargo metadata --no-deps --format-version 1 \
+          | jq -r '.packages[].dependencies[] | select(.req == "=0.0.0") | .name' | sort -u)
+        if [ -n "$stale" ]; then
+          echo "::error::These internal dependencies still require '=0.0.0': $stale. Is the =0.0.0 placeholder still present?"
+          exit 1
+        fi
+
+        echo "Injected $VERSION into $(find . -name Cargo.toml -not -path './target/*' | wc -l | tr -d ' ') manifests."

@@ -34,5 +34,10 @@ if ! command -v wasm-opt >/dev/null 2>&1; then
     exit 1
 fi
 
-wasm-opt --enable-custom-page-sizes -Os "$output" -o "$output.opt"
+# SpaceWasm feature-set
+wasm-opt \
+    --mvp-features \
+    --enable-mutable-globals \
+    --enable-custom-page-sizes \
+    -Os "$output" -o "$output.opt"
 mv "$output.opt" "$output"

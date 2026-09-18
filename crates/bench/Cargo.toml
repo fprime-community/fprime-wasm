@@ -1,8 +1,14 @@
 [package]
 name = "bench"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 publish = false
+
+[features]
+# The benchmark bins are `#![no_std] #![no_main]` Wasm modules: they cannot link
+# for the host, so a bare `cargo build --workspace` must skip them. This feature
+# is what `required-features` on each `[[bin]]` keys off.
+wasm = []
 
 [dependencies]
 fprime_core = { path = "../../fprime_core" }
@@ -16,185 +22,222 @@ bench = false
 
 [[bin]]
 name = "baseline"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_no_args"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_ints"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_floats"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_bool"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_enum"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_enum_wide"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_alias"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_mixed_scalars"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_string_tiny"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_string_small"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_string_large"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_string_truncated"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_array_scalar"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_array_bool"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_array_float"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_array_enum"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_array_2d"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_array_repeat"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_struct_enums"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_struct_scalars"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_struct_with_friends"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "cmd_struct_nested"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "fallback_scalar"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "fallback_string"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "fallback_struct"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "fallback_nested_string"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "fallback_struct_string"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "tlm_scalar"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "tlm_scalar_x8"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "tlm_string"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "tlm_struct"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "prm_scalar"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "dedup_same_cmd"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "dedup_distinct_cmd"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "mixed_small"
+required-features = ["wasm"]
 test = false
 bench = false
 
 [[bin]]
 name = "mixed_max"
+required-features = ["wasm"]
 test = false
 bench = false

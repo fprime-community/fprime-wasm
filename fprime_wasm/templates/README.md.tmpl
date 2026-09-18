@@ -1,0 +1,48 @@
+# {{crate_name}}
+
+F Prime sequences for this deployment, compiled to WebAssembly and run on board by
+[`Svc::WasmSequencer`](https://github.com/nasa/fprime).
+
+## Building
+
+```shell
+rustup target add {{target}}
+cargo build --release
+```
+
+The target comes from `.cargo/config.toml`, so `--target` is not needed. Each
+sequence links to its own module under `target/{{target}}/release/`, for example
+`{{sequence}}.wasm`.
+
+## Adding a sequence
+
+```shell
+fprime-wasm add <name>
+```
+
+That writes `src/bin/<name>.rs` and declares the `[[bin]]` it needs. Doing it by
+hand means remembering `test = false` and `bench = false`, without which Cargo
+tries to build a test harness for a `#![no_main]` binary.
+
+## Verifying a sequence
+
+```shell
+fprime-wasm verify
+```
+
+Runs each module on a `spacewasm` interpreter with the same host interface and the
+same limits as the on-board one, and reports what it needs: guest memory, guest
+stack, interpreter heap pages, code pages, operand stack. Those map directly onto
+`Svc::WasmSequencer::Config`, so the output is what you configure the component
+with.
+
+## The dictionary
+
+`{{dictionary}}` is this deployment's dictionary, and `build.rs` turns it into the
+typed API the sequences call. Replace it from a newer deployment build and the
+next `cargo build` picks it up; if a command or channel was renamed or removed,
+the sequences that used it stop compiling, which is the point.
+
+## Dependencies
+
+`fprime_core` and `fprime_build` are pinned to {{dependency}}.

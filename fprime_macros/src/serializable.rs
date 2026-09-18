@@ -54,16 +54,16 @@ fn derive_struct(input: &DeriveInput, s: &DataStruct) -> TokenStream {
         .map(|(i, field)| match &field.ident {
             None => {
                 let name = Literal::usize_unsuffixed(i);
-                quote! { self.#name.serialize_to(to, offset); }
+                quote! { self.#name.serialize_to(__to, __offset); }
             }
-            Some(name) => quote! { self.#name.serialize_to(to, offset); },
+            Some(name) => quote! { self.#name.serialize_to(__to, __offset); },
         });
 
     let deserialize_from = s.fields.iter().enumerate().map(|(i, field)| {
         let ty = &field.ty;
         let name = field_binding(i, field);
 
-        quote! { let #name: #ty = Serializable::deserialize_from(from, offset); }
+        quote! { let #name: #ty = Serializable::deserialize_from(__from, __offset); }
     });
 
     let field_names: Vec<Ident> = s
@@ -77,11 +77,11 @@ fn derive_struct(input: &DeriveInput, s: &DataStruct) -> TokenStream {
         impl #impl_generics Serializable for #name #ty_generics #where_clause {
             const SIZE: usize = 0 #(+ #size)*;
 
-            fn serialize_to(&self, to: &mut [u8], offset: &mut usize) {
+            fn serialize_to(&self, __to: &mut [u8], __offset: &mut usize) {
                 #(#serialize_to)*
             }
 
-            fn deserialize_from(from: &[u8], offset: &mut usize) -> Self {
+            fn deserialize_from(__from: &[u8], __offset: &mut usize) -> Self {
                 #(#deserialize_from)*
                 Self {
                     #(#field_names,)*
@@ -121,12 +121,12 @@ fn derive_enum(input: &DeriveInput, e: &DataEnum) -> syn::Result<TokenStream> {
         impl #impl_generics Serializable for #name #ty_generics #where_clause {
             const SIZE: usize = #repr::SIZE;
 
-            fn serialize_to(&self, to: &mut [u8], offset: &mut usize) {
-                (*self as #repr).serialize_to(to, offset);
+            fn serialize_to(&self, __to: &mut [u8], __offset: &mut usize) {
+                (*self as #repr).serialize_to(__to, __offset);
             }
 
-            fn deserialize_from(from: &[u8], offset: &mut usize) -> Self {
-                let raw: #repr = Serializable::deserialize_from(from, offset);
+            fn deserialize_from(__from: &[u8], __offset: &mut usize) -> Self {
+                let raw: #repr = Serializable::deserialize_from(__from, __offset);
                 match raw {
                     #(#match_branches)*
                     _ => fprime_core::panic(fprime_core::PanicCode::InvalidEnum),

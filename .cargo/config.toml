@@ -1,7 +1,6 @@
 [target.wasm32v1-none]
-# A pass-through wrapper around `rust-lld` that runs `wasm-opt` over the module
-# it produces, for release builds only.
-linker = "tools/wasm-link"
+# rust-lld + wasm-opt for release builds
+linker = ".cargo/wasm-link"
 rustflags = [
     "-Ctarget-cpu=mvp",
     "-Ctarget-feature=+mutable-globals",
