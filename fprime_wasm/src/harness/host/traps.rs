@@ -72,7 +72,7 @@ mod tests {
         assert!(sleep_too_long(1_000_000, "relative").is_none());
         assert!(sleep_too_long(u64::from(u32::MAX) * 1_000_000, "relative").is_none());
         assert!(sleep_too_long(u64::MAX, "absolute").is_some());
-        // The bound applies to `asleep` too, which this harness used to miss.
+        // The bound applies to `asleep` too, not just relative sleeps.
         let message = sleep_too_long(u64::MAX, "absolute").expect("rejected");
         assert!(message.contains("absolute"), "{message}");
     }

@@ -1,16 +1,4 @@
 //! The templates, and substitution into them.
-//!
-//! They are real files under `templates/`, embedded with [`include_str!`]: editable
-//! and diffable as the file types they actually are, with nothing for the binary to
-//! find at run time.
-//!
-//! # Why this needs its own tests
-//!
-//! These were `format!` literals, where the compiler checked every placeholder.
-//! External templates give that up — a mistyped `{{sequenc}}` is just text that
-//! would ship into someone's project — so [`render`] fails on any placeholder it
-//! does not recognise *and* on any that survives substitution, and the tests below
-//! hold every template to both rules.
 
 use anyhow::{Result, bail};
 
@@ -167,15 +155,13 @@ mod tests {
         assert_eq!(render(body, &[]).expect("renders"), body);
     }
 
-    /// The reason this module exists: braces in generated Rust and TOML are
-    /// ordinary characters now, not escapes.
+    /// Braces in generated Rust and TOML are ordinary characters, not escapes.
     #[test]
     fn single_braces_are_not_placeholders() {
         let body = "fn main() { let m = HashMap::new(); }";
         assert_eq!(render(body, &[]).expect("renders"), body);
     }
 
-    /// The failure mode `format!` used to catch at compile time.
     #[test]
     fn rejects_an_unknown_placeholder() {
         let err = render("{{sequenc}}", &values()).expect_err("should not render");
