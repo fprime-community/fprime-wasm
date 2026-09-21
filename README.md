@@ -21,14 +21,23 @@ inside a Wasm interpreter.
 
 ```shell
 rustup target add wasm32v1-none
-cargo install wasm-opt # (optional) for optimizing --release builds
+cargo binstall wasm-opt # (optional) for optimizing --release builds
 ```
 
-3. Install the tool:
+3. Install the tool. With
+   [`cargo binstall`](https://github.com/cargo-bins/cargo-binstall) this
+   downloads a prebuilt binary from the
+   [releases](https://github.com/fprime-community/fprime-wasm/releases); plain
+   `cargo install` always compiles from source, which takes a few minutes:
 
 ```shell
-cargo install fprime-wasm
+cargo binstall fprime-wasm   # prebuilt
+cargo install fprime-wasm    # from source
 ```
+
+Prebuilt binaries are published for Linux (`x86_64`, `aarch64`), macOS (Intel
+and Apple silicon) and Windows (`x86_64`). `cargo binstall` falls back to
+building from source on anything else.
 
 ## Starting a project
 
