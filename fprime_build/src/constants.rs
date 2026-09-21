@@ -20,7 +20,7 @@ pub fn constant(c: &Constant, dict: &Dictionary) -> (Qualifier, TokenStream) {
     let v = value(&c.value);
 
     let def = quote! {
-        const #name: #ty = #v;
+        pub const #name: #ty = #v;
     };
 
     (q, annotate(def, &c.annotation))
