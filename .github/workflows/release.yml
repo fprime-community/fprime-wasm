@@ -40,17 +40,16 @@ jobs:
         with:
           version: ${{ github.ref_name }}
 
-      - name: Run tests
-        # `bench` and `example` are wasm32v1-none crates with every test and
-        # bench target switched off, so `--workspace` builds no host test binary
-        # for them. They are exercised by the build below instead.
-        run: cargo test --workspace --verbose
-
       - name: Build the sequences
         # Cheap, and it is the only thing that proves the released fprime_core,
         # fprime_macros and fprime_build still compile a sequence for the target
         # they exist to serve.
-        run: cargo build --release --target wasm32v1-none -p bench -p example
+        run: |
+          cargo build --release --target wasm32v1-none \
+            -p bench -p example -p interp --features wasm
+
+      - name: Run tests
+        run: cargo test --workspace --verbose
 
       - name: Verify the sequences load on the on-board interpreter
         # A sequence can build and still fail to load: `spacewasm` implements
