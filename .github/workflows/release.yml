@@ -264,6 +264,10 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          # This name and the staging directory match a `cargo binstall` default
+          # pattern, which is why no [package.metadata.binstall] is needed.
+          # Renaming either breaks `cargo binstall` silently: it falls back to
+          # building from source.
           name="fprime-wasm-${VERSION}-${{ matrix.target }}"
           staging="$name"
           mkdir -p "$staging"
