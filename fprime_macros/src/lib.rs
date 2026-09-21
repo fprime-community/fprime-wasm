@@ -4,6 +4,7 @@ use quote::quote;
 use syn::{DeriveInput, parse_macro_input};
 
 mod command;
+mod fprime_test;
 mod infer_path;
 mod parameter;
 mod serializable;
@@ -92,8 +93,22 @@ pub fn fprime(attr: TokenStream, item: TokenStream) -> TokenStream {
     infer_enum_paths(attr.into(), item.into()).into()
 }
 
-/// Wire up the Wasm entry point, and also enable the sequencing DSL (see
-/// [`fprime`]) in the function body.
+/// A test that runs one sequence on the on-board interpreter and checks what it did.
+///
+/// ```ignore
+/// #[fprime_test(sequence = "safing")]
+/// fn powers_down_on_low_battery(t: Test) {
+///     t.initial_telemetry(Ref.power.BatteryVoltage, 21.5);
+///     t.expect_command(Ref.power.PWR_OFF());
+///     t.expect_exit(0);
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn fprime_test(attr: TokenStream, item: TokenStream) -> TokenStream {
+    expand(fprime_test::expand(attr.into(), item.into()))
+}
+
+/// Wires up the Wasm entry point, and enables the sequencing DSL (see [`fprime`]).
 #[proc_macro_attribute]
 pub fn fprime_main(attr: TokenStream, item: TokenStream) -> TokenStream {
     let entry = export(infer_enum_paths(attr.into(), item.into()));

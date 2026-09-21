@@ -1,4 +1,4 @@
-# What `fprime-wasm verify` measures a sequence against
+# What `fprime-wasm verify` sizes a sequence against, and what `fprime-wasm test` runs it under
 # Match these settings to the `instances.fpp` and WasmSequencer project configuration
 
 # Per WasmSequencer component instance (Svc::WasmSequencer::Config)
@@ -15,7 +15,7 @@ page_size = 8192          # WASM_SEQ_SPACEWASM_PAGE_SIZE
 event_message_max = 128   # Wasm.GUEST_EVENT_MESSAGE_SIZE
 serial_ports = 5          # Wasm.MAX_SERIAL_IN_PORTS / MAX_SERIAL_OUT_PORTS
 
-# fprime-wasm verify settings
-[verify]
+# `fprime-wasm test` settings
+[test]
 max_instructions = 10000000   # stop a sequence that loops forever
 stack_sample = 1              # instructions between operand-stack samples

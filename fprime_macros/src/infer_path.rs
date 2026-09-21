@@ -16,11 +16,12 @@
 
 use fprime_dictionary::konst::{ENCODE_SUFFIX, SIZE_SUFFIX};
 use fprime_dictionary::naming::{
-    definition_path, definition_path_with_name, konst_path, split_qualified_name, str_to_ident,
+    definition_path, definition_path_with_name, desc_path, konst_path, split_qualified_name,
+    str_to_ident,
 };
 use fprime_dictionary::{Command, Dictionary, TypeDefinition, TypeName};
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
-use quote::{ToTokens, quote};
+use quote::{ToTokens, quote, quote_spanned};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
@@ -61,6 +62,19 @@ pub(crate) fn rewrite(attr: TokenStream, item: TokenStream) -> syn::Result<Token
     Ok(resolver.const_encode_calls(qualified))
 }
 
+/// Qualifies, then descriptor-rewrites — in that order, since qualifying needs the call
+/// still in command position.
+pub(crate) fn rewrite_test_body(body: TokenStream, span: Span) -> syn::Result<TokenStream> {
+    let Ok(dictionary) = std::env::var(fprime_dictionary::DICTIONARY_ENV) else {
+        return Err(syn::Error::new(span, MISSING_DICTIONARY));
+    };
+
+    let resolver = resolver(Path::new(&dictionary)).map_err(|err| syn::Error::new(span, err))?;
+
+    let qualified = resolver.qualify_calls(body);
+    Ok(resolver.descriptor_calls(qualified))
+}
+
 fn signature_span(item: &TokenStream) -> Span {
     let mut first = None;
     let mut after_fn = false;
@@ -99,6 +113,16 @@ fn resolver(dictionary: &Path) -> Result<&'static Resolver, String> {
 struct Resolver {
     dictionary: Dictionary,
     commands: HashMap<String, usize>,
+    /// Channel and parameter points — needed by `#[fprime_test]`, not `#[fprime_main]`.
+    channels: HashMap<String, usize>,
+    parameters: HashMap<String, usize>,
+}
+
+/// Which kind of point a dotted name is.
+enum Point<'a> {
+    Command(&'a Command),
+    Channel,
+    Parameter,
 }
 
 impl Resolver {
@@ -109,11 +133,39 @@ impl Resolver {
             .enumerate()
             .map(|(index, command)| (command.name.clone(), index))
             .collect();
+        let channels = dictionary
+            .telemetry_channels
+            .iter()
+            .enumerate()
+            .map(|(index, channel)| (channel.name.clone(), index))
+            .collect();
+        let parameters = dictionary
+            .parameters
+            .iter()
+            .enumerate()
+            .map(|(index, parameter)| (parameter.name.clone(), index))
+            .collect();
 
         Self {
             dictionary,
             commands,
+            channels,
+            parameters,
         }
+    }
+
+    /// The point `name` refers to, if any (commands checked first).
+    fn point(&self, name: &str) -> Option<Point<'_>> {
+        if let Some(command) = self.command(name) {
+            return Some(Point::Command(command));
+        }
+        if self.channels.contains_key(name) {
+            return Some(Point::Channel);
+        }
+        if self.parameters.contains_key(name) {
+            return Some(Point::Parameter);
+        }
+        None
     }
 
     fn command(&self, name: &str) -> Option<&Command> {
@@ -240,8 +292,132 @@ impl Resolver {
         qualified
     }
 
-    /// Replace every command call whose arguments are all compile-time constants
-    /// with a reference to its encoded `Fw::ComBuffer`.
+    /// Rewrites every dictionary path in a test body into a `Desc` descriptor. A chain that
+    /// is not a dictionary point (`t.initial_telemetry(..)`, `event().containing(..)`, a
+    /// local) is left alone.
+    fn descriptor_calls(&self, tokens: TokenStream) -> TokenStream {
+        let trees: Vec<TokenTree> = tokens.into_iter().collect();
+        let mut out = TokenStream::new();
+        let mut index = 0;
+
+        while index < trees.len() {
+            // Only at the start of a chain, so the `power` in `Ref.power.PWR_OFF` is never
+            // mistaken for a root of its own.
+            let begins_a_chain = match index.checked_sub(1).map(|previous| &trees[previous]) {
+                Some(TokenTree::Punct(punct)) => !matches!(punct.as_char(), '.' | ':'),
+                _ => true,
+            };
+
+            if begins_a_chain && let Some(found) = self.dotted_point(&trees, index) {
+                let (rewritten, next) = self.descriptor_for(&trees, index, &found);
+                out.extend(rewritten);
+                index = next;
+                continue;
+            }
+
+            match &trees[index] {
+                TokenTree::Group(group) => {
+                    let mut descended =
+                        Group::new(group.delimiter(), self.descriptor_calls(group.stream()));
+                    descended.set_span(group.span());
+                    out.extend([TokenTree::Group(descended)]);
+                }
+                tree => out.extend([tree.clone()]),
+            }
+
+            index += 1;
+        }
+
+        out
+    }
+
+    /// The descriptor expression for a resolved point, and the index just past what it
+    /// consumed.
+    fn descriptor_for(
+        &self,
+        trees: &[TokenTree],
+        start: usize,
+        found: &DottedPoint,
+    ) -> (TokenStream, usize) {
+        // A command *call* carries its arguments; a bare one does not.
+        if let Some(Point::Command(command)) = self.point(&found.name)
+            && let Some(TokenTree::Group(args)) = trees.get(found.end)
+            && args.delimiter() == Delimiter::Parenthesis
+        {
+            let original: TokenStream = trees[start..=found.end].iter().cloned().collect();
+            if let Some(encoded) = self.const_encoded_call(command, args, original, {
+                // desc_path, not spanned_desc_path — this arm already emits the author's
+                // tokens once, inside `if false { .. }`; duplicating spans would give goto
+                // two definitions for one token.
+                let path = desc_path(&found.name);
+                quote! {
+                    {
+                        // A const item of reference type is a const context, giving
+                        // `&'static [u8]` without static promotion, and identical buffers
+                        // still dedupe across call sites.
+                        const __FPRIME_BUF: &[u8] = &__FPRIME_CMD;
+                        #path.with(__FPRIME_BUF)
+                    }
+                }
+            }) {
+                return (encoded, found.end + 1);
+            }
+            // Not const-encodable — left for the accessor to reject against its real signature.
+            let original: TokenStream = trees[start..=found.end].iter().cloned().collect();
+            return (original, found.end + 1);
+        }
+
+        // A bare descriptor, e.g. `t.never_command(Ref.wasmSeq.LOAD)` — the only chance to
+        // keep it mappable to what the author wrote.
+        (
+            spanned_desc_path(&found.segments, found.scaffold),
+            found.end,
+        )
+    }
+
+    /// Resolve the longest dotted chain starting at `start` to a dictionary point.
+    fn dotted_point(&self, trees: &[TokenTree], start: usize) -> Option<DottedPoint> {
+        let mut index = start;
+        let mut root = ident_at(trees, index)?;
+
+        index += 1;
+        while let Some(segment) = path_separator_at(trees, index) {
+            root = ident_at(trees, segment)?;
+            index = segment + 1;
+        }
+
+        let mut parts = vec![unraw(root)];
+        let mut segments = vec![root.clone()];
+        let mut scaffold = None;
+        while let Some(field) = field_separator_at(trees, index) {
+            let segment = ident_at(trees, field)?;
+            // The first `.`, kept as somewhere inside the chain to put the tokens the
+            // expansion invents — see `spanned_desc_path`.
+            scaffold = scaffold.or_else(|| Some(trees[index].span()));
+            parts.push(unraw(segment));
+            segments.push(segment.clone());
+            index = field + 1;
+        }
+
+        // A single-segment name is never a point — treating one as such would rewrite the
+        // author's own locals.
+        if parts.len() < 2 {
+            return None;
+        }
+
+        let name = parts.join(".");
+        self.point(&name)?;
+        Some(DottedPoint {
+            name,
+            segments,
+            // A chain of two or more parts has a `.` in it, so this is always the author's.
+            scaffold: scaffold.unwrap_or_else(Span::call_site),
+            end: index,
+        })
+    }
+
+    /// Replaces every command call whose arguments are all compile-time constants with a
+    /// reference to its encoded `Fw::ComBuffer`.
     fn const_encode_calls(&self, tokens: TokenStream) -> TokenStream {
         let trees: Vec<TokenTree> = tokens.into_iter().collect();
         let mut encoded = TokenStream::new();
@@ -260,6 +436,7 @@ impl Resolver {
                     call.command,
                     args,
                     trees[index..=call.args].iter().cloned().collect(),
+                    quote! { unsafe { fprime_core::command(&__FPRIME_CMD) } },
                 )
             {
                 encoded.extend(buffer);
@@ -283,13 +460,14 @@ impl Resolver {
         encoded
     }
 
-    /// The const-encoded form of `command` applied to `args`, or `None` if this
-    /// call has to keep the runtime `__SCRATCH` path.
+    /// The const-encoded form of `command` applied to `args`, or `None` for the runtime
+    /// `__SCRATCH` path.
     fn const_encoded_call(
         &self,
         command: &Command,
         args: &Group,
         original: TokenStream,
+        tail: TokenStream,
     ) -> Option<TokenStream> {
         if !self.dictionary.const_encodable(command) {
             return None;
@@ -297,8 +475,7 @@ impl Resolver {
 
         let parsed = arguments(args.stream());
 
-        // A call with the wrong arity is left alone, so that the accessor is what
-        // reports it against the user's own argument list.
+        // Wrong arity is left for the accessor to report.
         if parsed.len() != command.formal_params.len() {
             return None;
         }
@@ -315,6 +492,9 @@ impl Resolver {
         let encode = konst_path(&command.name, ENCODE_SUFFIX);
         let args = args.stream();
 
+        // `#original` is kept for type checking and goto/hover on the command name, not
+        // behaviour. `#tail` is what `#[fprime_main]` (dispatch) and `#[fprime_test]`
+        // (descriptor) differ in.
         Some(quote! {
             {
                 const __FPRIME_LEN: usize = #size(#args);
@@ -324,7 +504,7 @@ impl Resolver {
                     #original;
                 }
 
-                unsafe { fprime_core::command(&__FPRIME_CMD) }
+                #tail
             }
         })
     }
@@ -359,8 +539,7 @@ impl Resolver {
                             return false;
                         };
 
-                        // A struct literal that borrows the rest of its fields
-                        // from somewhere is not something we can evaluate.
+                        // A literal with `..rest` can't be evaluated.
                         if literal.rest.is_some() || !is_qualified_path(&literal.path) {
                             return false;
                         }
@@ -399,8 +578,7 @@ impl Resolver {
         }
     }
 
-    /// An array of exactly `size` constants of type `element`, written either
-    /// element by element or as a repeat.
+    /// An array of exactly `size` constants, as a list or `[x; n]` repeat.
     fn is_const_elements(&self, expr: &Expr, element: &TypeName, size: u32, depth: usize) -> bool {
         match expr {
             Expr::Array(array) => {
@@ -426,8 +604,8 @@ impl Resolver {
         }
     }
 
-    /// Qualify `expr` against the type the dictionary expects there. An
-    /// expression the dictionary has nothing to say about is left untouched.
+    /// Qualifies `expr` against its expected dictionary type; left untouched if the
+    /// dictionary has nothing to say about it.
     fn qualify(&self, expr: &mut Expr, expected: &TypeName, depth: usize) {
         if depth > MAX_DEPTH {
             return;
@@ -507,12 +685,42 @@ struct CommandCall<'a> {
     args: usize,
 }
 
+/// `crate::Desc::<segments>`, built from the author's own ident tokens so goto/hover still
+/// resolve them.
+///
+/// `scaffold` puts the tokens this invents — `crate`, `Desc`, `::` — inside the chain the
+/// author wrote, at its first `.`. On `Span::call_site()`, which is what `quote!` gives them,
+/// they claim the whole `#[fprime_test(..)]`: rustc then reports every type error *about the
+/// descriptor* on the attribute rather than on the expression that caused it, since the path
+/// node begins with a token that points there. A channel passed where a command belongs, or a
+/// `()` after a parameter, are the common ones.
+///
+/// The `.` is deliberate. Locating this on one of the author's idents would make
+/// goto-definition on that ident answer with the invented tokens' definitions too — the
+/// receiver once returned six targets that way. A punct has no definition to offer.
+fn spanned_desc_path(segments: &[Ident], scaffold: Span) -> TokenStream {
+    quote_spanned! { scaffold => crate::Desc #(:: #segments)* }
+}
+
+/// A dotted chain that resolved to a dictionary point.
+struct DottedPoint {
+    /// The dictionary's own dotted name.
+    name: String,
+    /// The author's own ident tokens per segment (spans included), not re-derived from
+    /// `name` — see [`spanned_desc_path`].
+    segments: Vec<Ident>,
+    /// Span of the chain's first `.`, which is where the invented tokens go — see
+    /// [`spanned_desc_path`].
+    scaffold: Span,
+    /// Index just past the chain, which is where its `( .. )` would be.
+    end: usize,
+}
+
 struct Argument {
     tokens: TokenStream,
     separator: Option<TokenTree>,
 }
 
-/// Split an argument list on its commas, keeping them.
 /// A numeric literal, or a negated one: `-1` parses as a unary negation.
 fn is_numeric_literal(expr: &Expr) -> bool {
     match expr {
@@ -522,9 +730,7 @@ fn is_numeric_literal(expr: &Expr) -> bool {
     }
 }
 
-/// A path this pass qualified against the dictionary, which is rooted at
-/// `crate`. A bare `SOME_NAME` is not one: it could be a local, and a user path
-/// we did not write cannot be assumed to name a `const`.
+/// Whether `expr` is a path this pass qualified (rooted at `crate`).
 fn is_qualified_definition(expr: &Expr) -> bool {
     let Expr::Path(path) = expr else {
         return false;
@@ -533,8 +739,7 @@ fn is_qualified_definition(expr: &Expr) -> bool {
     path.qself.is_none() && is_qualified_path(&path.path)
 }
 
-/// A path rooted at `crate`, which is the shape this pass writes when it
-/// qualifies a name against the dictionary.
+/// Whether `path` is rooted at `crate` — the shape this pass writes.
 fn is_qualified_path(path: &SynPath) -> bool {
     path.segments.len() > 1
         && path
@@ -543,6 +748,7 @@ fn is_qualified_path(path: &SynPath) -> bool {
             .is_some_and(|segment| segment.ident == "crate")
 }
 
+/// Splits an argument list on its commas, keeping them.
 fn arguments(tokens: TokenStream) -> Vec<Argument> {
     let mut arguments = Vec::new();
     let mut current = TokenStream::new();
@@ -559,8 +765,7 @@ fn arguments(tokens: TokenStream) -> Vec<Argument> {
         }
     }
 
-    // An argument list that ends in a comma has no argument after it, and an
-    // empty one has no arguments at all.
+    // A trailing comma leaves no argument after it; an empty list has none at all.
     if !current.is_empty() {
         arguments.push(Argument {
             tokens: current,
@@ -598,8 +803,8 @@ fn field_separator_at(trees: &[TokenTree], index: usize) -> Option<usize> {
     (punct.as_char() == '.').then_some(index + 1)
 }
 
-/// Replace an unqualified struct literal path with the path of the dictionary
-/// struct it stands for, e.g. `ChoicePair { .. }` becomes `crate::Defs::Ref::ChoicePair { .. }`.
+/// Replaces an unqualified struct path with its dictionary path, e.g. `ChoicePair` ->
+/// `crate::Defs::Ref::ChoicePair`.
 fn qualify_struct_path(literal: &mut ExprStruct, qualified_name: &str) {
     let Some(name) = bare_name(literal.qself.as_ref(), &literal.path) else {
         return;
@@ -616,17 +821,14 @@ fn qualify_struct_path(literal: &mut ExprStruct, qualified_name: &str) {
     ));
 }
 
-/// A path that is nothing but a bare identifier, which may be one an editor is
-/// partway through typing.
+/// A bare identifier, possibly one an editor is partway through typing.
 struct BareName {
-    /// The name to look up: what the author has actually typed, with any editor
-    /// marker taken back out.
+    /// The name to look up, with any editor marker stripped.
     lookup: String,
-    /// The identifier as written, marker and all.
+    /// The identifier as written, marker included.
     written: Ident,
     span: Span,
-    /// Whether an editor is asking about this name rather than the author having
-    /// finished it.
+    /// Whether an editor is mid-completion on this name.
     in_progress: bool,
 }
 
@@ -669,8 +871,7 @@ fn bare_name(qself: Option<&syn::QSelf>, path: &SynPath) -> Option<BareName> {
     })
 }
 
-/// The identifier's name without the `r#` a keyword-named item carries, so it
-/// compares equal to the plain name the dictionary stores.
+/// The identifier's name with any `r#` prefix stripped.
 fn unraw(ident: &Ident) -> String {
     let name = ident.to_string();
     name.strip_prefix("r#").map(str::to_string).unwrap_or(name)
@@ -708,8 +909,7 @@ pub(crate) mod test_support {
         Ok(resolver.const_encode_calls(qualified).to_string())
     }
 
-    /// Render a body without rewriting it, so expectations can be written as
-    /// ordinary Rust rather than as pre-spaced token strings.
+    /// Renders a body without rewriting it, for writing expectations as ordinary Rust.
     pub(crate) fn render_block(body: &str) -> syn::Result<String> {
         Ok(syn::parse_str::<TokenStream>(body)?.to_string())
     }

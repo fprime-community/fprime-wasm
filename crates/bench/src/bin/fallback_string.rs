@@ -7,5 +7,7 @@ use bench::*;
 #[fprime_main]
 pub fn main() {
     let busy = CdhCore.events.EventsDropped().0 > 0;
-    CdhCore.cmdDisp.CMD_NO_OP_STRING(if busy { "busy" } else { "idle" });
+    CdhCore
+        .cmdDisp
+        .CMD_NO_OP_STRING(if busy { "busy" } else { "idle" });
 }

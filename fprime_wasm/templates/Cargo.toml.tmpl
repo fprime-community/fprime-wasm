@@ -4,11 +4,17 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 
+[features]
+wasm = []
+
 [dependencies]
 fprime_core = "{{crate_version}}"
 
 [build-dependencies]
 fprime_build = "{{crate_version}}"
+
+[dev-dependencies]
+fprime_test = "{{crate_version}}"
 
 [lib]
 test = false
@@ -16,6 +22,7 @@ bench = false
 
 [[bin]]
 name = "{{sequence}}"
+required-features = ["wasm"]
 test = false
 bench = false
 

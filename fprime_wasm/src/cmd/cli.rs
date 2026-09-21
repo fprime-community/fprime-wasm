@@ -23,7 +23,11 @@ pub enum Command {
     Init(Init),
     /// Add a sequence to the crate in the current directory.
     Add(Add),
-    /// Run compiled sequences on the on-board interpreter and size them.
+    /// Compile the sequences to Wasm.
+    Build(Build),
+    /// Run the sequence tests.
+    Test(Test),
+    /// Load compiled sequences on the on-board interpreter and size them.
     Verify(Verify),
 }
 
@@ -66,6 +70,35 @@ pub struct Add {
 }
 
 #[derive(Args)]
+pub struct Build {
+    /// Build without optimisation, for a readable module in a debugger.
+    #[arg(long)]
+    pub debug: bool,
+
+    /// Extra arguments for `cargo build`.
+    #[arg(last = true, value_name = "CARGO_ARGS")]
+    pub cargo: Vec<String>,
+}
+
+#[derive(Args)]
+pub struct Test {
+    /// Only run tests whose name contains this. Repeatable.
+    pub filters: Vec<String>,
+
+    /// Test against the debug build of the sequences rather than the release build.
+    #[arg(long)]
+    pub debug: bool,
+
+    /// Use the sequences already built, instead of building them first.
+    #[arg(long)]
+    pub no_build: bool,
+
+    /// Extra arguments for `cargo test`.
+    #[arg(last = true, value_name = "CARGO_ARGS")]
+    pub cargo: Vec<String>,
+}
+
+#[derive(Args)]
 pub struct Verify {
     /// Modules to check. Defaults to every `.wasm` in the crate's build output.
     pub modules: Vec<PathBuf>,
@@ -74,40 +107,19 @@ pub struct Verify {
     #[arg(long)]
     pub debug: bool,
 
-    /// A dictionary, used to name the commands, channels and parameters a sequence
-    /// touches. Found automatically if the project has one.
+    /// Use the sequences already built, instead of building them first. Ignored
+    /// when modules are named directly.
     #[arg(long)]
-    pub dictionary: Option<PathBuf>,
+    pub no_build: bool,
 
-    /// Expand each module: every budget, the guest and interpreter figures, and the
-    /// commands, channels and parameters it touched.
+    /// Expand each module: every budget, and the guest and interpreter figures.
     #[arg(long, short)]
     pub verbose: bool,
 
-    /// Print every host call the sequence made. Implies --verbose.
-    #[arg(long)]
-    pub trace: bool,
-
     /// Report as JSON on stdout instead of tables. Diagnostics stay on stderr, so the
-    /// output can be piped straight into `jq`. `--trace` adds the host calls.
+    /// output can be piped straight into `jq`.
     #[arg(long)]
     pub json: bool,
-
-    /// Sequence arguments, as hex bytes, delivered through `fprime_v1.args`.
-    #[arg(long, value_name = "HEX")]
-    pub args: Option<String>,
-
-    /// Value a telemetry channel reads as, as `<id>=<hex>`. Repeatable.
-    #[arg(long = "tlm", value_name = "ID=HEX")]
-    pub telemetry: Vec<String>,
-
-    /// Value a parameter reads as, as `<id>=<hex>`. Repeatable.
-    #[arg(long = "prm", value_name = "ID=HEX")]
-    pub parameters: Vec<String>,
-
-    /// Message a serial port receives, as `<index>=<hex>`. Delivered once. Repeatable.
-    #[arg(long = "serial", value_name = "INDEX=HEX")]
-    pub serial: Vec<String>,
 
     /// Limits to measure against. Defaults to `sequencer.toml` at the crate root,
     /// else a stock sequencer.
@@ -120,9 +132,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_cli_is_internally_consistent() {
-        // Catches conflicting flags, duplicate names and bad defaults, which clap only
-        // validates when asked.
+    fn cli_is_internally_consistent() {
+        // Catches conflicting flags, duplicate names and bad defaults.
         use clap::CommandFactory;
         Cli::command().debug_assert();
     }

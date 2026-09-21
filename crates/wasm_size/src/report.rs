@@ -254,11 +254,7 @@ pub fn markdown(changes: &[Change], style: &Style) -> String {
             let _ = writeln!(out, "No binary changed size.");
         }
         false => {
-            let _ = writeln!(
-                out,
-                "`{}` → `HEAD`.\n",
-                style.base_label
-            );
+            let _ = writeln!(out, "`{}` → `HEAD`.\n", style.base_label);
             out.push_str(&table(&moved, style));
         }
     }
@@ -455,8 +451,7 @@ mod test {
         };
 
         assert!(
-            markdown(&compare(&base, &head), &style)
-                .contains("`main` → `HEAD`."),
+            markdown(&compare(&base, &head), &style).contains("`main` → `HEAD`."),
             "the label should reach the reader"
         );
     }

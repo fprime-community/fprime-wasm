@@ -1,0 +1,7 @@
+# A second `WasmSequencer` instance in the same deployment, configured to cap guest event
+# messages far shorter than the stock 128 bytes. Named by `tests/limits.rs` through
+# `#[fprime_test(limits = "...")]`; everything else in this crate runs against the defaults,
+# since there is no `sequencer.toml` here.
+
+[constants]
+event_message_max = 8     # Wasm.GUEST_EVENT_MESSAGE_SIZE

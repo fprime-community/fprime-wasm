@@ -1,0 +1,38 @@
+//! `{{sequence}}` sequence system tests. Run with `fprime-wasm test`.
+
+use fprime_test::*;
+use {{lib_name}}::*;
+
+#[fprime_test(sequence = "{{sequence}}")]
+fn runs_to_completion(t: Test) {
+    // Initial state before the sequence starts. Overrides default zeros
+    // t.initial_telemetry(Ref.power.BatteryVoltage, 21.5);
+    // t.initial_parameter(Ref.wasmSeq.INSTRUCTION_FUEL, 20);
+    // t.initial_serial(0, 100u32);
+
+    // Commands it must send, in order (no need to cover every command)
+    // t.expect_command(Ref.power.PWR_OFF());              // this exact call
+    // t.expect_command(Ref.power.PWR_OFF_STRING("mode")); // with args
+    // t.expect_command(Ref.power.PWR_OFF)                  // any arguments
+    //     .responds(EXECUTION_ERROR)                       // default: succeeds
+    //     .sets_telemetry(Ref.power.State, OFF);            // what changes when it lands
+
+    // Events, sleeps, and serial I/O it must do.
+    // t.expect_event_containing("safe mode");
+    // t.expect_sleep(sleep().of_secs(1.0).relative());
+    // t.expect_serial_recv(serial_recv(0).blocking().finding_a_message());
+    // t.expect_serial_send(serial_send(0).of(42u32));
+
+    // Things it must never do.
+    // t.never_command(Ref.wasmSeq.LOAD);
+    // t.never_event_containing("safe mode");
+
+    // How it ends.
+    t.expect_ok(); // clean exit or a plain return — the default
+    // t.expect_exit(0);
+    // t.expect_panic(2);
+
+    // For a sequence that loops forever instead of exiting:
+    // t.stop_after_last_step();
+    // t.expect_still_running();
+}

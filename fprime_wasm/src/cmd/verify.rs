@@ -1,50 +1,46 @@
-//! `fprime-wasm verify`: run compiled sequences on the on-board interpreter and size
-//! them.
+//! `fprime-wasm verify`: load compiled sequences on the on-board interpreter and size
+//! them. Nothing is executed — `fprime-wasm test` is what runs a sequence.
 
+use super::build;
+use super::cargo::Profile;
 use super::cli::Verify;
-use super::{dictionary, hex};
 use anyhow::{Context, Result, bail};
-use fprime_wasm::config;
-use fprime_wasm::harness::Responses;
-use fprime_wasm::project::{Project, TARGET};
+use fprime_test::config;
+use fprime_test::interpreter::Limits;
+use fprime_test::project::{self, Project, TARGET};
 use fprime_wasm::verify;
 use std::path::PathBuf;
 
 /// Returns whether every module passed.
 pub fn run(args: &Verify) -> Result<bool> {
     let cwd = std::env::current_dir().context("could not read the current directory")?;
-    // A path may be given from anywhere, so a project is only needed when something has
-    // to be discovered.
+    // A named path doesn't need a project; only discovery does.
     let project = Project::find(&cwd);
 
     let modules = if args.modules.is_empty() {
-        discover(args, project.as_ref())?
+        let found = project.as_ref().map_err(|err| {
+            anyhow::anyhow!("{err:#}. Alternatively, name the .wasm modules to check")
+        })?;
+        // Build first; a stale module would verify old code.
+        if !args.no_build && !build::build(found, Profile::from_debug_flag(args.debug), &[])? {
+            return Ok(false);
+        }
+        discover(args, found)?
     } else {
         args.modules.clone()
     };
 
-    let dictionary = dictionary::load(args.dictionary.as_deref(), project.as_ref().ok())?;
-    let sequencer = config::load(args.limits.as_deref(), project.as_ref().ok())?;
-    let limits = sequencer.sequencer.limits;
-    let responses = Responses {
-        args: hex::bytes(args.args.as_deref().unwrap_or("")).context("--args must be hex bytes")?,
-        telemetry: hex::keyed(&args.telemetry, "--tlm")?,
-        parameters: hex::keyed(&args.parameters, "--prm")?,
-        serial: hex::keyed(&args.serial, "--serial")?,
-        event_message_max: sequencer.sequencer.event_message_max,
-        serial_ports: sequencer.sequencer.serial_ports,
-    };
+    let loaded = config::load(args.limits.as_deref(), project.as_ref().ok())?;
+    let limits = loaded.limits;
 
     let mut checked: Vec<verify::Verified> = Vec::new();
     let mut failures: Vec<(PathBuf, Vec<String>)> = Vec::new();
-    // Inputs with no measurements at all, which the JSON reports apart from the measured
-    // modules.
+    // Modules with no measurements at all; reported apart from `checked` in the JSON.
     let mut unreadable: Vec<(PathBuf, String)> = Vec::new();
 
     for module in &modules {
-        // Each module is measured on a freshly configured allocator, so a failure on one
-        // does not distort the next; keep going and report all of them.
-        match verify::verify(module, &limits, responses.clone()) {
+        // Continue past failures; each module gets a fresh allocator.
+        match verify::verify(module, &limits) {
             Ok(one) => {
                 if !one.passed() {
                     failures.push((one.path.clone(), one.failures()));
@@ -52,10 +48,9 @@ pub fn run(args: &Verify) -> Result<bool> {
                 checked.push(one);
             }
             Err(err) => {
-                // A module that could not be decoded has no measurements, so it cannot
-                // appear in the report; it is named here instead. To stderr so `--json`
-                // keeps a clean stdout.
-                eprintln!("{}: could not be checked", module.display());
+                // Modules that will not load can't appear in the report; named here
+                // instead, to stderr so `--json` stays clean.
+                eprintln!("{}: could not be loaded", module.display());
                 for line in format!("{err:#}").lines() {
                     eprintln!("  {line}");
                 }
@@ -67,15 +62,8 @@ pub fn run(args: &Verify) -> Result<bool> {
     }
 
     if args.json {
-        let run = verify::report::Run::new(
-            &checked,
-            &unreadable,
-            &limits,
-            dictionary.as_ref(),
-            args.trace,
-        );
-        // Pretty-printed: these get committed as CI artefacts and diffed, and a
-        // single-line document diffs as one changed line.
+        let run = verify::report::Run::new(&checked, &unreadable, &limits);
+        // Pretty-printed so CI diffs are readable.
         println!(
             "{}",
             serde_json::to_string_pretty(&run).context("could not serialise the report")?
@@ -83,37 +71,29 @@ pub fn run(args: &Verify) -> Result<bool> {
         return Ok(failures.is_empty());
     }
 
-    report(
-        args,
-        &checked,
-        &modules,
-        &failures,
-        &limits,
-        &sequencer.source,
-        &dictionary,
-    );
+    report(args, &checked, &modules, &failures, &limits, &loaded.source);
     Ok(failures.is_empty())
 }
 
 /// Every `.wasm` in the project's build output, when none were named.
-fn discover(args: &Verify, project: Result<&Project, &anyhow::Error>) -> Result<Vec<PathBuf>> {
-    let project = project.map_err(|err| {
-        anyhow::anyhow!("{err:#}. Alternatively, name the .wasm modules to check")
-    })?;
+fn discover(args: &Verify, project: &Project) -> Result<Vec<PathBuf>> {
     let profile = if args.debug { "debug" } else { "release" };
+    // `cargo build` alone wouldn't produce Wasm; the target isn't pinned in .cargo/config.toml.
+    let build = format!(
+        "fprime-wasm build{}",
+        if args.debug { " --debug" } else { "" }
+    );
     let directory = project.artifact_dir(profile).with_context(|| {
         format!(
-            "no {profile} build found for {TARGET}. Run `cargo build{}` first, or name the .wasm \
-             modules to check",
-            if args.debug { "" } else { " --release" }
+            "no {profile} build found for {TARGET}. Run `{build}` first, or name the .wasm \
+             modules to check"
         )
     })?;
-    let discovered = verify::discover(&directory)?;
+    let discovered = project::modules(&directory)?;
     if discovered.is_empty() {
         bail!(
-            "no .wasm modules in {}. Run `cargo build{}` first",
-            directory.display(),
-            if args.debug { "" } else { " --release" }
+            "no .wasm modules in {}. Run `{build}` first",
+            directory.display()
         );
     }
     Ok(discovered)
@@ -125,39 +105,19 @@ fn report(
     checked: &[verify::Verified],
     modules: &[PathBuf],
     failures: &[(PathBuf, Vec<String>)],
-    limits: &fprime_wasm::harness::Limits,
+    limits: &Limits,
     source: &config::Source,
-    dictionary: &Option<fprime_dictionary::Dictionary>,
 ) {
     println!("{}", verify::limits_line(limits, &source.label()));
     println!();
     print!("{}", verify::summary(checked));
 
-    // Detail is opt-in: for a run over a crate's worth of sequences it is the difference
-    // between a screenful and a thousand lines.
-    if args.verbose || args.trace {
+    // Detail is opt-in; a full crate's worth would otherwise be huge.
+    if args.verbose {
         for one in checked {
             println!();
-            print!("{}", verify::detail(one, dictionary.as_ref(), args.trace));
+            print!("{}", verify::detail(one));
         }
-    }
-
-    // Warnings always; the notes about how `verify` fed the sequence only when asked
-    // for, since they fire on nearly every run.
-    let warnings = verify::issues(checked, args.verbose);
-    if !warnings.is_empty() {
-        println!();
-        print!("{warnings}");
-    }
-    let info = verify::info_count(checked);
-    if info > 0 && !args.verbose {
-        println!();
-        // Phrased as a label so it reads correctly for any count: a leading number would
-        // need both the noun and the verb to agree.
-        println!(
-            "Unset channels and parameters read as zero ({info}); --verbose lists them, \
-             --tlm/--prm set a value."
-        );
     }
 
     println!();
@@ -186,5 +146,15 @@ fn report(
             println!();
             println!("Re-run with --verbose for the full figures.");
         }
+    }
+
+    // Said once, and only when something was actually sized: the two figures this report
+    // cannot carry, and where they come from.
+    if !checked.is_empty() {
+        println!();
+        println!(
+            "Loading only: stackSize and the guest stack are measured by running a sequence, \
+             which `fprime-wasm test` does."
+        );
     }
 }

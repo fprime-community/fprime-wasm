@@ -1,17 +1,12 @@
-//! The `fprime-wasm` command. Everything it does is in [`fprime_wasm`]; these
-//! modules are the argument surface and the printing.
-//!
-//! * [`cli`] — the flags, and the only place clap appears
-//! * [`init`], [`add`], [`verify`] — one module per subcommand
-//! * [`dictionary`] — finding, validating and installing a deployment's dictionary,
-//!   which both `init` and `verify` need
-//! * [`hex`] — the `<key>=<hex>` value syntax the `verify` flags take
+//! The `fprime-wasm` CLI: argument parsing and printing; behaviour lives in [`fprime_wasm`].
 
 mod add;
+mod build;
+mod cargo;
 mod cli;
 mod dictionary;
-mod hex;
 mod init;
+mod test;
 mod verify;
 
 use clap::Parser;
@@ -23,6 +18,8 @@ fn main() -> ExitCode {
     let result = match cli.command {
         Command::Init(args) => init::run(&args).map(|()| true),
         Command::Add(args) => add::run(&args).map(|()| true),
+        Command::Build(args) => build::run(&args),
+        Command::Test(args) => test::run(&args),
         Command::Verify(args) => verify::run(&args),
     };
 

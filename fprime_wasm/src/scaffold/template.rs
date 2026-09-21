@@ -4,8 +4,7 @@ use anyhow::{Result, bail};
 
 /// One template, and where its output goes.
 pub struct Template {
-    /// Destination, relative to the generated crate root. Substituted too, so a
-    /// sequence can land at `src/bin/{{sequence}}.rs`.
+    /// Destination, relative to the generated crate root; also substituted.
     pub path: &'static str,
     pub body: &'static str,
     pub executable: bool,
@@ -37,7 +36,13 @@ pub const SEQUENCE: Template = Template::plain(
     include_str!("../../templates/sequence.rs.tmpl"),
 );
 
-/// The limits a project is verified against, named here so [`crate::config`] can hold
+/// A sequence's tests, written beside it by both `init` and `add`.
+pub const TEST: Template = Template::plain(
+    "tests/{{sequence}}.rs",
+    include_str!("../../templates/test.rs.tmpl"),
+);
+
+/// The limits a project is verified against, named here so [`fprime_test::config`] can hold
 /// the generated file to its own defaults.
 pub const SEQUENCER: Template = Template::plain(
     "sequencer.toml",
@@ -66,12 +71,10 @@ pub const PROJECT: &[Template] = &[
     Template::plain("build.rs", include_str!("../../templates/build.rs.tmpl")),
     Template::plain("src/lib.rs", include_str!("../../templates/lib.rs.tmpl")),
     SEQUENCE,
-    // Named `gitignore.tmpl` in the source tree: a real `.gitignore` there would
-    // apply to this repository.
+    TEST,
+    // Named without the leading dot; a real `.gitignore` here would apply to this repo.
     Template::plain(".gitignore", include_str!("../../templates/gitignore.tmpl")),
-    // Same rust-analyzer completion settings this repository uses, so a generated
-    // no_std crate doesn't drown in suggestions (`core::convert::Into`, postfix
-    // completions, autoimport) that don't fit it.
+    // Same rust-analyzer settings this repo uses, tuned for a no_std crate.
     Template::plain(
         ".vscode/settings.json",
         include_str!("../../templates/vscode-settings.json.tmpl"),
@@ -83,10 +86,7 @@ pub const PROJECT: &[Template] = &[
     Template::plain("README.md", include_str!("../../templates/README.md.tmpl")),
 ];
 
-/// Every placeholder any template may use.
-///
-/// Exhaustive on purpose: [`render`] rejects anything outside it, so a typo in a
-/// template is an error rather than literal text in the output.
+/// Every placeholder any template may use; [`render`] rejects anything outside it.
 pub const KEYS: &[&str] = &[
     "crate_name",
     "lib_name",
@@ -98,11 +98,7 @@ pub const KEYS: &[&str] = &[
     "crate_version",
 ];
 
-/// Substitute `{{key}}` occurrences in `text`.
-///
-/// Fails on a placeholder outside [`KEYS`] (a template typo) or one in `KEYS` that
-/// `values` omits (a caller that forgot it). Either would otherwise reach the
-/// generated project.
+/// Substitutes `{{key}}` occurrences in `text`.
 pub fn render(text: &str, values: &[(&str, String)]) -> Result<String> {
     let mut out = String::with_capacity(text.len());
     let mut rest = text;
@@ -132,8 +128,7 @@ pub fn render(text: &str, values: &[(&str, String)]) -> Result<String> {
     Ok(out)
 }
 
-/// Placeholders a template actually uses, in first-appearance order. Only the
-/// tests need it, to hold templates to [`KEYS`] without rendering them.
+/// Placeholders a template uses, in first-appearance order.
 #[cfg(test)]
 fn placeholders(text: &str) -> Vec<&str> {
     let mut found = Vec::new();
@@ -156,6 +151,13 @@ mod tests {
 
     fn values() -> Vec<(&'static str, String)> {
         KEYS.iter().map(|key| (*key, format!("<{key}>"))).collect()
+    }
+
+    #[test]
+    fn generated_sequencer_is_the_defaults() {
+        let generated =
+            fprime_test::config::parse(SEQUENCER.body).expect("the template should parse");
+        assert_eq!(generated, fprime_test::interpreter::Limits::default());
     }
 
     #[test]
@@ -182,7 +184,6 @@ mod tests {
         assert_eq!(render(body, &[]).expect("renders"), body);
     }
 
-    /// Braces in generated Rust and TOML are ordinary characters, not escapes.
     #[test]
     fn single_braces_are_not_placeholders() {
         let body = "fn main() { let m = HashMap::new(); }";
@@ -190,26 +191,23 @@ mod tests {
     }
 
     #[test]
-    fn rejects_an_unknown_placeholder() {
+    fn rejects_unknown_placeholder() {
         let err = render("{{sequenc}}", &values()).expect_err("should not render");
         assert!(err.to_string().contains("unknown placeholder"), "{err}");
         assert!(err.to_string().contains("sequenc"), "{err}");
     }
 
     #[test]
-    fn rejects_a_known_placeholder_with_no_value() {
+    fn rejects_known_placeholder_with_no_value() {
         let err = render("{{sequence}}", &[]).expect_err("should not render");
         assert!(err.to_string().contains("not given a value"), "{err}");
     }
 
     #[test]
-    fn rejects_an_unterminated_placeholder() {
+    fn rejects_unterminated_placeholder() {
         assert!(render("{{sequence", &values()).is_err());
     }
 
-    /// Every template, including its destination path, must only use placeholders
-    /// `KEYS` declares — otherwise `render` fails at run time for a user rather
-    /// than here.
     #[test]
     fn every_template_uses_only_known_placeholders() {
         for template in PROJECT {
@@ -225,8 +223,6 @@ mod tests {
         }
     }
 
-    /// And every template must render cleanly with the full value set, leaving
-    /// nothing behind.
     #[test]
     fn every_template_renders_with_no_placeholder_left() {
         let values = values();
@@ -243,8 +239,6 @@ mod tests {
         }
     }
 
-    /// A key nothing uses is dead weight and suggests a template was changed
-    /// without updating this list.
     #[test]
     fn every_key_is_used_by_some_template() {
         for key in KEYS {
@@ -257,12 +251,10 @@ mod tests {
     }
 
     #[test]
-    fn the_project_includes_the_starter_sequence() {
+    fn project_includes_starter_sequence() {
         assert!(PROJECT.iter().any(|t| t.path == SEQUENCE.path));
     }
 
-    /// Paths are written with forward slashes and joined per-component by the
-    /// caller, so a backslash here would become part of a file name on Unix.
     #[test]
     fn template_paths_use_forward_slashes() {
         for template in PROJECT {

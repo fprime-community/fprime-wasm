@@ -1,0 +1,66 @@
+[package]
+name = "interp"
+version.workspace = true
+edition.workspace = true
+publish = false
+
+[features]
+# The fixture bins are `#![no_std] #![no_main]` Wasm modules: they cannot link
+# for the host, so a bare `cargo build --workspace` must skip them. This feature
+# is what `required-features` on each `[[bin]]` keys off.
+wasm = []
+
+[dependencies]
+fprime_core = { path = "../../fprime_core" }
+
+[build-dependencies]
+fprime_build = { path = "../../fprime_build" }
+
+[dev-dependencies]
+fprime_test = { path = "../../fprime_test" }
+
+[lib]
+test = false
+bench = false
+
+[[bin]]
+name = "nominal"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "dispatch"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "trapping"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "forever"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "growing"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "hungry"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "reader"
+required-features = ["wasm"]
+test = false
+bench = false

@@ -258,11 +258,10 @@ fn build(root: &Path, target_dir: &Path) -> Result<(), String> {
 }
 
 /// Where a measured bin's source lives, relative to the workspace root, for the
-/// table to link to.
+/// table to link to. Doubles as the test of whether a module is a subject at all,
+/// since [`collect`] measures whatever is in the directory.
 ///
 /// Found by looking rather than recorded by cargo, which does not report it.
-/// `None` when nothing matches — a bin laid out some other way costs its link and
-/// nothing else, so this must not be an error.
 fn source(root: &Path, name: &str) -> Option<String> {
     SUBJECTS.iter().find_map(|subject| {
         let path = format!("crates/{subject}/src/bin/{name}.rs");
@@ -305,17 +304,30 @@ fn collect(release_dir: &Path, root: &Path) -> Result<Report, String> {
             .and_then(|stem| stem.to_str())
             .ok_or_else(|| format!("`{}` has no usable name", path.display()))?;
 
+        // The target directory is shared with every other wasm crate in the workspace —
+        // `crates/interp`'s harness fixtures, and anything a developer built by hand. Only
+        // the subjects are tracked, so a module that is not one of theirs is not a
+        // measurement: counting it would put a row in the table that the base revision has
+        // no counterpart for.
+        let Some(source) = source(root, name) else {
+            continue;
+        };
+
         let bytes = std::fs::read(&path)
             .map_err(|err| format!("could not read `{}`: {err}", path.display()))?;
 
         let sections = wasm::sections(&bytes)
             .ok_or_else(|| format!("`{}` is not a wasm module", path.display()))?;
 
-        binaries.push(Binary::from_sections(name, sections, source(root, name)));
+        binaries.push(Binary::from_sections(name, sections, Some(source)));
     }
 
     if binaries.is_empty() {
-        return Err(format!("no wasm modules in `{}`", release_dir.display()));
+        return Err(format!(
+            "no wasm modules from {} in `{}`",
+            SUBJECTS.join(" or "),
+            release_dir.display()
+        ));
     }
 
     Ok(Report::new(binaries, true))

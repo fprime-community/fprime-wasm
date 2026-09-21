@@ -1,12 +1,9 @@
 //! What `init` generates, as values rather than files.
-//!
-//! Separate from [`super::write`] so the generated contents can be asserted
-//! without touching a filesystem.
 
 use super::manifest::{DependencySpec, repoint_at_checkout};
 use super::template;
-use crate::project::TARGET;
 use anyhow::{Context, Result};
+use fprime_test::project::TARGET;
 use std::path::{Path, PathBuf};
 
 /// A file to create.
@@ -32,8 +29,7 @@ pub struct Plan {
 }
 
 impl Plan {
-    /// Library name Cargo exposes, which is what a sequence binary imports: Cargo
-    /// replaces `-` with `_`, so `ref-sequences` is imported as `ref_sequences`.
+    /// Cargo's library name: `-` replaced with `_`.
     pub fn lib_name(&self) -> String {
         self.name.replace('-', "_")
     }
@@ -47,15 +43,12 @@ impl Plan {
             ("target", TARGET.to_string()),
             ("stack_size", self.stack_size.to_string()),
             ("dictionary", self.dictionary.display().to_string()),
-            // `build.rs` embeds this in a Rust string literal, where a Windows
-            // separator would be an invalid escape.
+            // Avoids an invalid escape in the embedded Rust string literal.
             (
                 "dictionary_slashes",
                 self.dictionary.display().to_string().replace('\\', "/"),
             ),
-            // The template declares both dependencies as plain versions; a
-            // checkout is applied afterwards by `repoint_at_checkout`, which is
-            // why this is a version even in the path case.
+            // Always a version; `repoint_at_checkout` patches it for the path case.
             (
                 "crate_version",
                 match &self.dependency {
@@ -67,9 +60,6 @@ impl Plan {
     }
 
     /// Every file `init` creates, in a stable order.
-    ///
-    /// Fails only on a broken template — reported rather than panicked on, since a
-    /// release binary asserting on its own templates helps nobody.
     pub fn files(&self) -> Result<Vec<File>> {
         let values = self.values();
         let mut files: Vec<File> = template::PROJECT
@@ -80,8 +70,7 @@ impl Plan {
                 let contents = template::render(entry.body, &values)
                     .with_context(|| format!("in template {}", entry.path))?;
                 Ok(File {
-                    // Split so the separator is the platform's, not the `/` the
-                    // templates are written with.
+                    // Platform separator, not the `/` templates use.
                     path: path.split('/').collect(),
                     contents,
                     executable: entry.executable,
@@ -103,22 +92,31 @@ impl Plan {
 
 /// One sequence's source, for `add` and for the starter one `init` writes.
 pub fn sequence(lib_name: &str, name: &str) -> Result<String> {
-    // Supplying only the two keys this template uses cannot under-supply silently:
-    // `render` rejects any placeholder it was not given a value for.
+    render_for_sequence(template::SEQUENCE.body, lib_name, name).context("in the sequence template")
+}
+
+/// One sequence's tests, written beside its source by both `add` and `init`.
+pub fn test(lib_name: &str, name: &str) -> Result<String> {
+    render_for_sequence(template::TEST.body, lib_name, name).context("in the test template")
+}
+
+/// The two keys a per-sequence template uses.
+fn render_for_sequence(body: &str, lib_name: &str, name: &str) -> Result<String> {
     let values = vec![
         ("lib_name", lib_name.to_string()),
         ("sequence", name.to_string()),
     ];
-    template::render(template::SEQUENCE.body, &values).context("in the sequence template")
+    template::render(body, &values)
 }
 
 #[cfg(test)]
 mod tests {
     use super::super::fixture::{file, manifest, plan};
     use super::*;
+    use fprime_test::project::WASM_FEATURE;
 
     #[test]
-    fn generates_the_expected_set_of_files() {
+    fn generates_expected_files() {
         let paths: Vec<String> = plan()
             .files()
             .expect("templates render")
@@ -135,6 +133,7 @@ mod tests {
                 "build.rs",
                 "src/lib.rs",
                 "src/bin/startup.rs",
+                "tests/startup.rs",
                 ".gitignore",
                 ".vscode/settings.json",
                 ".vscode/extensions.json",
@@ -143,8 +142,6 @@ mod tests {
         );
     }
 
-    /// A template path is written with `/` and has to become a real nested path,
-    /// not one file with a slash in its name.
     #[test]
     fn template_paths_become_nested_paths() {
         let files = plan().files().expect("templates render");
@@ -156,10 +153,8 @@ mod tests {
         assert_eq!(config.path.components().count(), 2);
     }
 
-    /// Cargo underscores the library name, so a sequence in `ref-sequences` has to
-    /// `use ref_sequences::*`.
     #[test]
-    fn a_sequence_imports_the_underscored_library_name() {
+    fn sequence_imports_underscored_lib_name() {
         assert_eq!(plan().lib_name(), "ref_sequences");
         assert!(
             file(&plan(), "src/bin/startup.rs").contains("use ref_sequences::*;"),
@@ -168,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn the_manifest_names_the_crate_and_its_first_sequence() {
+    fn manifest_names_crate_and_sequence() {
         let manifest = manifest(&plan());
         assert_eq!(manifest["package"]["name"].as_str(), Some("ref-sequences"));
         let bins = manifest["bin"]
@@ -181,9 +176,8 @@ mod tests {
         );
     }
 
-    /// The two settings without which `cargo build` fails on a `#![no_main]` bin.
     #[test]
-    fn the_manifest_switches_off_the_bin_harnesses() {
+    fn manifest_disables_bin_harnesses() {
         let manifest = manifest(&plan());
         let bin = manifest["bin"]
             .as_array_of_tables()
@@ -193,14 +187,49 @@ mod tests {
             .clone();
         assert_eq!(bin["test"].as_bool(), Some(false));
         assert_eq!(bin["bench"].as_bool(), Some(false));
-        // The library target too: there is nothing to test in a no_std Wasm crate.
         assert_eq!(manifest["lib"]["test"].as_bool(), Some(false));
         assert_eq!(manifest["lib"]["bench"].as_bool(), Some(false));
     }
 
-    /// Unwinding machinery would dwarf the sequence itself.
     #[test]
-    fn the_manifest_sets_a_size_tuned_release_profile() {
+    fn sequences_gated_behind_wasm_feature() {
+        let manifest = manifest(&plan());
+        assert!(
+            manifest["features"][WASM_FEATURE].as_array().is_some(),
+            "the `{WASM_FEATURE}` feature must be declared"
+        );
+        // Not a default, or a host `cargo build` would try to link the bins.
+        assert!(
+            manifest["features"].get("default").is_none(),
+            "`{WASM_FEATURE}` must not be a default feature"
+        );
+
+        let required: Vec<String> = manifest["bin"]
+            .as_array_of_tables()
+            .expect("an array of tables")
+            .get(0)
+            .expect("one bin")["required-features"]
+            .as_array()
+            .expect("required-features should be an array")
+            .iter()
+            .map(|feature| feature.as_str().unwrap_or_default().to_string())
+            .collect();
+        assert_eq!(required, vec![WASM_FEATURE.to_string()]);
+    }
+
+    #[test]
+    fn manifest_depends_on_test_dsl_dev_only() {
+        let manifest = manifest(&plan());
+        assert_eq!(
+            manifest["dev-dependencies"]["fprime_test"].as_str(),
+            Some("1.2.3")
+        );
+        // `fprime_test` is a `std` host crate; it must not reach the sequences.
+        assert!(manifest["dependencies"].get("fprime_test").is_none());
+    }
+
+    #[test]
+    fn manifest_sets_size_tuned_release_profile() {
         let profile = manifest(&plan())["profile"]["release"].clone();
         assert_eq!(profile["panic"].as_str(), Some("abort"));
         assert_eq!(profile["opt-level"].as_str(), Some("s"));
@@ -209,7 +238,7 @@ mod tests {
     }
 
     #[test]
-    fn the_manifest_pins_both_crates_to_the_requested_version() {
+    fn manifest_pins_crate_versions() {
         let manifest = manifest(&plan());
         assert_eq!(
             manifest["dependencies"]["fprime_core"].as_str(),
@@ -221,14 +250,26 @@ mod tests {
         );
     }
 
-    /// `--page-size=1` is what makes guest memory sizeable in bytes; without it
-    /// every sequence demands a 64 KiB page.
+    /// `[build] target` would break `cargo test`; `fprime-wasm build` passes `--target` instead.
     #[test]
-    fn the_cargo_config_sets_the_target_and_the_link_arguments() {
+    fn cargo_config_omits_default_target() {
         let config: toml_edit::DocumentMut = file(&plan(), ".cargo/config.toml")
             .parse()
             .expect("the generated cargo config should be valid TOML");
-        assert_eq!(config["build"]["target"].as_str(), Some(TARGET));
+        assert!(
+            config
+                .get("build")
+                .and_then(|build| build.get("target"))
+                .is_none(),
+            "`[build] target` would break `cargo test` in a scaffolded project:\n{config}"
+        );
+    }
+
+    #[test]
+    fn cargo_config_sets_wasm_link_args() {
+        let config: toml_edit::DocumentMut = file(&plan(), ".cargo/config.toml")
+            .parse()
+            .expect("the generated cargo config should be valid TOML");
 
         let flags: Vec<String> = config["target"][TARGET]["rustflags"]
             .as_array()
@@ -251,11 +292,8 @@ mod tests {
         assert!(config.get("unstable").is_none(), "build-std must stay off");
     }
 
-    /// The config has to name the script the same plan writes; asserted against the
-    /// template rather than a literal, so renaming one and not the other fails here
-    /// instead of at someone's first release build.
     #[test]
-    fn the_cargo_config_wires_the_release_linker() {
+    fn cargo_config_wires_release_linker() {
         let config: toml_edit::DocumentMut = file(&plan(), ".cargo/config.toml")
             .parse()
             .expect("valid TOML");
@@ -265,12 +303,8 @@ mod tests {
         );
     }
 
-    /// `wasm-opt` introduces post-MVP instructions while optimising even when the
-    /// compiler emitted none, and the module then fails when the sequencer loads it.
-    /// Pinning the optimiser to what `spacewasm` implements is the whole point of the
-    /// script.
     #[test]
-    fn the_release_linker_pins_the_interpreters_feature_set() {
+    fn release_linker_pins_feature_set() {
         let script = file(&plan(), ".cargo/wasm-link");
         for flag in [
             "--mvp-features",
@@ -280,14 +314,11 @@ mod tests {
             assert!(script.contains(flag), "{flag} missing from:\n{script}");
         }
         assert!(script.contains("rust-lld"), "{script}");
-        // Optimising a debug build would make it unreadable in a debugger.
         assert!(script.contains("*/release/*"), "{script}");
     }
 
-    /// A missing optimiser must not fail the build: the module is linked and valid,
-    /// just larger, and `verify` measures what is actually on disk.
     #[test]
-    fn a_missing_optimiser_does_not_fail_the_build() {
+    fn missing_optimiser_does_not_fail_build() {
         let script = file(&plan(), ".cargo/wasm-link");
         let (_, after) = script
             .split_once("command -v wasm-opt")
@@ -303,7 +334,7 @@ mod tests {
     }
 
     #[test]
-    fn only_the_release_linker_is_executable() {
+    fn only_release_linker_is_executable() {
         for file in plan().files().expect("templates render") {
             let expected = file.path == PathBuf::from(".cargo").join("wasm-link");
             assert_eq!(
@@ -317,7 +348,7 @@ mod tests {
     }
 
     #[test]
-    fn a_custom_stack_size_reaches_the_link_arguments() {
+    fn custom_stack_size_reaches_link_args() {
         let mut plan = plan();
         plan.stack_size = 2048;
         assert!(
@@ -327,7 +358,7 @@ mod tests {
     }
 
     #[test]
-    fn build_rs_points_at_the_dictionary() {
+    fn build_rs_points_at_dictionary() {
         assert!(
             file(&plan(), "build.rs")
                 .contains("fprime_build::generate(\"dictionary/RefTopologyDictionary.json\")"),
@@ -335,7 +366,6 @@ mod tests {
         );
     }
 
-    /// A Windows-style path would land in the generated Rust as an invalid escape.
     #[test]
     fn build_rs_uses_forward_slashes() {
         let mut plan = plan();
@@ -346,7 +376,7 @@ mod tests {
     }
 
     #[test]
-    fn the_library_includes_the_generated_dictionary_and_the_runtime() {
+    fn library_includes_dictionary_and_runtime() {
         let lib = file(&plan(), "src/lib.rs");
         assert!(lib.contains("#![no_std]"), "{lib}");
         assert!(
@@ -358,7 +388,33 @@ mod tests {
     }
 
     #[test]
-    fn a_sequence_is_no_std_no_main_with_the_entry_point_attribute() {
+    fn library_gates_test_descriptors_from_flight() {
+        let lib = file(&plan(), "src/lib.rs");
+        let (before, after) = lib
+            .split_once("include!(concat!(env!(\"OUT_DIR\"), \"/descriptors.rs\"))")
+            .expect("the library should include the generated descriptors");
+        assert!(
+            before
+                .trim_end()
+                .ends_with("#[cfg(not(target_family = \"wasm\"))]"),
+            "the descriptors include must be gated to a host target:\n{lib}"
+        );
+        // And the flight API's own include must NOT be gated, or a sequence has no API at all.
+        assert!(
+            !after.contains("dictionary.rs"),
+            "the flight API include must come first and stay ungated:\n{lib}"
+        );
+        let (flight, _) = lib
+            .split_once("include!(concat!(env!(\"OUT_DIR\"), \"/dictionary.rs\"))")
+            .expect("the library should include the generated dictionary");
+        assert!(
+            !flight.contains("#[cfg("),
+            "the flight API include must not be behind a cfg:\n{lib}"
+        );
+    }
+
+    #[test]
+    fn sequence_is_no_std_no_main_with_entry_point() {
         let source = sequence("sequences", "safing").expect("renders");
         assert!(source.contains("#![no_std]"), "{source}");
         assert!(source.contains("#![no_main]"), "{source}");
@@ -370,10 +426,8 @@ mod tests {
         assert!(!source.contains("{{"), "{source}");
     }
 
-    /// `init` and `add` must render the same file, or the starter sequence would
-    /// drift from every later one.
     #[test]
-    fn init_and_add_render_the_same_sequence() {
+    fn init_and_add_render_same_sequence() {
         let mut plan = plan();
         plan.name = "sequences".into();
         plan.sequence = "safing".into();
@@ -381,5 +435,22 @@ mod tests {
             file(&plan, "src/bin/safing.rs"),
             sequence("sequences", "safing").expect("renders")
         );
+        assert_eq!(
+            file(&plan, "tests/safing.rs"),
+            test("sequences", "safing").expect("renders")
+        );
+    }
+
+    #[test]
+    fn sequence_test_names_sequence_and_imports_crate() {
+        let source = test("sequences", "safing").expect("renders");
+        assert!(
+            source.contains("#[fprime_test(sequence = \"safing\")]"),
+            "{source}"
+        );
+        assert!(source.contains("use fprime_test::*;"), "{source}");
+        assert!(source.contains("use sequences::*;"), "{source}");
+        assert!(!source.contains("#![no_std]"), "{source}");
+        assert!(!source.contains("{{"), "{source}");
     }
 }

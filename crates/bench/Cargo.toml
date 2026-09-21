@@ -219,6 +219,48 @@ test = false
 bench = false
 
 [[bin]]
+name = "serial_recv_block"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "serial_recv_poll"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "serial_send_scalar"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "serial_echo"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "serial_struct"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "serial_string"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "serial_ports_x4"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
 name = "dedup_same_cmd"
 required-features = ["wasm"]
 test = false

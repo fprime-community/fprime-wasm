@@ -27,7 +27,7 @@ case "$output" in
 esac
 
 # Not fatal: the module is linked and valid, just larger than it needs to be, and
-# `fprime-wasm verify` measures whatever is actually on disk.
+# `fprime-wasm verify` sizes whatever is actually on disk.
 if ! command -v wasm-opt >/dev/null 2>&1; then
     echo "wasm-link: wasm-opt not found on PATH, leaving $output unoptimised" >&2
     echo "wasm-link: it ships with binaryen: https://github.com/WebAssembly/binaryen" >&2

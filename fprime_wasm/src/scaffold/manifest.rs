@@ -22,23 +22,21 @@ impl DependencySpec {
     }
 }
 
-/// Point the generated manifest's two dependencies at a checkout of this
-/// repository.
+/// Points the generated manifest's two dependencies at a checkout of this repository.
 ///
-/// Edits the parsed document instead of substituting a `{ path = "..." }` fragment
-/// into the template: a path is arbitrary text and TOML reinterprets parts of it —
-/// `\U` in `C:\Users\...` is a unicode escape, so the manifest would not parse at
-/// all. `toml_edit` escapes the string properly and the template stays plain TOML.
+/// Edits the parsed document rather than splicing a `{ path = "..." }` string, so a
+/// backslash in the path is escaped correctly.
 pub(super) fn repoint_at_checkout(manifest: &str, checkout: &Path) -> Result<String> {
     let mut document: toml_edit::DocumentMut = manifest
         .parse()
         .context("the generated Cargo.toml is not valid TOML")?;
 
-    // The spec names one crate; its sibling sits beside it in the same checkout.
+    // The spec names one crate; its siblings sit beside it in the same checkout.
     let root = checkout.parent().unwrap_or(Path::new(".."));
     for (table, crate_name) in [
         ("dependencies", "fprime_core"),
         ("build-dependencies", "fprime_build"),
+        ("dev-dependencies", "fprime_test"),
     ] {
         let mut dependency = toml_edit::InlineTable::new();
         dependency.insert("path", root.join(crate_name).display().to_string().into());
@@ -62,10 +60,9 @@ mod tests {
         );
     }
 
-    /// A path spec names one crate; the sibling must be resolved beside it, or
-    /// `fprime_build` would point at `fprime_core`'s directory.
+    /// The sibling crate resolves beside the named one, not in its directory.
     #[test]
-    fn a_path_dependency_resolves_each_crate_beside_the_other() {
+    fn path_dependency_resolves_sibling_crates() {
         let mut plan = plan();
         plan.dependency = DependencySpec::Path(PathBuf::from("../../fprime_core"));
         let manifest = manifest(&plan);
@@ -86,15 +83,9 @@ mod tests {
         );
     }
 
-    /// The bug that moved this off string substitution: a spliced
-    /// `{ path = "..." }` made a backslash invalid TOML, so `--local` on Windows
-    /// produced a manifest Cargo could not parse.
-    ///
-    /// The characters matter, not the platform — so the path contains a backslash
-    /// while still having a parent on this host, and the assertion is that the
-    /// value round-trips rather than that it equals a platform-specific spelling.
+    /// Regression: a spliced `{ path = "..." }` made a backslash invalid TOML.
     #[test]
-    fn a_backslash_in_a_path_dependency_is_escaped_not_spliced() {
+    fn backslash_in_path_dependency_is_escaped() {
         for awkward in [r"od\d", "od\"d", r"od\Users"] {
             let checkout = PathBuf::from("/tmp").join(awkward).join("fprime_core");
             let mut plan = plan();

@@ -114,10 +114,9 @@ fn command_truncates_string_arguments() {
     )
 }
 
-/// A modeled type named `String` keeps its `crate::Defs::` path, and so is
-/// serialized by value rather than mistaken for a `fprime_core::String<N>`
+/// A modeled `String` type keeps its `crate::Defs::` path, not mistaken for `fprime_core::String<N>`.
 #[test]
-fn command_passes_modeled_string_types_by_value() {
+fn command_passes_modeled_string_by_value() {
     assert_expands(
         command::command(
             quote! { opcode = 0x1 },
@@ -219,7 +218,7 @@ fn parameter() {
 }
 
 #[test]
-fn rejects_a_declared_body() {
+fn rejects_declared_body() {
     assert_eq!(
         "expected an empty body, the implementation is generated from the signature",
         error(parameter::parameter(
@@ -230,7 +229,7 @@ fn rejects_a_declared_body() {
 }
 
 #[test]
-fn rejects_a_missing_return_type() {
+fn rejects_missing_return_type() {
     assert_eq!(
         "expected a return type naming the modeled type",
         error(parameter::parameter(
@@ -241,7 +240,7 @@ fn rejects_a_missing_return_type() {
 }
 
 #[test]
-fn rejects_a_channel_without_a_time() {
+fn rejects_channel_without_time() {
     assert_eq!(
         "expected a `(value, time)` return type",
         error(telemetry::telemetry(
@@ -252,7 +251,7 @@ fn rejects_a_channel_without_a_time() {
 }
 
 #[test]
-fn rejects_a_missing_identifier() {
+fn rejects_missing_identifier() {
     assert_eq!(
         "expected `opcode = <value>`",
         error(command::command(
@@ -294,8 +293,8 @@ fn qualifies_by_formal_parameter_type() {
     )
 }
 
-/// `DpReqType` is declared by both `Ref.DpDemo` and `Ref.SignalGen`, so only the
-/// receiver decides which enum `IMMEDIATE` belongs to.
+/// `DpReqType` is declared by both `Ref.DpDemo` and `Ref.SignalGen`. receiver decides
+/// which enum `IMMEDIATE` belongs to.
 #[test]
 fn same_constant_resolves_per_receiver() {
     assert_eq!(
@@ -324,7 +323,9 @@ fn qualifies_ambiguous_constants() {
 fn qualifies_array_elements() {
     assert_eq!(
         rewrite("Ref.typeDemo.CHOICES([RED, BLUE]);"),
-        expect("Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::RED, crate::Defs::Ref::Choice::BLUE]);")
+        expect(
+            "Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::RED, crate::Defs::Ref::Choice::BLUE]);"
+        )
     )
 }
 
@@ -361,64 +362,60 @@ fn qualifies_chained_and_nested_commands() {
     )
 }
 
-/// An attribute on the argument belongs to the argument, not to the name, so
-/// qualifying the name must not drop it -- a `#[cfg]` gated argument that
-/// quietly stopped being gated would change what is sent.
+/// Qualifying an argument's name must not drop the argument's own attributes (e.g. `#[cfg]`).
 #[test]
-fn keeps_attributes_on_the_argument() {
+fn keeps_argument_attributes() {
     assert_eq!(
         rewrite("Ref.dpDemo.SelectColor(#[cfg(feature = \"red\")] RED);"),
-        expect("Ref.dpDemo.SelectColor(#[cfg(feature = \"red\")] crate::Defs::Ref::DpDemo::ColorEnum::RED);")
+        expect(
+            "Ref.dpDemo.SelectColor(#[cfg(feature = \"red\")] crate::Defs::Ref::DpDemo::ColorEnum::RED);"
+        )
     )
 }
 
-/// An editor asks about a body by splicing a marker identifier in at the cursor
-/// and expanding. It then finds the cursor in the real expansion at the offset the
-/// marker sits at in this one, so the two have to agree up to that point: a name
-/// carrying the marker must resolve to whatever the name without it resolves to,
-/// and must come out still carrying it.
+/// A name carrying the completion marker must resolve like the name without it, and keep
+/// the marker.
 #[test]
-fn resolves_a_name_an_editor_is_asking_about() {
-    // A finished constant with the cursor in it: qualified, marker preserved, so
-    // this differs from the real expansion by the marker alone.
+fn completion_marker_resolves() {
+    // A finished constant with the cursor in it: qualified, marker preserved.
     assert_eq!(
         rewrite("Ref.dpDemo.SelectColor(REraCompletionMarkerD);"),
-        expect("Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::REraCompletionMarkerD);")
+        expect(
+            "Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::REraCompletionMarkerD);"
+        )
     );
 
-    // Half typed, so not a constant: left alone, exactly as the real expansion
-    // leaves the `PROC_` the author has actually typed.
+    // Half typed, so not a constant: left alone.
     let half_typed = "Ref.dpDemo.Dp(IMMEDIATE, 2, PROC_raCompletionMarker);";
     assert_eq!(
         rewrite(half_typed),
-        expect("Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, PROC_raCompletionMarker);")
+        expect(
+            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, PROC_raCompletionMarker);"
+        )
     );
 
-    // Nothing typed yet: likewise left alone, since the real expansion has no
-    // argument there at all.
+    // Nothing typed yet: left alone too.
     assert_eq!(
         rewrite("Ref.dpDemo.Dp(IMMEDIATE, 2, raCompletionMarker);"),
-        expect("Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, raCompletionMarker);")
+        expect(
+            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, raCompletionMarker);"
+        )
     )
 }
 
-/// A call with too few arguments keeps the arguments it does have qualified, so
-/// the count is the only thing left for the compiler to complain about.
+/// A call with too few arguments keeps the arguments it does have qualified.
 #[test]
-fn qualifies_what_it_can_of_a_short_call() {
+fn short_call_qualifies_partially() {
     assert_eq!(
         rewrite("Ref.dpDemo.Dp(IMMEDIATE, 2);"),
         expect("Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2);")
     )
 }
 
-/// Everything the dictionary does not describe survives untouched.
-/// The reason the DSL reads tokens instead of a parsed function: a body is
-/// half written most of the time it is looked at, and giving up on one that does
-/// not parse costs every finished statement in it its resolution. Here a `;` is
-/// missing, which is what the compiler hands the macro verbatim.
+/// Qualifies around a syntax error (a missing `;`), since the DSL works on tokens rather
+/// than a parsed body.
 #[test]
-fn qualifies_across_a_syntax_error() {
+fn qualifies_across_syntax_error() {
     assert_eq!(
         rewrite(
             "CdhCore.events.SET_EVENT_FILTER(ACTIVITY_HI, DISABLED)
@@ -434,24 +431,20 @@ fn qualifies_across_a_syntax_error() {
     )
 }
 
-/// An argument deleted out of the middle of a call leaves the slot it was in
-/// empty, rather than shifting every later argument onto the parameter before
-/// it -- which is what splitting on the commas as written buys over parsing the
-/// argument list.
+/// A deleted argument leaves its slot empty rather than shifting later arguments onto
+/// earlier parameters.
 #[test]
-fn keeps_arguments_on_their_own_parameters_across_a_gap() {
+fn gap_keeps_argument_positions() {
     assert_eq!(
         rewrite("Ref.dpDemo.Dp(, 0, PROC_TYPE_NONE);"),
         expect("Ref.dpDemo.Dp(, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);")
     )
 }
 
-/// The limitation of that, stated: an argument only resolves if what is written
-/// in its slot is an expression. Delete a comma and the two names it separated
-/// read as one argument, which is not, so both keep their own spelling -- and
-/// the rest of the body is qualified regardless.
+/// An argument only resolves if it parses as an expression; two names merged by a deleted
+/// comma don't, so both stay unqualified.
 #[test]
-fn leaves_an_argument_that_is_not_yet_an_expression() {
+fn non_expression_argument_untouched() {
     assert_eq!(
         rewrite(
             "Ref.dpDemo.Dp(IMMEDIATE 0, PROC_TYPE_NONE);
@@ -464,26 +457,23 @@ fn leaves_an_argument_that_is_not_yet_an_expression() {
     )
 }
 
-/// A command is qualified wherever it sits, including inside an argument of
-/// something that is not a command at all.
+/// A command is qualified wherever it sits, including nested in a non-command's argument.
 #[test]
-fn qualifies_a_command_nested_in_an_argument() {
+fn qualifies_nested_command() {
     assert_eq!(
         rewrite("record(Ref.dpDemo.SelectColor(BLUE));"),
         expect("record(Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::BLUE));")
     )
 }
 
-/// A chain that merely *ends* in a command's name is not that command. This is
-/// the shape a trailing `.` leaves behind: `Ref.` and the statement under it read
-/// as one field chain, and qualifying its argument would be resolving against a
-/// call nobody wrote.
+/// A chain merely *ending* in a command's name is not that command (the shape a trailing
+/// `.` leaves behind).
 #[test]
-fn does_not_qualify_a_chain_that_only_ends_in_a_command() {
+fn chain_ending_in_command_untouched() {
     let absorbed = "Ref.Ref.dpDemo.SelectColor(GREEN);";
     assert_eq!(rewrite(absorbed), expect(absorbed));
 
-    // Nor one that is a command's name with something in front of it.
+    // Nor a command's name with something in front of it.
     let extended = "topology.Ref.dpDemo.SelectColor(GREEN);";
     assert_eq!(rewrite(extended), expect(extended));
 }
@@ -491,18 +481,17 @@ fn does_not_qualify_a_chain_that_only_ends_in_a_command() {
 /// The instance may be written as a qualified path, of which the dictionary knows
 /// only the final segment.
 #[test]
-fn qualifies_through_a_qualified_instance() {
+fn qualifies_through_qualified_instance() {
     assert_eq!(
         rewrite("crate::Ref.dpDemo.SelectColor(BLUE);"),
         expect("crate::Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::BLUE);")
     )
 }
 
-/// The DSL is applied to the whole item, so everything that is not a command
-/// argument -- attributes, visibility, the signature, a parameter list that
-/// looks like a call -- has to come out as it went in.
+/// Everything that isn't a command argument (attributes, visibility, signature) passes
+/// through unchanged.
 #[test]
-fn leaves_everything_but_the_arguments_alone() {
+fn leaves_non_argument_tokens_alone() {
     assert_eq!(
         rewrite(
             "#[inline]
@@ -521,11 +510,9 @@ fn leaves_everything_but_the_arguments_alone() {
     )
 }
 
-/// An editor asks about a name by expanding a copy of the body with a marker
-/// spliced in, and most of the time it asks the body does not parse. The marker
-/// has to survive that path too.
+/// The completion marker must survive even when the body doesn't parse.
 #[test]
-fn resolves_a_name_an_editor_is_asking_about_in_a_broken_body() {
+fn completion_marker_resolves_in_broken_body() {
     assert_eq!(
         rewrite(
             "Ref.dpDemo.SelectColor(BLraCompletionMarkerUE)
@@ -568,17 +555,16 @@ fn const_encode(body: &str) -> String {
 
 /// The `const` buffer a const-encoded call is expected to expand to.
 fn encoded(command: &str, args: &str) -> String {
-    let parse = |source: String| {
-        syn::parse_str::<TokenStream>(&source).expect("expectation should parse")
-    };
+    let parse =
+        |source: String| syn::parse_str::<TokenStream>(&source).expect("expectation should parse");
 
     let path = command.replace('.', "::");
     let size = parse(format!("crate::Konst::{path}__size"));
     let encode = parse(format!("crate::Konst::{path}__encode"));
     let args = parse(args.to_string());
 
-    // The call the user wrote, kept so an editor can still resolve the receiver
-    // and the command name. See `keeps_the_written_call_for_navigation`.
+    // Kept so an editor can still resolve the receiver and command name — see
+    // `keeps_the_written_call_for_navigation`.
     let original = parse(command.to_string());
 
     quote! {
@@ -597,7 +583,7 @@ fn encoded(command: &str, args: &str) -> String {
 }
 
 #[test]
-fn const_encodes_a_call_with_no_arguments() {
+fn const_encodes_call_with_no_arguments() {
     assert_eq!(
         const_encode("CdhCore.cmdDisp.CMD_NO_OP();"),
         format!("{} ;", encoded("CdhCore.cmdDisp.CMD_NO_OP", ""))
@@ -623,7 +609,7 @@ fn const_encodes_literals_and_enumerated_constants() {
 }
 
 #[test]
-fn const_encodes_a_string_literal() {
+fn const_encodes_string_literal() {
     assert_eq!(
         const_encode(r#"CdhCore.cmdDisp.CMD_NO_OP_STRING("STRINGS");"#),
         format!(
@@ -633,10 +619,9 @@ fn const_encodes_a_string_literal() {
     )
 }
 
-/// `-1` is a unary negation of a literal, not a literal, but it is still a
-/// compile-time constant.
+/// `-1` is a unary negation, not a literal, but is still a compile-time constant.
 #[test]
-fn const_encodes_a_negative_literal() {
+fn const_encodes_negative_literal() {
     assert_eq!(
         const_encode("CdhCore.cmdDisp.CMD_TEST_CMD_1(-1, -2.5, 3);"),
         format!(
@@ -646,11 +631,10 @@ fn const_encodes_a_negative_literal() {
     )
 }
 
-/// The load-bearing negative case. A bare identifier is a path expression just
-/// like a qualified enumerated constant is, so accepting "any path" would move a
-/// local into a `const` initialiser and break a program that compiles today.
+/// A bare identifier must not be accepted as constant — that would move a local into a
+/// `const` initialiser.
 #[test]
-fn leaves_a_runtime_argument_on_the_accessor() {
+fn runtime_argument_left_for_accessor() {
     let body = r#"CdhCore.cmdDisp.CMD_NO_OP_STRING(name);"#;
     assert_eq!(const_encode(body), expect(body));
 
@@ -658,10 +642,9 @@ fn leaves_a_runtime_argument_on_the_accessor() {
     assert_eq!(const_encode(body), expect(body));
 }
 
-/// A local of the right enum type reaches the argument already qualified-looking
-/// only if the user wrote the path themselves; a bare name stays on the accessor.
+/// A bare local name, even of the right enum type, stays unqualified, on the accessor.
 #[test]
-fn leaves_a_computed_argument_on_the_accessor() {
+fn computed_argument_left_for_accessor() {
     let body = "Ref.dpDemo.Dp(IMMEDIATE, count + 1, PROC_TYPE_NONE);";
     assert_eq!(
         const_encode(body),
@@ -675,26 +658,24 @@ fn leaves_a_computed_argument_on_the_accessor() {
     )
 }
 
-/// Arity is the accessor's to complain about, against the user's own argument
-/// list, so a wrong-arity call is not rewritten.
+/// Arity is the accessor's to complain about, so a wrong-arity call is not rewritten.
 #[test]
-fn leaves_a_wrong_arity_call_on_the_accessor() {
+fn wrong_arity_left_for_accessor() {
     let body = "CdhCore.cmdDisp.CMD_NO_OP(1);";
     assert_eq!(const_encode(body), expect(body));
 }
 
 /// Something that is not a command at all is untouched by the second pass.
 #[test]
-fn leaves_a_non_command_alone() {
+fn non_command_left_alone() {
     let body = "Ref.notAThing.Dp(1, 2, 3);";
     assert_eq!(const_encode(body), expect(body));
 }
 
-/// A struct argument is const-encodable too: the generated encoder descends the
-/// members itself, so nothing needs a `const` trait method (which is not stable
-/// anyway -- E0379).
+/// A struct argument is const-encodable too — the generated encoder descends its members
+/// itself.
 #[test]
-fn const_encodes_a_struct_argument() {
+fn const_encodes_struct_argument() {
     let arg = "crate::Defs::Ref::ChoicePair {
          firstChoice: crate::Defs::Ref::Choice::RED,
          secondChoice: crate::Defs::Ref::Choice::BLUE
@@ -709,7 +690,7 @@ fn const_encodes_a_struct_argument() {
 }
 
 #[test]
-fn const_encodes_an_array_argument() {
+fn const_encodes_array_argument() {
     let arg = "[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]";
 
     assert_eq!(
@@ -720,7 +701,7 @@ fn const_encodes_an_array_argument() {
 
 /// Nested arrays, a nested struct and a member array in one argument.
 #[test]
-fn const_encodes_a_deeply_nested_struct_argument() {
+fn const_encodes_deeply_nested_struct() {
     let body = "Ref.typeDemo.GLUTTON_OF_CHOICE(ChoiceSlurry {
              tooManyChoices: [[BLUE, RED], [TWO, TWO]],
              choiceAsMemberArray: [2, 3],
@@ -738,7 +719,7 @@ fn const_encodes_a_deeply_nested_struct_argument() {
 /// `[x; N]` is qualified like an array literal, so it is accepted when the
 /// repeat count matches the dictionary's array size.
 #[test]
-fn const_encodes_a_repeated_array_argument() {
+fn const_encodes_repeated_array() {
     let arg = "[crate::Defs::Ref::Choice::ONE ; 2]";
 
     assert_eq!(
@@ -750,7 +731,7 @@ fn const_encodes_a_repeated_array_argument() {
 /// An array literal of the wrong length would not compile as the argument, so it
 /// is left for the accessor to reject rather than turned into a `const`.
 #[test]
-fn leaves_a_wrong_length_array_on_the_accessor() {
+fn wrong_length_array_left_for_accessor() {
     let body = "Ref.typeDemo.CHOICES([ONE, TWO, ONE]);";
     assert!(
         !const_encode(body).contains("__encode"),
@@ -762,7 +743,7 @@ fn leaves_a_wrong_length_array_on_the_accessor() {
 /// A struct literal missing a member, or completing itself from elsewhere, is
 /// not something we can evaluate.
 #[test]
-fn leaves_a_partial_struct_literal_on_the_accessor() {
+fn partial_struct_left_for_accessor() {
     let body = "Ref.typeDemo.CHOICE_PAIR(ChoicePair { firstChoice: RED, ..other });";
     assert!(
         !const_encode(body).contains("__encode"),
@@ -771,10 +752,9 @@ fn leaves_a_partial_struct_literal_on_the_accessor() {
     )
 }
 
-/// A runtime value anywhere inside an aggregate keeps the whole call on the
-/// accessor.
+/// A runtime value anywhere inside an aggregate keeps the whole call on the accessor.
 #[test]
-fn leaves_a_struct_with_a_runtime_member_on_the_accessor() {
+fn runtime_member_left_for_accessor() {
     let body = "Ref.typeDemo.CHOICE_PAIR(ChoicePair { firstChoice: RED, secondChoice: chosen });";
     assert!(
         !const_encode(body).contains("__encode"),
@@ -783,14 +763,8 @@ fn leaves_a_struct_with_a_runtime_member_on_the_accessor() {
     )
 }
 
-/// The regression guard for the span damage const encoding used to cause.
-///
-/// Rewriting a call into a `Konst` path deletes the receiver and the command name
-/// from the expansion, and an editor with no token to map back offers no
-/// definition at all: `tools/goto_probe.py` went from 12/12 to 7/12, losing
-/// exactly `dpDemo`, `Dp`, `CMD_NO_OP`, `CMD_NO_OP_STRING` and
-/// `GLUTTON_OF_CHOICE`. Keeping the written call in an unreachable branch restores
-/// it and costs nothing, which `bench` measures.
+/// Regression guard: the written call must survive in an unreachable branch so
+/// goto-definition still resolves it (see `tools/goto_probe.py`).
 #[test]
 fn keeps_the_written_call_for_navigation() {
     let expansion = const_encode("Ref.dpDemo.Dp(IMMEDIATE, 0, PROC_TYPE_NONE);");
@@ -800,8 +774,7 @@ fn keeps_the_written_call_for_navigation() {
         "the written call should survive in an unreachable branch: {expansion}"
     );
 
-    // The receiver chain and the command name have to be present as themselves;
-    // a `Konst` path does not give an editor anything to resolve `dpDemo` to.
+    // A `Konst` path gives an editor nothing to resolve `dpDemo` to.
     for token in ["Ref", "dpDemo", "Dp"] {
         assert!(
             expansion.contains(&format!("{token} ")) || expansion.contains(&format!("{token}.")),

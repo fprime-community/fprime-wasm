@@ -20,10 +20,9 @@ path = "src/cmd/main.rs"
 
 [dependencies]
 fprime_dictionary = { path = "../fprime_dictionary", version = "=0.0.0" }
+fprime_test = { path = "../fprime_test", version = "=0.0.0" }
 anyhow = "1.0.104"
 clap = { version = "4.6.7", features = ["derive"] }
-spacewasm = "0.7.1"
 toml_edit = { version = "0.25.15", features = ["serde"] }
-wasmparser = { version = "0.259", default-features = false }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
