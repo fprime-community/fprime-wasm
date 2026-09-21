@@ -23,16 +23,6 @@ runs:
         VERSION="${VERSION#v}"
         echo "Releasing version: $VERSION"
 
-        # Edit in place through a temporary file rather than with `sed -i`. This
-        # action runs on the macOS binary runners too, and BSD sed reads the
-        # argument after -i as a backup suffix: the GNU spelling consumed the
-        # script, tried to run `Cargo.toml` as one, and failed with "invalid
-        # command code C". `-i.bak` would work on both but leaves .bak files in
-        # the tree that `cargo publish` would then package.
-        #
-        # `cat` into the original rather than `mv` over it: mktemp's file lives
-        # in $TMPDIR, which is not necessarily the same filesystem, and the
-        # original's mode is worth keeping.
         rewrite() {
           local file="$1" script="$2" tmp
           tmp="$(mktemp)"

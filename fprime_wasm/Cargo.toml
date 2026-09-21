@@ -10,18 +10,6 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
-# Where `cargo binstall` finds the prebuilt binaries that
-# `.github/workflows/release.yml` attaches to each GitHub release. Both
-# templates have to be spelled out: binstall's defaults look under
-# `/download/{version}/` rather than `/download/v{version}/`, name the asset
-# `{name}-{target}-v{version}` rather than `{name}-v{version}-{target}`, and do
-# not expect the staging directory the release archives are built around.
-#
-# No `pkg-fmt`: binstall probes every archive suffix, so these two lines cover
-# the Unix `.tar.gz` and the Windows `.zip` alike.
-#
-# `{ version }` is the published crate version, which the release workflow keeps
-# equal to the tag, so `v{ version }` resolves to the tag that holds the assets.
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-v{ version }-{ target }{ archive-suffix }"
 bin-dir = "{ name }-v{ version }-{ target }/{ bin }{ binary-ext }"
