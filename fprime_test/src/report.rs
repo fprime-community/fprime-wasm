@@ -172,8 +172,7 @@ fn step_detail(plan: &Context, walk: &Walk, calls: &[Call], index: usize) -> Str
             ));
             out.push(String::new());
             out.push(
-                "  steps match in order — an earlier call can't satisfy a later step."
-                    .to_string(),
+                "  steps match in order — an earlier call can't satisfy a later step.".to_string(),
             );
         }
         None => {
@@ -558,10 +557,7 @@ mod tests {
             message.contains("event(WARNING_LO) \"bus off\""),
             "{message}"
         );
-        assert!(
-            message.contains("sequence exited successfully 0"),
-            "{message}"
-        );
+        assert!(message.contains("exited successfully with 0"), "{message}");
         assert!(message.contains("fix:"), "{message}");
         assert!(message.contains("host call 1"), "{message}");
     }

@@ -73,3 +73,9 @@ The default `sequencer.toml` can be overriden per test with:
 ```
 
 `fprime-wasm verify --limits <path>` sizes against one the same way.
+
+## Dictionary
+
+`{{dictionary}}` is this deployment's dictionary, and `build.rs` turns it into the
+typed API the sequences call. Replace it from a newer release build and re-run
+`fprime-wasm build`.

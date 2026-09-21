@@ -1,3 +1,4 @@
+#[cfg(target_family = "wasm")]
 #[link(wasm_import_module = "fprime_v1")]
 unsafe extern "C" {
     /// Exit the runtime given a status.
