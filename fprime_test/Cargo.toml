@@ -1,0 +1,25 @@
+[package]
+name = "fprime_test"
+description = "Test F Prime Wasm sequences: run one on the on-board interpreter and check the commands it sends, the responses it gets and the telemetry it reads"
+readme = "README.md"
+keywords = ["fprime", "wasm", "spacecraft", "sequencer", "testing"]
+categories = ["aerospace", "development-tools::testing", "wasm"]
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow = "1.0.104"
+fprime_core = { path = "../fprime_core", version = "=0.0.0" }
+fprime_dictionary = { path = "../fprime_dictionary", version = "=0.0.0" }
+spacewasm = "0.7.1"
+toml_edit = { version = "0.25.15", features = ["serde"] }
+wasmparser = { version = "0.259", default-features = false }
+serde = { version = "1.0.228", features = ["derive"] }
+
+[dev-dependencies]
+# Same wasm-tools release as `wasmparser` above. Only `tests/diagnostics.rs` needs it, to
+# assemble module shapes `rust-lld` never emits.
+wat = "1.259.0"

@@ -17,8 +17,7 @@ pub fn str_to_ident(name: &str) -> Ident {
     }
 }
 
-/// Split a dot qualified dictionary name into its module qualifier and its
-/// trailing name, e.g. `Ref.DpDemo.DpReqType` becomes `(["Ref", "DpDemo"], "DpReqType")`.
+/// Splits `Ref.DpDemo.DpReqType` into `(["Ref", "DpDemo"], "DpReqType")`.
 pub fn split_qualified_name(qualified_name: &str) -> (Vec<&str>, &str) {
     let mut qualifier: Vec<&str> = qualified_name.split('.').collect();
 
@@ -28,21 +27,30 @@ pub fn split_qualified_name(qualified_name: &str) -> (Vec<&str>, &str) {
     (qualifier, name)
 }
 
-/// The Rust path of a generated type definition, e.g. `Ref.DpDemo.DpReqType`
-/// becomes `crate::Defs::Ref::DpDemo::DpReqType`.
+/// The Rust path of a generated type definition, e.g. `Ref.DpDemo.DpReqType` becomes
+/// `crate::Defs::Ref::DpDemo::DpReqType`.
 pub fn definition_path(qualified_name: &str) -> TokenStream {
     let (_, name) = split_qualified_name(qualified_name);
 
     definition_path_with_name(qualified_name, str_to_ident(name))
 }
 
-/// [`definition_path`] with the trailing identifier supplied by the caller, for
-/// callers that need to spell that last segment their own way.
+/// [`definition_path`], with the trailing identifier supplied instead of derived.
 pub fn definition_path_with_name(qualified_name: &str, name: Ident) -> TokenStream {
     let (qualifier, _) = split_qualified_name(qualified_name);
     let modules = qualifier.into_iter().map(str_to_ident);
 
     quote! { crate::Defs::#(#modules::)*#name }
+}
+
+/// The Rust path of a generated descriptor, e.g. `Ref.power.BatteryVoltage` becomes
+/// `crate::Desc::Ref::power::BatteryVoltage`.
+pub fn desc_path(qualified_name: &str) -> TokenStream {
+    let (qualifier, name) = split_qualified_name(qualified_name);
+    let modules = qualifier.into_iter().map(str_to_ident);
+    let name = str_to_ident(name);
+
+    quote! { crate::Desc::#(#modules::)*#name }
 }
 
 /// The Rust path of a generated const encoder, e.g. `CdhCore.cmdDisp.CMD_NO_OP`

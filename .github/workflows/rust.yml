@@ -43,13 +43,13 @@ jobs:
           restore-keys: test-${{ runner.os }}-
 
       - name: Test the host crates
-        run: cargo test -p fprime_dictionary -p fprime_build -p fprime_macros -p wasm_size -p fprime-wasm
+        run: cargo test -p fprime_dictionary -p fprime_build -p fprime_macros -p wasm_size -p fprime-wasm -p fprime_test
 
-      # A sequence bin cannot link for the host, so every one in `crates/bench` and
-      # `crates/example` is declared `required-features = ["wasm"]` and a host build
-      # of the workspace skips it. Nothing else enforces that: a new bin added
-      # without the gate breaks this command and no other step notices, because
-      # every other step names its packages explicitly.
+      # A sequence bin cannot link for the host, so every one in `crates/bench`,
+      # `crates/example` and `crates/interp` is declared `required-features = ["wasm"]`
+      # and a host build of the workspace skips it. Nothing else enforces that: a new
+      # bin added without the gate breaks this command and no other step notices,
+      # because every other step names its packages explicitly.
       - name: Build the workspace for the host
         run: cargo build --workspace
 
@@ -59,12 +59,21 @@ jobs:
       # the two dictionary libs and no `.wasm` at all, and the verify below has
       # nothing to look at.
       - name: Build the wasm crates
-        run: cargo build --release --target wasm32v1-none -p bench -p example --features wasm
+        run: |
+          cargo build --release --target wasm32v1-none \
+            -p bench -p example -p interp --features wasm
 
-      - name: Verify the sequences against the on-board interpreter
+      # After the wasm build, because a sequence test loads the compiled module. Runs
+      # for the host with no flags, which is the same thing `fprime-wasm test` does
+      # once it has built — so this also pins that a scaffolded project's tests are
+      # reachable by a plain `cargo test`. `interp` is in the same boat: its tests drive
+      # the harness directly against purpose-built fixture modules.
+      - name: Test what the sequences do
+        run: cargo test -p example -p interp
+
+      - name: Verify the sequences load on the on-board interpreter
         run: |
           cargo run -p fprime-wasm -- verify \
-            --dictionary fprime_dictionary/src/test/RefTopologyDictionary.json \
             target/wasm32v1-none/release/*.wasm
 
   size:

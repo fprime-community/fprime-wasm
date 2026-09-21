@@ -1,3 +1,4 @@
+#[cfg(target_family = "wasm")]
 #[link(wasm_import_module = "fprime_v1")]
 unsafe extern "C" {
     /// Exit the runtime given a status.
@@ -145,3 +146,81 @@ unsafe extern "C" {
         block_type: i32,
     ) -> i32;
 }
+
+/// Host-build stand-ins for the `fprime_v1` imports; every one aborts.
+#[cfg(not(target_family = "wasm"))]
+#[allow(unused)]
+mod host {
+    fn off_target(function: &str) -> ! {
+        panic!(
+            "fprime_v1.{function} was called in a host build. A sequence runs on the \
+             interpreter, not natively: load the module with `fprime_test` instead of \
+             calling into the generated API directly."
+        )
+    }
+
+    pub(crate) unsafe fn exit(_code: i32) -> ! {
+        off_target("exit")
+    }
+
+    pub(crate) unsafe fn panic(_code: i32) -> ! {
+        off_target("panic")
+    }
+
+    #[allow(dead_code)]
+    pub(crate) unsafe fn args(_destination_ptr: u32, _destination_size: u32) -> u32 {
+        off_target("args")
+    }
+
+    pub(crate) unsafe fn time(_time_ptr: u32, _time_size: u32) {
+        off_target("time")
+    }
+
+    pub(crate) unsafe fn tlm(
+        _id: i64,
+        _time_ptr: u32,
+        _time_size: u32,
+        _value_ptr: u32,
+        _value_size: u32,
+    ) -> i32 {
+        off_target("tlm")
+    }
+
+    pub(crate) unsafe fn prm(_id: i64, _value_ptr: u32, _value_size: u32) -> i32 {
+        off_target("prm")
+    }
+
+    pub(crate) unsafe fn cmd(_buf_ptr: u32, _buf_size: u32) -> i32 {
+        off_target("cmd")
+    }
+
+    pub(crate) unsafe fn event(_severity: i32, _msg_ptr: u32, _msg_size: u32) {
+        off_target("event")
+    }
+
+    pub(crate) unsafe fn rsleep(_us: u64) {
+        off_target("rsleep")
+    }
+
+    pub(crate) unsafe fn asleep(_us: u64) {
+        off_target("asleep")
+    }
+
+    pub(crate) unsafe fn serial_send(_index: i32, _data_ptr: u32, _data_size: u32) {
+        off_target("serial_send")
+    }
+
+    pub(crate) unsafe fn serial_recv(
+        _index: i32,
+        _data_ptr: u32,
+        _data_size: u32,
+        _actual_size_ptr: u32,
+        _block_type: i32,
+    ) -> i32 {
+        off_target("serial_recv")
+    }
+}
+
+#[allow(unused)]
+#[cfg(not(target_family = "wasm"))]
+pub(crate) use host::*;

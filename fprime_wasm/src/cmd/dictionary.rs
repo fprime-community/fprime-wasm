@@ -1,11 +1,10 @@
 //! Finding, validating and installing a deployment's JSON dictionary.
 //!
 //! `init` copies one into the project, since `build.rs` generates the whole command,
-//! channel and parameter surface from it. `verify` only wants one for names, so a
-//! missing dictionary there costs labels rather than failing the run.
+//! channel and parameter surface from it. A sequence test reads the same copy, to name the
+//! commands and channels a failure mentions.
 
 use anyhow::{Context, Result, bail};
-use fprime_wasm::project::Project;
 use fprime_wasm::scaffold::DICTIONARY_DIR;
 use std::io::{IsTerminal, Write};
 use std::path::{Path, PathBuf};
@@ -107,32 +106,4 @@ fn existing(root: &Path) -> Option<PathBuf> {
     candidates.sort();
     let first = candidates.into_iter().next()?;
     Some(PathBuf::from(DICTIONARY_DIR).join(first.file_name()?))
-}
-
-/// The dictionary to name things with: whatever was asked for, else the project's,
-/// else none. A missing dictionary only costs names, so it is never fatal on its own.
-pub fn load(
-    explicit: Option<&Path>,
-    project: Option<&Project>,
-) -> Result<Option<fprime_dictionary::Dictionary>> {
-    if let Some(path) = explicit {
-        let dictionary =
-            fprime_dictionary::try_parse(path).map_err(|err| anyhow::anyhow!("{err}"))?;
-        return Ok(Some(dictionary));
-    }
-    let Some(project) = project else {
-        return Ok(None);
-    };
-    let Some(relative) = existing(project.root()) else {
-        return Ok(None);
-    };
-    match fprime_dictionary::try_parse(&project.root().join(&relative)) {
-        Ok(dictionary) => Ok(Some(dictionary)),
-        // Found by guessing, so a bad one is not the user's instruction to follow;
-        // carry on without names.
-        Err(err) => {
-            eprintln!("warning: ignoring {}: {err}", relative.display());
-            Ok(None)
-        }
-    }
 }

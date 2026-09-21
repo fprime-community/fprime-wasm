@@ -12,6 +12,10 @@ mod sleep;
 pub mod time;
 mod tlm;
 
+/// Dictionary point descriptors for generated `Desc` consts and test scaffolding.
+#[cfg(not(target_family = "wasm"))]
+pub mod desc;
+
 pub use cmd::*;
 pub use konst::*;
 pub use log::*;

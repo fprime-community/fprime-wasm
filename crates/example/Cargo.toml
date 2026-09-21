@@ -16,6 +16,9 @@ fprime_core = { path = "../../fprime_core" }
 [build-dependencies]
 fprime_build = { path = "../../fprime_build" }
 
+[dev-dependencies]
+fprime_test = { path = "../../fprime_test" }
+
 [lib]
 test = false
 bench = false
@@ -28,6 +31,18 @@ bench = false
 
 [[bin]]
 name = "no_op"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "worker"
+required-features = ["wasm"]
+test = false
+bench = false
+
+[[bin]]
+name = "poller"
 required-features = ["wasm"]
 test = false
 bench = false

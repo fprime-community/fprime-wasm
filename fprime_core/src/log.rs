@@ -14,10 +14,12 @@ impl<const N: usize> StrTruncate<N> for String<N> {
         let mut out: heapless::Vec<u8, N, u16> = heapless::Vec::new();
         let n = core::cmp::min(s.len(), N);
         unsafe {
+            // Avoid `copy_nonoverlapping` since that induces a memcpy and without
+            // bulk-memory operations in spacewasm it would cost a large amout of `.wasm` size.
+            out.set_len(n);
             for (i, c) in s.get_unchecked(..n).as_bytes().iter().enumerate() {
                 *out.get_unchecked_mut(i) = *c;
             }
-            out.set_len(n);
             heapless::String::from_utf8_unchecked(out)
         }
     }

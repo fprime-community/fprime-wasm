@@ -6,7 +6,8 @@ inside a Wasm interpreter.
 
 | Crate | |
 |---|---|
-| [`fprime-wasm`](fprime_wasm) | The `fprime-wasm` command: scaffold a sequence project, add sequences, size a module against the on-board interpreter |
+| [`fprime-wasm`](fprime_wasm) | The `fprime-wasm` command: scaffold a sequence project, add sequences, build and test them, size a module against the on-board interpreter |
+| [`fprime_test`](fprime_test) | The `#[fprime_test]` DSL: run a sequence on `spacewasm` and check what it does |
 | [`fprime_core`](fprime_core) | `no_std` runtime a sequence links against, and the guest side of the `fprime_v1` host ABI |
 | [`fprime_build`](fprime_build) | `build.rs` code generator, turning an F Prime JSON dictionary into a typed Rust API |
 | [`fprime_macros`](fprime_macros) | `#[fprime_main]` and the sequencing DSL |
@@ -34,19 +35,19 @@ cargo install fprime-wasm
 ```shell
 mkdir my-sequences && cd my-sequences
 fprime-wasm init          # asks for the deployment's JSON dictionary
-cargo build --release
+fprime-wasm test
 fprime-wasm verify
 ```
 
-See [`fprime_wasm/README.md`](fprime_wasm/README.md) for what `init`, `add` and
-`verify` do.
+See [`fprime_wasm/README.md`](fprime_wasm/README.md) for what `init`, `add`,
+`build`, `test` and `verify` do.
 
 [VS Code](https://code.visualstudio.com) is the recommended editor for
 a generated sequences project.
 
 ## This repository
 
-Besides the five published crates, `crates/` holds what exercises them:
+Besides the six published crates, `crates/` holds what exercises them:
 
 | Crate | |
 |---|---|
@@ -65,4 +66,4 @@ cargo build --release --features wasm
 
 `spacewasm`, the on-board interpreter, only implements WebAssembly 1.0 plus
 `mutable-globals` and `custom-page-sizes`. `.cargo/wasm-link` pins `wasm-opt` to
-that same set, and `fprime-wasm verify` checks the result.
+that same set, and `fprime-wasm verify` checks the result loads.

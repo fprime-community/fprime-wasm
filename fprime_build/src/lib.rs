@@ -7,6 +7,7 @@ use std::{env, fs};
 
 mod commands;
 mod constants;
+mod desc;
 mod konst;
 mod parameters;
 mod telemetry;
@@ -14,6 +15,12 @@ mod tree;
 mod types;
 mod util;
 mod values;
+
+/// The flight API a sequence is built against: types, accessors, const encoders.
+pub const DICTIONARY: &str = "dictionary.rs";
+
+/// The test descriptors file, excluded from the flight translation unit.
+pub const DESCRIPTORS: &str = "descriptors.rs";
 
 /// Serialize a token stream into a string
 fn render_tokens(ts: TokenStream) -> String {
@@ -28,7 +35,6 @@ pub(crate) fn generate_to_file<W: ?Sized + Write>(
     dict: &fprime_dictionary::Dictionary,
     writer: &mut BufWriter<W>,
 ) {
-    // Every command reports an `Fw::CmdResponse`
     if !matches!(
         dict.type_definitions.get("Fw.CmdResponse"),
         Some(TypeDefinition::Enum(_))
@@ -38,9 +44,7 @@ pub(crate) fn generate_to_file<W: ?Sized + Write>(
 
     let mut definitions = vec![];
 
-    // Generate all namespace nested definitions
-    // Definitions are keyed by an unordered map, so walk them by name to keep
-    // the generated file stable across runs
+    // Sorted for stable output across runs; the map itself is unordered.
     let mut type_names: Vec<&String> = dict.type_definitions.keys().collect();
     type_names.sort();
 
@@ -54,7 +58,6 @@ pub(crate) fn generate_to_file<W: ?Sized + Write>(
         definitions.push(Definition { qualifier, tokens });
     }
 
-    // Generate all impl nested definitions
     let mut impls = vec![];
     let mut konsts = vec![];
 
@@ -77,13 +80,10 @@ pub(crate) fn generate_to_file<W: ?Sized + Write>(
         impls.push(Definition { qualifier, tokens });
     }
 
-    // Collect all the code into a hierarchy
     let definitions: CodeTree = definitions.into();
     let impls: CodeTree = impls.into();
     let konsts: CodeTree = konsts.into();
 
-    // Linearize the definition trees into a token stream nested in modules
-    // Linearize the impl trees into a token stream of nested structs
     let tokens: TokenStream = definitions
         .module_nesting()
         .into_iter()
@@ -91,7 +91,6 @@ pub(crate) fn generate_to_file<W: ?Sized + Write>(
         .chain(konsts.module_nesting_named("Konst"))
         .collect();
 
-    // Render the token stream into formatted Rust code and write it to a file
     writer
         .write(render_tokens(tokens).as_bytes())
         .expect("failed to write to file");
@@ -99,10 +98,43 @@ pub(crate) fn generate_to_file<W: ?Sized + Write>(
     writer.flush().expect("failed to flush file")
 }
 
+/// The `Desc` tree: one `const` per dictionary point, for `#[fprime_test]` to resolve against.
+pub(crate) fn generate_descriptors_to_file<W: ?Sized + Write>(
+    dict: &fprime_dictionary::Dictionary,
+    writer: &mut BufWriter<W>,
+) {
+    desc::check_for_collisions(dict);
+
+    let mut descs = vec![];
+
+    for cmd in &dict.commands {
+        let (qualifier, tokens) = desc::command(cmd);
+        descs.push(Definition { qualifier, tokens });
+    }
+    for tlm in &dict.telemetry_channels {
+        let (qualifier, tokens) = desc::telemetry_channel(dict, tlm);
+        descs.push(Definition { qualifier, tokens });
+    }
+    for prm in &dict.parameters {
+        let (qualifier, tokens) = desc::parameter(dict, prm);
+        descs.push(Definition { qualifier, tokens });
+    }
+    if let Some((qualifier, tokens)) = desc::responses(dict) {
+        descs.push(Definition { qualifier, tokens });
+    }
+
+    let descs: CodeTree = descs.into();
+    let tokens = descs.module_nesting_named("Desc");
+
+    writer
+        .write_all(render_tokens(tokens).as_bytes())
+        .expect("failed to write the descriptors");
+    writer.flush().expect("failed to flush the descriptors")
+}
+
 pub fn generate(dictionary_json: &str) {
-    // Get the output directory provided by Cargo
     let out_dir = env::var_os("OUT_DIR").unwrap();
-    let dest_path = Path::new(&out_dir).join("dictionary.rs");
+    let dest_path = Path::new(&out_dir).join(DICTIONARY);
     println!("cargo::rerun-if-changed=build.rs");
 
     let dictionary_path = fs::canonicalize(dictionary_json).unwrap_or_else(|err| {
@@ -118,6 +150,12 @@ pub fn generate(dictionary_json: &str) {
     let mut writer = BufWriter::new(file);
 
     generate_to_file(&dict, &mut writer);
+
+    // Written unconditionally; whether it is *compiled* is the including crate's `cfg`.
+    let descriptors = Path::new(&out_dir).join(DESCRIPTORS);
+    let file = fs::File::create(descriptors).expect("failed to open the descriptors file");
+    let mut writer = BufWriter::new(file);
+    generate_descriptors_to_file(&dict, &mut writer);
 
     println!("cargo::rerun-if-changed=Cargo.toml");
     println!("cargo::rerun-if-changed={}", dictionary_json);

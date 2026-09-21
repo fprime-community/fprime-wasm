@@ -2,16 +2,14 @@
 
 use super::name::valid_name;
 use super::plan::{File, sequence};
-use crate::project::Project;
 use anyhow::{Context, Result, bail};
+use fprime_test::project::Project;
 use std::path::{Path, PathBuf};
 
 /// What happened to a file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Written {
     Created,
-    /// Left as it was. `init` and `add` never overwrite: a sequence someone has
-    /// edited is worth more than a template.
     Skipped,
 }
 
@@ -33,22 +31,19 @@ pub fn write(root: &Path, file: &File) -> Result<Written> {
     Ok(Written::Created)
 }
 
-/// Cargo runs `.cargo/wasm-link` directly, so a file left at 0644 fails the build
-/// with a permission error rather than anything that names the cause.
+/// Cargo runs `.cargo/wasm-link` directly, so it needs the executable bit.
 #[cfg(unix)]
 fn set_executable(path: &Path) -> Result<()> {
     use std::os::unix::fs::PermissionsExt;
     let mut permissions = std::fs::metadata(path)
         .with_context(|| format!("could not read the mode of {}", path.display()))?
         .permissions();
-    // Added to whatever the umask allowed, rather than set outright, so a restrictive
-    // umask is respected for the read and write bits.
+    // Added to the existing mode, so the umask's read/write bits are respected.
     permissions.set_mode(permissions.mode() | 0o111);
     std::fs::set_permissions(path, permissions)
         .with_context(|| format!("could not make {} executable", path.display()))
 }
 
-/// No such bit off Unix, where a `#!/bin/sh` linker cannot run anyway.
 #[cfg(not(unix))]
 fn set_executable(_path: &Path) -> Result<()> {
     Ok(())
@@ -58,13 +53,12 @@ fn set_executable(_path: &Path) -> Result<()> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Added {
     pub source: Written,
+    pub test: Written,
     pub declared: bool,
 }
 
-/// Add a sequence to `project`: write its source and declare its `[[bin]]`.
-///
-/// Both halves are idempotent, so re-running after an interruption completes the
-/// missing half instead of duplicating the other.
+/// Adds a sequence to `project`: writes its source and tests, and declares its `[[bin]]`.
+/// Idempotent — a re-run completes whichever parts are missing.
 pub fn add_sequence(project: &mut Project, name: &str) -> Result<Added> {
     valid_name(name)?;
     if project.has_unusable_bin_key() {
@@ -85,12 +79,26 @@ pub fn add_sequence(project: &mut Project, name: &str) -> Result<Added> {
         },
     )?;
 
+    // Written even for a pre-existing sequence missing its test file.
+    let test = write(
+        project.root(),
+        &File {
+            path: PathBuf::from("tests").join(format!("{name}.rs")),
+            contents: super::plan::test(&lib_name, name)?,
+            executable: false,
+        },
+    )?;
+
     let declared = project.declare_sequence(name);
     if declared {
         project.save()?;
     }
 
-    Ok(Added { source, declared })
+    Ok(Added {
+        source,
+        test,
+        declared,
+    })
 }
 
 #[cfg(test)]
@@ -106,11 +114,9 @@ mod tests {
         root
     }
 
-    /// Cargo runs this one rather than reading it, so the bit is the difference
-    /// between a working release build and a permission error.
     #[cfg(unix)]
     #[test]
-    fn an_executable_file_is_written_with_the_bit_set() {
+    fn executable_file_is_written_with_bit_set() {
         use std::os::unix::fs::PermissionsExt;
         let root = temporary(line!());
 
@@ -136,7 +142,42 @@ mod tests {
     }
 
     #[test]
-    fn writes_a_file_and_then_leaves_it_alone() {
+    fn add_sequence_writes_source_tests_and_bin_entry() {
+        let root = temporary(line!());
+        std::fs::create_dir_all(&root).expect("temp dir");
+        std::fs::write(
+            root.join("Cargo.toml"),
+            "[package]\nname = \"sequences\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
+        )
+        .expect("manifest");
+
+        let mut project = Project::find(&root).expect("a project");
+        let added = add_sequence(&mut project, "safing").expect("added");
+        assert_eq!(added.source, Written::Created);
+        assert_eq!(added.test, Written::Created);
+        assert!(added.declared);
+
+        let test_path = root.join("tests").join("safing.rs");
+        assert!(test_path.is_file(), "the tests should be beside the source");
+        std::fs::write(&test_path, "// what I decided it should do").expect("edit");
+
+        // Re-run: nothing new, and the edit survives.
+        let mut project = Project::find(&root).expect("a project");
+        let again = add_sequence(&mut project, "safing").expect("added again");
+        assert_eq!(again.source, Written::Skipped);
+        assert_eq!(again.test, Written::Skipped);
+        assert!(!again.declared, "the [[bin]] must not be declared twice");
+        assert_eq!(
+            std::fs::read_to_string(&test_path).expect("read back"),
+            "// what I decided it should do"
+        );
+        assert_eq!(project.sequences(), vec!["safing"]);
+
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
+    fn write_leaves_existing_file_alone() {
         let root = temporary(line!());
         let file = File {
             path: PathBuf::from("src").join("bin").join("startup.rs"),

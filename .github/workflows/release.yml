@@ -52,7 +52,7 @@ jobs:
         # they exist to serve.
         run: cargo build --release --target wasm32v1-none -p bench -p example
 
-      - name: Verify the sequences against the on-board interpreter
+      - name: Verify the sequences load on the on-board interpreter
         # A sequence can build and still fail to load: `spacewasm` implements
         # WebAssembly 1.0 plus mutable-globals and custom-page-sizes only, and
         # `wasm-opt` can introduce post-MVP instructions while optimising. This
@@ -63,7 +63,6 @@ jobs:
         # there would try to build the tool itself for Wasm.
         run: |
           cargo run -p fprime-wasm -- verify \
-            --dictionary fprime_dictionary/src/test/RefTopologyDictionary.json \
             target/wasm32v1-none/release/*.wasm
 
       - name: Publish crates to crates.io
@@ -86,12 +85,14 @@ jobs:
           #   fprime_macros      -> fprime_dictionary
           #   fprime_core        -> fprime_macros
           #   fprime_build       -> fprime_dictionary
-          #   fprime-wasm        -> fprime_dictionary
+          #   fprime_test        -> fprime_core, fprime_dictionary
+          #   fprime-wasm        -> fprime_test, fprime_dictionary
           crates=(
             fprime_dictionary
             fprime_macros
             fprime_core
             fprime_build
+            fprime_test
             fprime-wasm
           )
 
@@ -132,7 +133,7 @@ jobs:
             # Retry ONLY to ride out crates.io's new-crate rate limit (HTTP 429).
             # crates.io allows a burst of ~5 brand-new crate names, then refills
             # one token roughly every 10 minutes; a first release of this
-            # workspace publishes 5 new names and can trip it. Any other failure
+            # workspace publishes 6 new names and will trip it. Any other failure
             # (an unresolved dependency, a failed verification build) is
             # permanent, so fail fast rather than retry for over an hour.
             attempt=1

@@ -3,20 +3,14 @@
 use super::cli::Init;
 use super::dictionary;
 use anyhow::{Context, Result, bail};
-use fprime_wasm::project::TARGET;
+use fprime_test::project::TARGET;
 use fprime_wasm::scaffold::{self, DependencySpec, Plan, Written};
 use std::path::Path;
 
-/// Version of the `fprime_*` crates a scaffolded project depends on.
-///
-/// The whole workspace releases in lockstep from one tag, so the tool and the crates
-/// it scaffolds against always share a version. `0.0.0` is the unreleased placeholder
-/// that `release.yml` substitutes, so seeing it means this is a build from a checkout
-/// rather than an installed release.
+/// Version scaffolded projects depend on; `0.0.0` means an unreleased checkout build.
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// This crate's own directory at compile time, used to fall back to path dependencies
-/// when running an unreleased build out of a checkout.
+/// This crate's directory at compile time, for path-dependency fallback.
 const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
 
 pub fn run(args: &Init) -> Result<()> {
@@ -55,8 +49,7 @@ pub fn run(args: &Init) -> Result<()> {
         stack_size: args.stack_size,
     };
 
-    // Rendered up front so a broken template fails before any file is written, rather
-    // than leaving a half-created project behind.
+    // Rendered first so a bad template fails before any file is written.
     let files = plan.files()?;
 
     println!("Creating {} in {}", plan.name, root.display());
@@ -75,17 +68,17 @@ pub fn run(args: &Init) -> Result<()> {
     println!();
     println!("Next:");
     println!("  rustup target add {TARGET}");
-    println!("  cd {} && cargo build --release", directory.display());
+    // Skip `cd .`; it reads as though it does something.
+    if directory != Path::new(".") {
+        println!("  cd {}", directory.display());
+    }
+    println!("  fprime-wasm build");
+    println!("  fprime-wasm test");
     println!("  fprime-wasm verify");
     Ok(())
 }
 
-/// How a scaffolded project should depend on the `fprime_*` crates.
-///
-/// An unreleased build cannot honestly emit its own version — `0.0.0` is not on
-/// crates.io — so it falls back to path dependencies into the checkout it was built
-/// from. That keeps `cargo run -p fprime-wasm -- init` working while developing, and an
-/// installed release still pins a real version.
+/// How a scaffolded project depends on the `fprime_*` crates.
 fn dependency_spec(version: Option<&str>, local: Option<&Path>) -> Result<DependencySpec> {
     if let Some(local) = local {
         let root = std::fs::canonicalize(local)
@@ -124,10 +117,8 @@ fn dependency_spec(version: Option<&str>, local: Option<&Path>) -> Result<Depend
 mod tests {
     use super::*;
 
-    /// `--local` must point at a real checkout, or the scaffolded manifest would
-    /// reference a path that does not resolve.
     #[test]
-    fn a_local_dependency_must_be_a_checkout() {
+    fn local_dependency_requires_checkout() {
         let empty =
             std::env::temp_dir().join(format!("fprime-wasm-not-a-checkout-{}", std::process::id()));
         std::fs::create_dir_all(&empty).expect("temp dir");
@@ -141,7 +132,7 @@ mod tests {
     }
 
     #[test]
-    fn an_explicit_version_is_used_verbatim() {
+    fn explicit_version_used_verbatim() {
         assert_eq!(
             dependency_spec(Some("1.2.3"), None).expect("valid"),
             DependencySpec::Version("1.2.3".into())

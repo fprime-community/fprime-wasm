@@ -8,7 +8,10 @@ use bench::*;
 pub fn main() {
     Ref.typeDemo.CHOICE_PAIR_WITH_FRIENDS(
         1,
-        ChoicePair { firstChoice: RED, secondChoice: BLUE },
+        ChoicePair {
+            firstChoice: RED,
+            secondChoice: BLUE,
+        },
         2,
     );
 }
