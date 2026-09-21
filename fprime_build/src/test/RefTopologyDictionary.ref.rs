@@ -118,7 +118,7 @@ pub mod Defs {
             WIDE_HIGH = 4294967296,
         }
         /// An integer constant
-        const dimension: u32 = 3;
+        pub const dimension: u32 = 3;
         pub mod DpDemo {
             #[allow(unused_imports)]
             use fprime_core::*;
@@ -154,7 +154,7 @@ pub mod Defs {
             /// An array of scalars
             pub type U32Array = [u32; 5];
             /// Another integer constant
-            const stringSize: u32 = 80;
+            pub const stringSize: u32 = 80;
         }
         pub mod SignalGen {
             #[allow(unused_imports)]
@@ -197,7 +197,7 @@ pub mod Defs {
             #[allow(unused_imports)]
             use fprime_core::*;
             /// A string constant
-            const DEFAULT_SEQ_BASE_DIR: &'static str = "/seq";
+            pub const DEFAULT_SEQ_BASE_DIR: &'static str = "/seq";
         }
     }
 }
