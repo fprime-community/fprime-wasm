@@ -4,8 +4,8 @@ Create and inspect [F Prime](https://github.com/nasa/fprime) Wasm sequence
 projects.
 
 ```shell
-cargo install fprime-wasm
-cargo install wasm-opt
+cargo binstall fprime-wasm   # prebuilt binary. `cargo install fprime-wasm` builds from source
+cargo binstall wasm-opt
 ```
 
 ## `init`
