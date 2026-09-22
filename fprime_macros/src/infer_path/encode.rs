@@ -2,12 +2,12 @@
 
 use crate::infer_path::MAX_DEPTH;
 use crate::infer_path::name::unraw;
-use crate::infer_path::scan::arguments;
-use crate::infer_path::symbols::Symbols;
+use crate::infer_path::scan::{Chain, Lower, Rewrite, arguments, scan};
+use crate::infer_path::symbols::{Point, Symbols};
 use fprime_dictionary::konst::{ENCODE_SUFFIX, SIZE_SUFFIX};
 use fprime_dictionary::naming::{konst_path, split_qualified_name};
 use fprime_dictionary::{Command, TypeDefinition, TypeName};
-use proc_macro2::{Group, Span, TokenStream, TokenTree};
+use proc_macro2::{Group, Span, TokenStream};
 use quote::quote;
 use syn::spanned::Spanned;
 use syn::{Expr, Lit, Member, Path as SynPath, UnOp};
@@ -88,51 +88,39 @@ fn is_qualified_path(path: &SynPath) -> bool {
             .is_some_and(|segment| segment.ident == "crate")
 }
 
-impl Symbols {
-    /// Replaces every command call whose arguments are all compile-time constants with a
-    /// reference to its encoded `Fw::ComBuffer`.
-    pub(super) fn const_encode_calls(&self, tokens: TokenStream) -> TokenStream {
-        let trees: Vec<TokenTree> = tokens.into_iter().collect();
-        let mut encoded = TokenStream::new();
-        let mut index = 0;
+/// Pass two of `#[fprime]`: every command call whose arguments are all compile-time
+/// constants becomes a reference to its encoded `Fw::ComBuffer`.
+pub(super) fn encode(symbols: &Symbols, tokens: TokenStream) -> TokenStream {
+    scan(symbols, tokens, &Encode { symbols })
+}
 
-        while index < trees.len() {
-            let begins_a_chain = match index.checked_sub(1).map(|previous| &trees[previous]) {
-                Some(TokenTree::Punct(punct)) => !matches!(punct.as_char(), '.' | ':'),
-                _ => true,
-            };
+struct Encode<'a> {
+    symbols: &'a Symbols,
+}
 
-            if begins_a_chain
-                && let Some(call) = self.command_call(&trees, index)
-                && let Some(TokenTree::Group(args)) = trees.get(call.args)
-                && let Some(buffer) = self.const_encoded_call(
-                    call.command,
-                    args,
-                    trees[index..=call.args].iter().cloned().collect(),
-                    quote! { unsafe { fprime_core::command(&__FPRIME_CMD) } },
-                )
-            {
-                encoded.extend(buffer);
-                index = call.args + 1;
-                continue;
-            }
+impl Lower for Encode<'_> {
+    fn chain(&self, chain: &Chain<'_>) -> Rewrite {
+        let (Point::Command(command), Some(args)) = (&chain.point, &chain.args) else {
+            return Rewrite::Skip;
+        };
 
-            match &trees[index] {
-                TokenTree::Group(group) => {
-                    let mut descended =
-                        Group::new(group.delimiter(), self.const_encode_calls(group.stream()));
-                    descended.set_span(group.span());
-                    encoded.extend([TokenTree::Group(descended)]);
-                }
-                tree => encoded.extend([tree.clone()]),
-            }
-
-            index += 1;
+        // A call this cannot fold is left alone, which puts it on the run-time accessor —
+        // that encodes the same command into `__SCRATCH`, so the reason is not worth
+        // reporting. Skipping rather than consuming also means a command nested inside these
+        // arguments is still folded.
+        match self.symbols.const_encoded_call(
+            command,
+            args,
+            chain.written_call(),
+            quote! { unsafe { fprime_core::command(&__FPRIME_CMD) } },
+        ) {
+            Some(buffer) => Rewrite::Call(buffer),
+            None => Rewrite::Skip,
         }
-
-        encoded
     }
+}
 
+impl Symbols {
     /// The const-encoded form of `command` applied to `args`, or `None` for the runtime
     /// `__SCRATCH` path.
     pub(super) fn const_encoded_call(

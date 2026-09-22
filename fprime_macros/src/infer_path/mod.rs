@@ -41,8 +41,11 @@ mod qualify;
 mod scan;
 mod symbols;
 
+use describe::describe;
+use encode::encode;
 use name::COMPLETION_MARKER;
 use proc_macro2::{Span, TokenStream, TokenTree};
+use qualify::qualify;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
@@ -73,11 +76,9 @@ pub(crate) fn rewrite(attr: TokenStream, item: TokenStream) -> syn::Result<Token
         return Err(syn::Error::new(span, MISSING_DICTIONARY));
     };
 
-    let resolver = resolver(Path::new(&dictionary)).map_err(|err| syn::Error::new(span, err))?;
+    let symbols = symbols(Path::new(&dictionary)).map_err(|err| syn::Error::new(span, err))?;
 
-    let qualified = resolver.qualify_calls(item);
-
-    Ok(resolver.const_encode_calls(qualified))
+    Ok(encode(symbols, qualify(symbols, item)))
 }
 
 /// Qualifies, then descriptor-rewrites — in that order, since qualifying needs the call
@@ -87,7 +88,7 @@ pub(crate) fn rewrite_test_body(body: TokenStream, span: Span) -> syn::Result<To
         return Err(syn::Error::new(span, MISSING_DICTIONARY));
     };
 
-    let resolver = resolver(Path::new(&dictionary)).map_err(|err| syn::Error::new(span, err))?;
+    let symbols = symbols(Path::new(&dictionary)).map_err(|err| syn::Error::new(span, err))?;
 
     // An editor expands this on every keystroke, with a marker where the cursor is. A
     // half-written argument is not a mistake to report, and a `compile_error!` put ahead of
@@ -95,8 +96,7 @@ pub(crate) fn rewrite_test_body(body: TokenStream, span: Span) -> syn::Result<To
     // `spanned_desc_path` for the invariant that rests on.
     let completing = has_completion_marker(&body);
 
-    let qualified = resolver.qualify_calls(body);
-    Ok(resolver.descriptor_calls(qualified, completing))
+    Ok(describe(symbols, qualify(symbols, body), completing))
 }
 
 /// Whether an editor is partway through typing somewhere in `tokens`.
@@ -126,21 +126,21 @@ fn signature_span(item: &TokenStream) -> Span {
 }
 
 /// Dictionaries are parsed once per compilation and shared by every expansion.
-fn resolver(dictionary: &Path) -> Result<&'static Symbols, String> {
+fn symbols(dictionary: &Path) -> Result<&'static Symbols, String> {
     static CACHE: OnceLock<Mutex<HashMap<PathBuf, &'static Symbols>>> = OnceLock::new();
 
     let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
     let mut cache = cache.lock().unwrap_or_else(|err| err.into_inner());
 
-    if let Some(resolver) = cache.get(dictionary) {
-        return Ok(resolver);
+    if let Some(symbols) = cache.get(dictionary) {
+        return Ok(symbols);
     }
 
     let parsed = fprime_dictionary::try_parse(dictionary)?;
-    let resolver: &'static Symbols = Box::leak(Box::new(Symbols::new(parsed)));
-    cache.insert(dictionary.to_path_buf(), resolver);
+    let symbols: &'static Symbols = Box::leak(Box::new(Symbols::new(parsed)));
+    cache.insert(dictionary.to_path_buf(), symbols);
 
-    Ok(resolver)
+    Ok(symbols)
 }
 
 #[cfg(test)]
@@ -155,20 +155,20 @@ pub(crate) mod test_support {
 
     /// Apply the DSL to a sequence body and render the result as tokens.
     pub(crate) fn rewrite_block(body: &str) -> syn::Result<String> {
-        let resolver = resolver(Path::new(DICTIONARY))
+        let symbols = symbols(Path::new(DICTIONARY))
             .map_err(|err| syn::Error::new(Span::call_site(), err))?;
 
-        Ok(resolver.qualify_calls(syn::parse_str(body)?).to_string())
+        Ok(qualify(symbols, syn::parse_str(body)?).to_string())
     }
 
     /// Both passes, in the order `rewrite` runs them: qualify, then const-encode.
     pub(crate) fn const_encode_block(body: &str) -> syn::Result<String> {
-        let resolver = resolver(Path::new(DICTIONARY))
+        let symbols = symbols(Path::new(DICTIONARY))
             .map_err(|err| syn::Error::new(Span::call_site(), err))?;
 
-        let qualified = resolver.qualify_calls(syn::parse_str(body)?);
+        let qualified = qualify(symbols, syn::parse_str(body)?);
 
-        Ok(resolver.const_encode_calls(qualified).to_string())
+        Ok(encode(symbols, qualified).to_string())
     }
 
     /// Renders a body without rewriting it, for writing expectations as ordinary Rust.
@@ -179,14 +179,14 @@ pub(crate) mod test_support {
     /// The `#[fprime_test]` pipeline exactly as the macro runs it, marker detection
     /// included — which is what [`descriptor_block`] takes as a parameter instead.
     pub(crate) fn test_body(body: &str) -> syn::Result<String> {
-        let resolver = resolver(Path::new(DICTIONARY))
+        let symbols = symbols(Path::new(DICTIONARY))
             .map_err(|err| syn::Error::new(Span::call_site(), err))?;
 
         let tokens: TokenStream = syn::parse_str(body)?;
         let completing = has_completion_marker(&tokens);
-        let qualified = resolver.qualify_calls(tokens);
+        let qualified = qualify(symbols, tokens);
 
-        Ok(resolver.descriptor_calls(qualified, completing).to_string())
+        Ok(describe(symbols, qualified, completing).to_string())
     }
 
     /// Both passes in the order `#[fprime_test]` runs them: qualify, then descriptor.
@@ -194,11 +194,11 @@ pub(crate) mod test_support {
     /// `completing` stands in for an editor mid-keystroke, which the marker itself signals in
     /// the real thing — see [`rewrite_test_body`].
     pub(crate) fn descriptor_block(body: &str, completing: bool) -> syn::Result<String> {
-        let resolver = resolver(Path::new(DICTIONARY))
+        let symbols = symbols(Path::new(DICTIONARY))
             .map_err(|err| syn::Error::new(Span::call_site(), err))?;
 
-        let qualified = resolver.qualify_calls(syn::parse_str(body)?);
+        let qualified = qualify(symbols, syn::parse_str(body)?);
 
-        Ok(resolver.descriptor_calls(qualified, completing).to_string())
+        Ok(describe(symbols, qualified, completing).to_string())
     }
 }

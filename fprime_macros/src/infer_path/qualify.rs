@@ -2,8 +2,8 @@
 
 use crate::infer_path::MAX_DEPTH;
 use crate::infer_path::name::{declared_in, unraw, written_path};
-use crate::infer_path::scan::arguments;
-use crate::infer_path::symbols::Symbols;
+use crate::infer_path::scan::{Chain, Lower, Rewrite, arguments, scan};
+use crate::infer_path::symbols::{Point, Symbols};
 use fprime_dictionary::naming::{definition_path, definition_path_with_name, split_qualified_name};
 use fprime_dictionary::{Command, TypeDefinition, TypeName};
 use proc_macro2::{Group, TokenStream, TokenTree};
@@ -32,50 +32,42 @@ fn parse<T: syn::parse::Parse>(tokens: TokenStream) -> T {
     syn::parse2(tokens).expect("generated dictionary path should parse")
 }
 
-impl Symbols {
-    pub(super) fn qualify_calls(&self, tokens: TokenStream) -> TokenStream {
-        let trees: Vec<TokenTree> = tokens.into_iter().collect();
-        let mut qualified = TokenStream::new();
-        let mut index = 0;
+/// Pass one of both pipelines: the bare dictionary names in `tokens` become
+/// `crate::Defs::..` paths.
+///
+/// It has to run before either pass two. A constant is only recognisable as one once
+/// qualified, and a call that has already been rewritten is no longer in a command position
+/// for qualification to find — see `.notes/const-command-encoding.md`.
+pub(super) fn qualify(symbols: &Symbols, tokens: TokenStream) -> TokenStream {
+    scan(symbols, tokens, &Qualify { symbols })
+}
 
-        while index < trees.len() {
-            let begins_a_chain = match index.checked_sub(1).map(|previous| &trees[previous]) {
-                Some(TokenTree::Punct(punct)) => !matches!(punct.as_char(), '.' | ':'),
-                _ => true,
-            };
+struct Qualify<'a> {
+    symbols: &'a Symbols,
+}
 
-            if begins_a_chain
-                && let Some(call) = self.command_call(&trees, index)
-                && let Some(TokenTree::Group(args)) = trees.get(call.args)
-            {
-                qualified.extend(trees[index..call.args].iter().cloned());
-                qualified.extend([TokenTree::Group(self.qualify_args(args, call.command))]);
-                index = call.args + 1;
-                continue;
-            }
+impl Lower for Qualify<'_> {
+    fn chain(&self, chain: &Chain<'_>) -> Rewrite {
+        // Only a command has formal parameters to qualify its arguments against, and only a
+        // call has arguments. Everything else is walked on, so a command nested inside a
+        // channel read is still found.
+        let (Point::Command(command), Some(args)) = (&chain.point, &chain.args) else {
+            return Rewrite::Skip;
+        };
 
-            match &trees[index] {
-                // A command in a block, a closure or an argument is still a command.
-                TokenTree::Group(group) => {
-                    let mut descended =
-                        Group::new(group.delimiter(), self.qualify_calls(group.stream()));
-                    descended.set_span(group.span());
-                    qualified.extend([TokenTree::Group(descended)]);
-                }
-                tree => qualified.extend([tree.clone()]),
-            }
+        let mut out = chain.written.clone();
+        out.extend([TokenTree::Group(self.symbols.qualify_args(args, command))]);
 
-            index += 1;
-        }
-
-        qualified
+        Rewrite::Call(out)
     }
+}
 
+impl Symbols {
     fn qualify_args(&self, args: &Group, command: &Command) -> Group {
         let mut rewritten = TokenStream::new();
 
         for (position, argument) in arguments(args.stream()).into_iter().enumerate() {
-            let written = self.qualify_calls(argument.tokens);
+            let written = qualify(self, argument.tokens);
 
             let expected = command.formal_params.get(position).and_then(|param| {
                 syn::parse2::<Expr>(written.clone())
@@ -85,7 +77,7 @@ impl Symbols {
 
             match expected {
                 Some((param, mut expr)) => {
-                    self.qualify(&mut expr, &param.type_name, 0);
+                    self.qualify_value(&mut expr, &param.type_name, 0);
                     rewritten.extend(expr.into_token_stream());
                 }
                 None => rewritten.extend(written),
@@ -99,9 +91,9 @@ impl Symbols {
         qualified
     }
 
-    /// Qualifies `expr` against its expected dictionary type; left untouched if the
+    /// Qualifies one value against its expected dictionary type; left untouched if the
     /// dictionary has nothing to say about it.
-    fn qualify(&self, expr: &mut Expr, expected: &TypeName, depth: usize) {
+    fn qualify_value(&self, expr: &mut Expr, expected: &TypeName, depth: usize) {
         if depth > MAX_DEPTH {
             return;
         }
@@ -157,7 +149,7 @@ impl Symbols {
                     };
 
                     match member.size {
-                        None => self.qualify(&mut field.expr, &member.type_name, depth + 1),
+                        None => self.qualify_value(&mut field.expr, &member.type_name, depth + 1),
                         Some(_) => self.qualify_elements(&mut field.expr, &member.type_name, depth),
                     }
                 }
@@ -172,10 +164,10 @@ impl Symbols {
         match expr {
             Expr::Array(array) => {
                 for element_expr in array.elems.iter_mut() {
-                    self.qualify(element_expr, element, depth + 1);
+                    self.qualify_value(element_expr, element, depth + 1);
                 }
             }
-            Expr::Repeat(repeat) => self.qualify(&mut repeat.expr, element, depth + 1),
+            Expr::Repeat(repeat) => self.qualify_value(&mut repeat.expr, element, depth + 1),
             _ => {}
         }
     }

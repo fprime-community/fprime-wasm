@@ -56,7 +56,15 @@ impl Symbols {
     }
 
     /// The point `name` refers to, if any (commands checked first).
+    ///
+    /// A name with no `.` in it is never one. Treating a single segment as a point would
+    /// rewrite the author's own locals, and an F Prime point is always at least
+    /// `Component.NAME`.
     pub(super) fn point(&self, name: &str) -> Option<Point<'_>> {
+        if !name.contains('.') {
+            return None;
+        }
+
         if let Some(command) = self.command(name) {
             return Some(Point::Command(command));
         }
