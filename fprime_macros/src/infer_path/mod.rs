@@ -29,7 +29,6 @@
 //! * [`symbols`] is what a scan resolves them against.
 //! * [`name`] decides how much of a name's qualifier the author wrote.
 //! * [`qualify`] turns a bare name into a `crate::Defs::..` path — pass one of both.
-//! * [`scope`] puts the enums a call's arguments draw on in scope, for the editor.
 //! * [`encode`] folds a call whose arguments are all constants into its `Fw::ComBuffer` —
 //!   pass two of `#[fprime]`.
 //! * [`describe`] turns a point into the `Desc` descriptor a test matches on — pass two of
@@ -40,7 +39,6 @@ mod encode;
 mod name;
 mod qualify;
 mod scan;
-mod scope;
 mod symbols;
 
 use describe::describe;
@@ -48,7 +46,6 @@ use encode::encode;
 use name::COMPLETION_MARKER;
 use proc_macro2::{Span, TokenStream, TokenTree};
 use qualify::qualify;
-use scope::scope;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
@@ -78,7 +75,7 @@ pub(crate) fn rewrite(attr: TokenStream, item: TokenStream) -> syn::Result<Token
 
     let symbols = symbols(Path::new(&dictionary)).map_err(|err| syn::Error::new(span, err))?;
 
-    Ok(encode(symbols, scope(symbols, qualify(symbols, item))))
+    Ok(encode(symbols, qualify(symbols, item)))
 }
 
 /// Qualifies, then descriptor-rewrites — in that order, since qualifying needs the call
@@ -96,11 +93,7 @@ pub(crate) fn rewrite_test_body(body: TokenStream, span: Span) -> syn::Result<To
     // `spanned_desc_path` for the invariant that rests on.
     let completing = has_completion_marker(&body);
 
-    Ok(describe(
-        symbols,
-        scope(symbols, qualify(symbols, body)),
-        completing,
-    ))
+    Ok(describe(symbols, qualify(symbols, body), completing))
 }
 
 /// Whether an editor is partway through typing somewhere in `tokens`.
@@ -170,17 +163,9 @@ pub(crate) mod test_support {
         let symbols = symbols(Path::new(DICTIONARY))
             .map_err(|err| syn::Error::new(Span::call_site(), err))?;
 
-        let scoped = scope(symbols, qualify(symbols, syn::parse_str(body)?));
+        let qualified = qualify(symbols, syn::parse_str(body)?);
 
-        Ok(encode(symbols, scoped).to_string())
-    }
-
-    /// The scope pass alone, for isolating what it emits.
-    pub(crate) fn scope_block(body: &str) -> syn::Result<String> {
-        let symbols = symbols(Path::new(DICTIONARY))
-            .map_err(|err| syn::Error::new(Span::call_site(), err))?;
-
-        Ok(scope(symbols, syn::parse_str(body)?).to_string())
+        Ok(encode(symbols, qualified).to_string())
     }
 
     /// Renders a body without rewriting it, for writing expectations as ordinary Rust.
@@ -196,9 +181,9 @@ pub(crate) mod test_support {
 
         let tokens: TokenStream = syn::parse_str(body)?;
         let completing = has_completion_marker(&tokens);
-        let scoped = scope(symbols, qualify(symbols, tokens));
+        let qualified = qualify(symbols, tokens);
 
-        Ok(describe(symbols, scoped, completing).to_string())
+        Ok(describe(symbols, qualified, completing).to_string())
     }
 
     /// Both passes in the order `#[fprime_test]` runs them: qualify, then descriptor.
@@ -209,8 +194,8 @@ pub(crate) mod test_support {
         let symbols = symbols(Path::new(DICTIONARY))
             .map_err(|err| syn::Error::new(Span::call_site(), err))?;
 
-        let scoped = scope(symbols, qualify(symbols, syn::parse_str(body)?));
+        let qualified = qualify(symbols, syn::parse_str(body)?);
 
-        Ok(describe(symbols, scoped, completing).to_string())
+        Ok(describe(symbols, qualified, completing).to_string())
     }
 }

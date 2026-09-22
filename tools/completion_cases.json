@@ -160,14 +160,14 @@
     "expect": "CMD_NO_OP"
   },
   {
-    "why": "sequence: dot completion beside a wrapped call",
+    "why": "sequence: dot completion late in a long body",
     "path": "crates/example/src/bin/example.rs",
     "anchor": "Ref.dpDemo.SelectColor(BLUE);",
     "insert": "    CdhCore.<|>",
     "expect": "cmdDisp"
   },
   {
-    "why": "sequence: dot completion after a wrapped call, last in the body",
+    "why": "sequence: dot completion at the end of a long body",
     "path": "crates/example/src/bin/example.rs",
     "anchor": "Ref.dpDemo.SelectColor(GREEN);",
     "insert": "    Ref.<|>",

@@ -187,15 +187,6 @@ fn write_stream(tokens: TokenStream, depth: usize, out: &mut String) {
                 write_stream(group.stream(), depth + 1, out);
                 push(&mut line, "}");
             }
-            // A parenthesised block — what `scope` wraps a call in — still wants its
-            // statements on separate lines. An argument list does not.
-            TokenTree::Group(group) if holds_a_block(&group.stream()) => {
-                let (open, close) = delimiters(group.delimiter());
-                push(&mut line, open);
-                flush(&mut line, depth, out);
-                write_stream(group.stream(), depth + 1, out);
-                push(&mut line, close);
-            }
             // Everything else stays inline: an argument list on its own line reads worse.
             TokenTree::Group(group) => {
                 let (open, close) = delimiters(group.delimiter());
@@ -212,13 +203,6 @@ fn write_stream(tokens: TokenStream, depth: usize, out: &mut String) {
     }
 
     flush(&mut line, depth, out);
-}
-
-/// Whether `tokens` holds a block of its own, so its delimiters want their own lines.
-fn holds_a_block(tokens: &TokenStream) -> bool {
-    tokens.clone().into_iter().any(
-        |tree| matches!(tree, TokenTree::Group(group) if group.delimiter() == Delimiter::Brace),
-    )
 }
 
 /// A stream on one line, groups included.

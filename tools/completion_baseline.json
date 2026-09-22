@@ -20,7 +20,7 @@
   "glob control: nothing typed, enum in scope": {
     "bare_rank": 1,
     "import": false,
-    "items": 171,
+    "items": 169,
     "qualified_rank": null
   },
   "sequence: command name after a component": {
@@ -47,16 +47,16 @@
     "items": 10,
     "qualified_rank": null
   },
-  "sequence: dot completion after a wrapped call, last in the body": {
+  "sequence: dot completion at the end of a long body": {
     "bare_rank": 2,
     "import": false,
     "items": 5,
     "qualified_rank": null
   },
-  "sequence: dot completion beside a wrapped call": {
-    "bare_rank": null,
+  "sequence: dot completion late in a long body": {
+    "bare_rank": 1,
     "import": false,
-    "items": 0,
+    "items": 3,
     "qualified_rank": null
   },
   "sequence: dot completion on a component": {
@@ -72,34 +72,34 @@
     "qualified_rank": null
   },
   "sequence: enum argument, first position": {
-    "bare_rank": 1,
+    "bare_rank": null,
     "import": false,
-    "items": 170,
-    "qualified_rank": null
+    "items": 166,
+    "qualified_rank": 2
   },
   "sequence: enum argument, long prefix": {
-    "bare_rank": 1,
-    "import": false,
-    "items": 170,
-    "qualified_rank": null
-  },
-  "sequence: enum argument, short prefix": {
-    "bare_rank": 1,
-    "import": false,
-    "items": 167,
-    "qualified_rank": null
-  },
-  "sequence: enum inside a struct member": {
-    "bare_rank": 3,
+    "bare_rank": null,
     "import": false,
     "items": 168,
-    "qualified_rank": null
+    "qualified_rank": 1
+  },
+  "sequence: enum argument, short prefix": {
+    "bare_rank": null,
+    "import": false,
+    "items": 167,
+    "qualified_rank": 3
+  },
+  "sequence: enum inside a struct member": {
+    "bare_rank": null,
+    "import": false,
+    "items": 168,
+    "qualified_rank": 3
   },
   "sequence: nothing typed, enum argument": {
-    "bare_rank": 1,
+    "bare_rank": null,
     "import": false,
-    "items": 171,
-    "qualified_rank": null
+    "items": 169,
+    "qualified_rank": 4
   },
   "test: bare command in a descriptor": {
     "bare_rank": 1,
@@ -126,9 +126,9 @@
     "qualified_rank": null
   },
   "test: enum inside a struct member": {
-    "bare_rank": 3,
+    "bare_rank": null,
     "import": false,
     "items": 219,
-    "qualified_rank": null
+    "qualified_rank": 3
   }
 }
