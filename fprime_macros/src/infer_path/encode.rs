@@ -104,59 +104,38 @@ impl Lower for Encode<'_> {
             return Rewrite::Skip;
         };
 
-        // A call this cannot fold is left alone, which puts it on the run-time accessor —
-        // that encodes the same command into `__SCRATCH`, so the reason is not worth
-        // reporting. Skipping rather than consuming also means a command nested inside these
-        // arguments is still folded.
-        match self.symbols.const_encoded_call(
-            command,
-            args,
-            chain.written_call(),
-            quote! { unsafe { fprime_core::command(&__FPRIME_CMD) } },
-        ) {
-            Some(buffer) => Rewrite::Call(buffer),
-            None => Rewrite::Skip,
+        match self.symbols.buffer(command, args) {
+            Ok(buffer) => Rewrite::Call(buffer.block(
+                &chain.written_call(),
+                quote! { unsafe { fprime_core::command(&__FPRIME_CMD) } },
+            )),
+            // A call this cannot fold is left alone, which puts it on the run-time accessor —
+            // that encodes the same command into `__SCRATCH`, so the reason is not worth
+            // reporting. Skipping rather than consuming also means a command nested inside
+            // these arguments is still folded.
+            Err(_) => Rewrite::Skip,
         }
     }
 }
 
-impl Symbols {
-    /// The const-encoded form of `command` applied to `args`, or `None` for the runtime
-    /// `__SCRATCH` path.
-    pub(super) fn const_encoded_call(
-        &self,
-        command: &Command,
-        args: &Group,
-        original: TokenStream,
-        tail: TokenStream,
-    ) -> Option<TokenStream> {
-        if !self.dictionary.const_encodable(command) {
-            return None;
-        }
+/// The two `const` items a folded call needs, and the arguments they are built from.
+pub(super) struct Buffer {
+    size: TokenStream,
+    encode: TokenStream,
+    args: TokenStream,
+}
 
-        let parsed = arguments(args.stream());
+impl Buffer {
+    /// The whole block, with `tail` as its value — the one thing the two pipelines differ in.
+    ///
+    /// `original` is kept for type checking and for goto/hover on the command name, not for
+    /// behaviour: a `Konst` path gives an editor nothing to resolve the receiver to. The
+    /// arguments are emitted three times over, so each one has to be copyable and free of side
+    /// effects — which is exactly what the eligibility rule buys.
+    pub(super) fn block(&self, original: &TokenStream, tail: TokenStream) -> TokenStream {
+        let Buffer { size, encode, args } = self;
 
-        // Wrong arity is left for the accessor to report.
-        if parsed.len() != command.formal_params.len() {
-            return None;
-        }
-
-        for (param, argument) in command.formal_params.iter().zip(&parsed) {
-            let expr = syn::parse2::<Expr>(argument.tokens.clone()).ok()?;
-
-            if !self.is_const_argument(&expr, &param.type_name) {
-                return None;
-            }
-        }
-
-        let size = konst_path(&command.name, SIZE_SUFFIX);
-        let encode = konst_path(&command.name, ENCODE_SUFFIX);
-        let args = args.stream();
-
-        // `#original` is kept for type checking and goto/hover on the command name, not
-        // behaviour. `#tail` is what `#[fprime_main]` (dispatch) and `#[fprime_test]`
-        // (descriptor) differ in.
-        Some(quote! {
+        quote! {
             {
                 const __FPRIME_LEN: usize = #size(#args);
                 const __FPRIME_CMD: [u8; __FPRIME_LEN] = #encode::<__FPRIME_LEN>(#args);
@@ -167,17 +146,74 @@ impl Symbols {
 
                 #tail
             }
+        }
+    }
+}
+
+impl Symbols {
+    /// The `const` items for `command` applied to `args`, or why they cannot be built.
+    ///
+    /// `#[fprime]` discards the reason and falls back on the run-time accessor, which encodes
+    /// the same command into `__SCRATCH`. `#[fprime_test]` reports it, because a test that
+    /// wrote arguments asked to match the exact bytes they encode to and has no fallback.
+    ///
+    /// One function rather than two, so the answer and the reason cannot disagree. They used
+    /// to be a hand-maintained mirror, with a comment asking the reader to keep the checks in
+    /// the same order and an arm that was unreachable only as long as they did.
+    pub(super) fn buffer(&self, command: &Command, args: &Group) -> Result<Buffer, syn::Error> {
+        let help = matching_alternatives(command);
+        let at = |span: Span, reason: &str| syn::Error::new(span, format!("{reason}\n\n{help}"));
+
+        // Asking which parameter has no encoding, rather than whether they all do, gets the
+        // offending one for free — and builds one `ConstArg` tree instead of two.
+        let unencodable = command
+            .formal_params
+            .iter()
+            .find(|param| self.dictionary.const_arg(&param.type_name).is_none());
+
+        if let Some(param) = unencodable {
+            return Err(at(
+                args.span(),
+                &format!(
+                    "`{}` is a {}, which a test cannot write out as bytes",
+                    param.name,
+                    type_label(&param.type_name),
+                ),
+            ));
+        }
+
+        let parsed = arguments(args.stream());
+        if parsed.len() != command.formal_params.len() {
+            return Err(at(
+                args.span(),
+                &format!(
+                    "{} takes {} arguments, but {} {} written",
+                    command.name,
+                    command.formal_params.len(),
+                    parsed.len(),
+                    were(parsed.len()),
+                ),
+            ));
+        }
+
+        for (param, argument) in command.formal_params.iter().zip(&parsed) {
+            let Ok(expr) = syn::parse2::<Expr>(argument.tokens.clone()) else {
+                return Err(at(
+                    argument.tokens.span(),
+                    &format!("`{}` is not something a test can read", param.name),
+                ));
+            };
+
+            self.check_const_argument(&expr, &param.type_name, &param.name)
+                .map_err(|err| at(err.span(), &err.to_string()))?;
+        }
+
+        Ok(Buffer {
+            size: konst_path(&command.name, SIZE_SUFFIX),
+            encode: konst_path(&command.name, ENCODE_SUFFIX),
+            args: args.stream(),
         })
     }
-
-    /// Whether `expr` may appear in the `const` initialiser of a const-encoded
-    /// call.
-    fn is_const_argument(&self, expr: &Expr, expected: &TypeName) -> bool {
-        // No name for the value, since the reason is thrown away: this is the `#[fprime_main]`
-        // side, which only decides between the `const` buffer and the run-time accessor.
-        self.check_const_argument(expr, expected, "").is_ok()
-    }
-
     /// The same question, answered with the reason when the answer is no. `#[fprime_main]`
     /// only needs the yes or no — a call it cannot fold goes to the run-time accessor — but
     /// `#[fprime_test]` has to say why, since for a test there is no fallback.
@@ -380,63 +416,5 @@ impl Symbols {
                 format!("`{at}` has to be a list of {size} values, written out here"),
             )),
         }
-    }
-
-    /// Why a command call in a test body cannot be matched by its exact argument bytes.
-    ///
-    /// Makes the same checks as [`Symbols::const_encoded_call`], in the same order, so this
-    /// is always the one that made it give up.
-    pub(super) fn why_not_const(&self, command: &Command, args: &Group) -> syn::Error {
-        let help = matching_alternatives(command);
-        let at = |span: Span, reason: &str| syn::Error::new(span, format!("{reason}\n\n{help}"));
-
-        let unencodable = command
-            .formal_params
-            .iter()
-            .find(|param| self.dictionary.const_arg(&param.type_name).is_none());
-
-        if let Some(param) = unencodable {
-            return at(
-                args.span(),
-                &format!(
-                    "`{}` is a {}, which a test cannot write out as bytes",
-                    param.name,
-                    type_label(&param.type_name),
-                ),
-            );
-        }
-
-        let parsed = arguments(args.stream());
-        if parsed.len() != command.formal_params.len() {
-            return at(
-                args.span(),
-                &format!(
-                    "{} takes {} arguments, but {} {} written",
-                    command.name,
-                    command.formal_params.len(),
-                    parsed.len(),
-                    were(parsed.len()),
-                ),
-            );
-        }
-
-        for (param, argument) in command.formal_params.iter().zip(&parsed) {
-            let Ok(expr) = syn::parse2::<Expr>(argument.tokens.clone()) else {
-                return at(
-                    argument.tokens.span(),
-                    &format!("`{}` is not something a test can read", param.name),
-                );
-            };
-
-            if let Err(err) = self.check_const_argument(&expr, &param.type_name, &param.name) {
-                return at(err.span(), &err.to_string());
-            }
-        }
-
-        // Unreachable: every check `const_encoded_call` makes has just passed.
-        at(
-            args.span(),
-            "this command cannot be matched by its exact arguments",
-        )
     }
 }

@@ -57,26 +57,26 @@ impl Lower for Describe<'_> {
 
         let original = chain.written_call();
 
-        if let Some(encoded) = self
-            .symbols
-            .const_encoded_call(command, args, original.clone(), {
-                // desc_path, not spanned_desc_path — this arm already emits the author's tokens
-                // once, inside `if false { .. }`; duplicating spans would give goto two
-                // definitions for one token.
-                let path = desc_path(&chain.name);
-                quote! {
-                    {
-                        // A const item of reference type is a const context, giving
-                        // `&'static [u8]` without static promotion, and identical buffers still
-                        // dedupe across call sites.
-                        const __FPRIME_BUF: &[u8] = &__FPRIME_CMD;
-                        #path.with(__FPRIME_BUF)
+        let why = match self.symbols.buffer(command, args) {
+            Ok(buffer) => {
+                return Rewrite::Call(buffer.block(&original, {
+                    // desc_path, not spanned_desc_path — this arm already emits the author's
+                    // tokens once, inside `if false { .. }`; duplicating spans would give goto
+                    // two definitions for one token.
+                    let path = desc_path(&chain.name);
+                    quote! {
+                        {
+                            // A const item of reference type is a const context, giving
+                            // `&'static [u8]` without static promotion, and identical buffers
+                            // still dedupe across call sites.
+                            const __FPRIME_BUF: &[u8] = &__FPRIME_CMD;
+                            #path.with(__FPRIME_BUF)
+                        }
                     }
-                }
-            })
-        {
-            return Rewrite::Call(encoded);
-        }
+                }));
+            }
+            Err(why) => why,
+        };
 
         // Unlike `#[fprime]`, where falling back on the accessor is the right answer — it
         // encodes the same command at run time — a test that wrote arguments asked to match
@@ -91,7 +91,7 @@ impl Lower for Describe<'_> {
         // `expansions_agree_up_to_the_cursor` measures that.
         let error = match self.completing {
             true => TokenStream::new(),
-            false => self.symbols.why_not_const(command, args).to_compile_error(),
+            false => why.to_compile_error(),
         };
         // `as u32`, as the generated `CmdDesc` does: the dictionary holds an opcode as a u64
         // and `FwOpcodeType` is narrower.
