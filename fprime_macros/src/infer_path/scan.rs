@@ -9,7 +9,7 @@
 //! empty rather than shifting later arguments onto earlier parameters, and an argument that
 //! is not an expression is still passed through.
 
-use crate::infer_path::name::unraw;
+use crate::infer_path::name::dictionary_name;
 use crate::infer_path::symbols::{Point, Symbols};
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 
@@ -146,14 +146,14 @@ fn resolve<'a>(
         at = segment + 1;
     }
 
-    let mut parts = vec![unraw(root)];
+    let mut parts = vec![dictionary_name(root)];
     let mut segments = vec![root.clone()];
     let mut scaffold = None;
 
     while let Some(field) = field_separator_at(trees, at) {
         let segment = ident_at(trees, field)?;
         scaffold = scaffold.or_else(|| Some(trees[at].span()));
-        parts.push(unraw(segment));
+        parts.push(dictionary_name(segment));
         segments.push(segment.clone());
         at = field + 1;
     }

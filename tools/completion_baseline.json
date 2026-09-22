@@ -18,9 +18,9 @@
     "qualified_rank": null
   },
   "sequence: cursor inside a command name": {
-    "bare_rank": null,
+    "bare_rank": 2,
     "import": false,
-    "items": 1,
+    "items": 4,
     "qualified_rank": null
   },
   "sequence: cursor inside a resolved enum argument": {
@@ -72,9 +72,9 @@
     "qualified_rank": null
   },
   "test: cursor inside a bare command name": {
-    "bare_rank": null,
+    "bare_rank": 2,
     "import": false,
-    "items": 3,
+    "items": 2,
     "qualified_rank": null
   },
   "test: cursor inside a resolved struct member": {

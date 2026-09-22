@@ -101,3 +101,15 @@ pub(super) fn unraw(ident: &Ident) -> String {
     let name = ident.to_string();
     name.strip_prefix("r#").map(str::to_string).unwrap_or(name)
 }
+
+/// The identifier's name as the dictionary would spell it: `r#` stripped, and the cursor an
+/// editor left in the middle of it taken out.
+///
+/// Looking a name up by what the author has typed *so far* is the only way a name being edited
+/// resolves at all, and resolving is what keeps the two expansions rust-analyzer builds
+/// agreeing up to the cursor. The marker still has to reach the output, which is why only the
+/// lookup uses this and the emitted token stays the author's — see [`WrittenPath::emit`] for
+/// the same rule one level down.
+pub(super) fn dictionary_name(ident: &Ident) -> String {
+    unraw(ident).replace(COMPLETION_MARKER, "")
+}

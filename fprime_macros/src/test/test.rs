@@ -1020,6 +1020,24 @@ fn expansions_agree_up_to_the_cursor() {
         );
     }
 
+    // A chain segment, not an argument: the receiver, component or point name itself. These
+    // only agree because the scan looks a name up by what has been typed so far.
+    for (body, name, prefix) in [
+        (
+            "CdhCore.cmdDisp.CMD_NO_OP_STRING(\"STRINGS\");",
+            "CMD_NO_OP_STRING",
+            "CMD_NO_OP_S",
+        ),
+        ("Ref.dpDemo.SelectColor(BLUE);", "dpDemo", "dpD"),
+    ] {
+        let typed = at_cursor(body, name, prefix);
+        agrees_up_to_the_cursor(
+            &format!("const-encode {name}"),
+            &const_encode(&typed),
+            &const_encode(body),
+        );
+    }
+
     // And a test body, through the descriptor pass. `test_body` detects the marker itself,
     // as the macro does, so the lenient and the reporting paths are both reached.
     for (body, name, prefix) in [
@@ -1035,67 +1053,20 @@ fn expansions_agree_up_to_the_cursor() {
             "filename",
             "file",
         ),
+        // A bare point, which has no `if false { .. }` copy of the author's tokens — so the
+        // `Desc` path this emits is the only thing the cursor can land in.
+        ("t.never_command(Ref.wasmSeq.LOAD);", "LOAD", "LO"),
+        (
+            "t.initial_telemetry(CdhCore.events.EventsDropped, 5);",
+            "EventsDropped",
+            "Events",
+        ),
     ] {
         let typed = at_cursor(body, name, prefix);
         agrees_up_to_the_cursor(
             &format!("descriptor {name}"),
             &test_body(&typed),
             &test_body(body),
-        );
-    }
-}
-
-/// Characterises a known gap, so a rewrite cannot change it by accident.
-///
-/// An *argument* name is resolved with the marker stripped and then emitted still carrying
-/// it (`WrittenPath::emit`), which is what keeps the two expansions agreeing. A *chain*
-/// segment — the receiver, component or point name — is not: `dotted_point` and
-/// `command_call` look the dotted name up with the marker still in it, so a name being
-/// edited resolves to nothing, is passed through unrewritten in the expansion that has the
-/// marker, and is rewritten in the one that does not. They then disagree from the start of
-/// the chain.
-///
-/// The consequence is measured, not theoretical. `tools/completion_probe.py` records the
-/// same name offered at rank 1 out of 2 items when the tail is deleted and retyped, and not
-/// offered at all out of 3 items when the cursor is put into the middle of it — cases
-/// `test: bare command in a descriptor` against `test: cursor inside a bare command name`.
-///
-/// Closing it means stripping the marker in the chain scan too, which changes what the
-/// macro emits and so is not part of a behaviour-preserving rewrite.
-#[test]
-fn editing_a_dictionary_name_diverges() {
-    for (body, name, prefix, what) in [
-        (
-            "t.never_command(Ref.wasmSeq.LOAD);",
-            "LOAD",
-            "LO",
-            "a bare point in a test body",
-        ),
-        (
-            "t.initial_telemetry(CdhCore.events.EventsDropped, 5);",
-            "EventsDropped",
-            "Events",
-            "a channel in a test body",
-        ),
-        (
-            "CdhCore.cmdDisp.CMD_NO_OP_STRING(\"STRINGS\");",
-            "CMD_NO_OP_STRING",
-            "CMD_NO_OP_S",
-            "a command in a sequence, const-encoded",
-        ),
-    ] {
-        let typed = at_cursor(body, name, prefix);
-        let (with, without) = match body.starts_with("t.") {
-            true => (test_body(&typed), test_body(body)),
-            false => (const_encode(&typed), const_encode(body)),
-        };
-
-        assert!(
-            !agrees_before_the_cursor(what, &with, &without),
-            "{what}: the expansions now agree, which means the chain scan learned to strip \
-             the marker. That is the fix — move this case into \
-             `expansions_agree_up_to_the_cursor` and re-bless \
-             tools/completion_baseline.json."
         );
     }
 }
