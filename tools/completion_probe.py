@@ -289,14 +289,19 @@ def overlay(path: Path, cases: list[Case]) -> tuple[str, dict[int, tuple[int, in
     # hides the anchor the next one is looking for.
     located = [(index, case, case.locate(original)) for index, case in enumerate(cases)]
 
-    taken: dict[int, str] = {}
-    for _, case, number in located:
-        if number in taken:
-            raise ValueError(
-                f"{path}:{number + 1} is the line for both {taken[number]!r} and "
-                f"{case.why!r}; one case per line, or they truncate each other"
-            )
-        taken[number] = case.why
+    # Two cases may share a line only if at most one of them rewrites it. An inserted body
+    # goes *after* its anchor, so it sits happily beside a truncation on that same line.
+    for kind in ("edit", "insert"):
+        taken: dict[int, str] = {}
+        for _, case, number in located:
+            if (case.mode == "insert") != (kind == "insert"):
+                continue
+            if number in taken:
+                raise ValueError(
+                    f"{path}:{number + 1} is the line for both {taken[number]!r} and "
+                    f"{case.why!r}; two cases cannot {kind} one line"
+                )
+            taken[number] = case.why
 
     for index, case, number in located:
         if case.mode == "insert":
@@ -307,27 +312,65 @@ def overlay(path: Path, cases: list[Case]) -> tuple[str, dict[int, tuple[int, in
             lines[number] = line.replace(case.name, case.keep, 1)
         cursors[index] = (number, column)
 
-    # Insertions last, deepest first, so an earlier one cannot shift a later one's anchor —
-    # and every cursor already recorded above sits on a line no insertion moved, because a
-    # file may not mix the two (`locate` would collide).
-    for index, case, number in sorted(located, key=lambda found: -found[2]):
+    # Insertions last, shallowest first, carrying a running offset — and shifting every cursor
+    # already recorded at or below each insertion point. Two inserted bodies in one file
+    # otherwise leave the deeper one's cursor pointing at whatever the shallower one pushed
+    # down, and the probe then asks the wrong position and reports every name in scope. That
+    # read exactly like a regression in the macro; hence `verify` below.
+    shift = 0
+    for index, case, number in sorted(located, key=lambda found: found[2]):
         if case.mode != "insert":
             continue
 
         written = case.insert.split("\n")
-        at = next(
-            (offset for offset, line in enumerate(written) if CURSOR in line),
-            None,
-        )
+        at = next((offset for offset, line in enumerate(written) if CURSOR in line), None)
         if at is None:
             raise ValueError(f"{case.why!r}: an inserted body needs {CURSOR} for the cursor")
 
         column = written[at].index(CURSOR)
         written[at] = written[at].replace(CURSOR, "", 1)
-        lines[number + 1 : number + 1] = written
-        cursors[index] = (number + 1 + at, column)
 
-    return "\n".join(lines) + "\n", cursors
+        into = number + 1 + shift
+        lines[into:into] = written
+        for other, (line, other_column) in cursors.items():
+            if line >= into:
+                cursors[other] = (line + len(written), other_column)
+        cursors[index] = (into + at, column)
+        shift += len(written)
+
+    text = "\n".join(lines) + "\n"
+    verify(path, cases, text, cursors)
+
+    return text, cursors
+
+
+def verify(path: Path, cases: list[Case], text: str, cursors: dict[int, tuple[int, int]]) -> None:
+    """Every cursor sits where its case meant it to.
+
+    An overlay is line surgery, and a cursor that lands a few lines off still returns a long,
+    plausible completion list — every name in scope, none of them the one expected. That is
+    indistinguishable from the feature being broken, so it is checked rather than assumed.
+    """
+    lines = text.split("\n")
+
+    for index, case in enumerate(cases):
+        line, column = cursors[index]
+        found = lines[line]
+        wanted = None
+        if case.mode == "insert":
+            body = case.insert.split("\n")
+            wanted = next(line for line in body if CURSOR in line).replace(CURSOR, "")
+
+        if wanted is not None and found != wanted:
+            raise ValueError(
+                f"{case.why!r}: the cursor landed on {found!r}, not on {wanted!r} — "
+                f"{path.name}:{line + 1} is the wrong line"
+            )
+        if wanted is None and case.keep not in found:
+            raise ValueError(
+                f"{case.why!r}: the cursor landed on {found!r}, which does not hold "
+                f"{case.keep!r} — {path.name}:{line + 1} is the wrong line"
+            )
 
 
 def inserted(item: dict) -> str:

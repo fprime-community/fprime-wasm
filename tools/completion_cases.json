@@ -144,5 +144,33 @@
     "anchor": "pub fn main() {",
     "insert": "    {\n        #[allow(unused_imports)]\n        use example::Defs::Svc::EventManager::FilterSeverity::*;\n        CdhCore.events.SET_EVENT_FILTER(<|>);\n    }",
     "expect": "ACTIVITY_HI"
+  },
+  {
+    "why": "sequence: dot completion on a receiver",
+    "path": "crates/example/src/bin/no_op.rs",
+    "anchor": "CdhCore.cmdDisp.CMD_NO_OP();",
+    "insert": "    CdhCore.<|>",
+    "expect": "cmdDisp"
+  },
+  {
+    "why": "sequence: dot completion on a component",
+    "path": "crates/example/src/bin/poller.rs",
+    "anchor": "let inbox = serial_in!(u32, 1);",
+    "insert": "    CdhCore.cmdDisp.<|>",
+    "expect": "CMD_NO_OP"
+  },
+  {
+    "why": "sequence: dot completion beside a wrapped call",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "Ref.dpDemo.SelectColor(BLUE);",
+    "insert": "    CdhCore.<|>",
+    "expect": "cmdDisp"
+  },
+  {
+    "why": "sequence: dot completion after a wrapped call, last in the body",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "Ref.dpDemo.SelectColor(GREEN);",
+    "insert": "    Ref.<|>",
+    "expect": "dpDemo"
   }
 ]

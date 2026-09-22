@@ -36,15 +36,39 @@
     "qualified_rank": null
   },
   "sequence: cursor inside a resolved enum argument": {
-    "bare_rank": 4,
+    "bare_rank": null,
     "import": false,
-    "items": 10,
+    "items": 164,
     "qualified_rank": null
   },
   "sequence: cursor inside a resolved struct member": {
     "bare_rank": 4,
     "import": false,
     "items": 10,
+    "qualified_rank": null
+  },
+  "sequence: dot completion after a wrapped call, last in the body": {
+    "bare_rank": 2,
+    "import": false,
+    "items": 5,
+    "qualified_rank": null
+  },
+  "sequence: dot completion beside a wrapped call": {
+    "bare_rank": null,
+    "import": false,
+    "items": 0,
+    "qualified_rank": null
+  },
+  "sequence: dot completion on a component": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 4,
+    "qualified_rank": null
+  },
+  "sequence: dot completion on a receiver": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 3,
     "qualified_rank": null
   },
   "sequence: enum argument, first position": {
