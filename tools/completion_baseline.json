@@ -20,7 +20,7 @@
   "glob control: nothing typed, enum in scope": {
     "bare_rank": 1,
     "import": false,
-    "items": 169,
+    "items": 171,
     "qualified_rank": null
   },
   "sequence: command name after a component": {
@@ -48,34 +48,34 @@
     "qualified_rank": null
   },
   "sequence: enum argument, first position": {
-    "bare_rank": null,
+    "bare_rank": 1,
     "import": false,
-    "items": 166,
-    "qualified_rank": 2
+    "items": 170,
+    "qualified_rank": null
   },
   "sequence: enum argument, long prefix": {
-    "bare_rank": null,
+    "bare_rank": 1,
     "import": false,
-    "items": 168,
-    "qualified_rank": 1
+    "items": 170,
+    "qualified_rank": null
   },
   "sequence: enum argument, short prefix": {
-    "bare_rank": null,
+    "bare_rank": 1,
     "import": false,
     "items": 167,
-    "qualified_rank": 3
+    "qualified_rank": null
   },
   "sequence: enum inside a struct member": {
-    "bare_rank": null,
+    "bare_rank": 3,
     "import": false,
     "items": 168,
-    "qualified_rank": 3
+    "qualified_rank": null
   },
   "sequence: nothing typed, enum argument": {
-    "bare_rank": null,
+    "bare_rank": 1,
     "import": false,
-    "items": 169,
-    "qualified_rank": 4
+    "items": 171,
+    "qualified_rank": null
   },
   "test: bare command in a descriptor": {
     "bare_rank": 1,
@@ -102,9 +102,9 @@
     "qualified_rank": null
   },
   "test: enum inside a struct member": {
-    "bare_rank": null,
+    "bare_rank": 3,
     "import": false,
     "items": 219,
-    "qualified_rank": 3
+    "qualified_rank": null
   }
 }

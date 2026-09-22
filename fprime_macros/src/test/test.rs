@@ -1,5 +1,5 @@
 use crate::infer_path::test_support::{
-    const_encode_block, descriptor_block, render_block, rewrite_block,
+    const_encode_block, descriptor_block, render_block, rewrite_block, scope_block,
     test_body as expand_test_body,
 };
 use crate::{command, parameter, telemetry};
@@ -573,6 +573,25 @@ fn const_encode(body: &str) -> String {
     const_encode_block(body).expect("failed to rewrite body")
 }
 
+/// The block `scope` wraps a call in: the enums its arguments draw on, glob-imported so an
+/// editor offers a bare `IMMEDIATE` rather than only the constant's whole path. Named per test
+/// rather than derived, so each one says which enums its command brings into scope.
+fn scoped(enums: &[&str], inner: &str) -> String {
+    let parse =
+        |source: String| syn::parse_str::<TokenStream>(&source).expect("expectation should parse");
+
+    let imports: Vec<TokenStream> = enums
+        .iter()
+        .map(|name| {
+            let path = parse(format!("crate::Defs::{}", name.replace('.', "::")));
+            quote! { #[allow(unused_imports)] use #path::*; }
+        })
+        .collect();
+    let inner = parse(inner.to_string());
+
+    quote! { ({ #(#imports)* #inner }) }.to_string()
+}
+
 /// The `const` buffer a const-encoded call is expected to expand to.
 fn encoded(command: &str, args: &str) -> String {
     let parse =
@@ -618,11 +637,14 @@ fn const_encodes_literals_and_enumerated_constants() {
         const_encode("Ref.dpDemo.Dp(IMMEDIATE, 0, PROC_TYPE_NONE);"),
         format!(
             "{} ;",
-            encoded(
-                "Ref.dpDemo.Dp",
-                "crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
-                 0,
-                 crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE"
+            scoped(
+                &["Ref.DpDemo.DpReqType", "Fw.DpCfg.ProcType"],
+                &encoded(
+                    "Ref.dpDemo.Dp",
+                    "crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                     0,
+                     crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE"
+                )
             )
         )
     )
@@ -659,7 +681,13 @@ fn runtime_argument_left_for_accessor() {
     assert_eq!(const_encode(body), expect(body));
 
     let body = "Ref.dpDemo.SelectColor(chosen);";
-    assert_eq!(const_encode(body), expect(body));
+    assert_eq!(
+        const_encode(body),
+        format!(
+            "{} ;",
+            scoped(&["Ref.DpDemo.ColorEnum"], "Ref.dpDemo.SelectColor(chosen)")
+        )
+    );
 }
 
 /// A bare local name, even of the right enum type, stays unqualified, on the accessor.
@@ -668,12 +696,16 @@ fn computed_argument_left_for_accessor() {
     let body = "Ref.dpDemo.Dp(IMMEDIATE, count + 1, PROC_TYPE_NONE);";
     assert_eq!(
         const_encode(body),
-        expect(
-            "Ref.dpDemo.Dp(
-                 crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
-                 count + 1,
-                 crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
-             );"
+        format!(
+            "{} ;",
+            scoped(
+                &["Ref.DpDemo.DpReqType", "Fw.DpCfg.ProcType"],
+                "Ref.dpDemo.Dp(
+                     crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                     count + 1,
+                     crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
+                 )"
+            )
         )
     )
 }
@@ -705,7 +737,10 @@ fn const_encodes_struct_argument() {
         const_encode(
             "Ref.typeDemo.CHOICE_PAIR(ChoicePair { firstChoice: RED, secondChoice: BLUE });"
         ),
-        format!("{} ;", encoded("Ref.typeDemo.CHOICE_PAIR", arg))
+        format!(
+            "{} ;",
+            scoped(&["Ref.Choice"], &encoded("Ref.typeDemo.CHOICE_PAIR", arg))
+        )
     )
 }
 
@@ -715,7 +750,10 @@ fn const_encodes_array_argument() {
 
     assert_eq!(
         const_encode("Ref.typeDemo.CHOICES([ONE, TWO]);"),
-        format!("{} ;", encoded("Ref.typeDemo.CHOICES", arg))
+        format!(
+            "{} ;",
+            scoped(&["Ref.Choice"], &encoded("Ref.typeDemo.CHOICES", arg))
+        )
     )
 }
 
@@ -744,7 +782,10 @@ fn const_encodes_repeated_array() {
 
     assert_eq!(
         const_encode("Ref.typeDemo.CHOICES([ONE; 2]);"),
-        format!("{} ;", encoded("Ref.typeDemo.CHOICES", arg))
+        format!(
+            "{} ;",
+            scoped(&["Ref.Choice"], &encoded("Ref.typeDemo.CHOICES", arg))
+        )
     )
 }
 
@@ -843,7 +884,10 @@ fn const_encodes_a_partly_qualified_struct() {
                  secondChoice: Ref::Choice::BLUE
              });"
         ),
-        format!("{} ;", encoded("Ref.typeDemo.CHOICE_PAIR", arg))
+        format!(
+            "{} ;",
+            scoped(&["Ref.Choice"], &encoded("Ref.typeDemo.CHOICE_PAIR", arg))
+        )
     )
 }
 
@@ -1069,4 +1113,76 @@ fn expansions_agree_up_to_the_cursor() {
             &test_body(body),
         );
     }
+}
+
+/// The scope pass, alone, with the token text's spacing collapsed.
+///
+/// `to_string()` spacing is a `proc_macro2::Spacing` artefact: `::*;` out of `quote!` and
+/// `:: * ;` out of a parsed source are the same tokens. Only this test compares a stream
+/// `quote!` built against one written as source, so only this test has to care.
+fn scope(body: &str) -> String {
+    spaceless(&scope_block(body).expect("failed to rewrite body"))
+}
+
+fn spaceless(tokens: &str) -> String {
+    tokens.split_whitespace().collect()
+}
+
+/// A call gets exactly the enums its arguments can name a constant of, in parameter order,
+/// and nothing else gets touched.
+///
+/// The qualification tests above take this wrapper back out with `scoped`, because it is
+/// uniform and orthogonal to what they assert. This is where it is pinned, alongside every
+/// shape in `dsl_corpus.ref.rs`.
+#[test]
+fn scopes_the_enums_a_call_draws_on() {
+    // Both parameters are enums, and both are imported, in the order the dictionary declares
+    // them. `Svc.EventManager.Enabled` is one of the four enums that declare `DISABLED`, which
+    // is why the glob is per call and not per function.
+    assert_eq!(
+        scope("CdhCore.events.SET_EVENT_FILTER(ACTIVITY_HI, DISABLED);"),
+        spaceless(&expect(
+            "({
+                 #[allow(unused_imports)]
+                 use crate::Defs::Svc::EventManager::FilterSeverity::*;
+                 #[allow(unused_imports)]
+                 use crate::Defs::Svc::EventManager::Enabled::*;
+                 CdhCore.events.SET_EVENT_FILTER(ACTIVITY_HI, DISABLED)
+             });"
+        ))
+    );
+
+    // One enum reached through a struct, a nested struct, a nested array and a member array —
+    // all of them `Ref.Choice`, so it is imported once.
+    assert_eq!(
+        scope("Ref.typeDemo.GLUTTON_OF_CHOICE(x);"),
+        spaceless(&expect(
+            "({
+                 #[allow(unused_imports)]
+                 use crate::Defs::Ref::Choice::*;
+                 Ref.typeDemo.GLUTTON_OF_CHOICE(x)
+             });"
+        ))
+    );
+
+    // Nothing to bring into scope: no wrapper at all, so the common case is untouched.
+    for body in [
+        "CdhCore.cmdDisp.CMD_NO_OP();",
+        "CdhCore.cmdDisp.CMD_NO_OP_STRING(\"hi\");",
+        "Ref.wasmSeq.LOAD(\"x\");",
+        // A channel is not a command and has no arguments to scope.
+        "CdhCore.events.EventsDropped();",
+        // Neither is a name the dictionary does not have.
+        "Ref.notAThing.Dp(1, 2, 3);",
+    ] {
+        assert_eq!(scope(body), spaceless(&expect(body)), "{body}");
+    }
+
+    // Parenthesised, or `{ .. }` at the start of a statement would parse as a block and
+    // `.check()` would no longer be a method call on the command's response.
+    assert!(
+        scope("Ref.dpDemo.SelectColor(BLUE).check();").starts_with("("),
+        "the wrapper has to be an expression: {}",
+        scope("Ref.dpDemo.SelectColor(BLUE).check();")
+    );
 }
