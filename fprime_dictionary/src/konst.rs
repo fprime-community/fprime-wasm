@@ -12,7 +12,11 @@ pub const SIZE_SUFFIX: &str = "__size";
 pub const ENCODE_SUFFIX: &str = "__encode";
 
 /// Nesting descended before concluding a type is cyclic.
-const MAX_DEPTH: usize = 32;
+///
+/// Public because a caller walking the *values* of a type has to stop where this stopped when
+/// it declared the type encodable. Two independent caps that happened to agree would be a
+/// coincidence waiting to break.
+pub const MAX_DEPTH: usize = 32;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConstArg {
@@ -70,6 +74,18 @@ impl Dictionary {
         }
 
         None
+    }
+
+    /// The definition an alias chain bottoms out in, for a type that has one.
+    ///
+    /// `None` for a primitive, for an alias to one, and for a name the dictionary does not
+    /// define — none of which carries the enumerated constants or members a caller asking this
+    /// is after. [`Dictionary::resolved_type`] is the same walk stopping one step earlier.
+    pub fn definition(&self, type_name: &TypeName) -> Option<&TypeDefinition> {
+        match self.resolved_type(type_name)? {
+            TypeName::QualifiedIdentifier { name } => self.type_definitions.get(name),
+            _ => None,
+        }
     }
 
     /// How a whole formal parameter of type `type_name` is written by a const

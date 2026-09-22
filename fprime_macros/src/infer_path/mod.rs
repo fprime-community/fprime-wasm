@@ -51,9 +51,6 @@ use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 use symbols::Symbols;
 
-/// Nesting depth qualified inside a single command argument
-pub(super) const MAX_DEPTH: usize = 32;
-
 const MISSING_DICTIONARY: &str = concat!(
     "the F Prime DSL needs a dictionary to resolve names against, but `",
     "FPRIME_DICTIONARY",

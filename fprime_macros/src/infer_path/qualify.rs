@@ -1,9 +1,9 @@
 //! Bare dictionary names become `crate::Defs::..` paths.
 
-use crate::infer_path::MAX_DEPTH;
 use crate::infer_path::name::{declared_in, unraw, written_path};
 use crate::infer_path::scan::{Chain, Lower, Rewrite, arguments, scan};
 use crate::infer_path::symbols::{Point, Symbols};
+use fprime_dictionary::konst::MAX_DEPTH;
 use fprime_dictionary::naming::{definition_path, definition_path_with_name, split_qualified_name};
 use fprime_dictionary::{Command, TypeDefinition, TypeName};
 use proc_macro2::{Group, TokenStream, TokenTree};
@@ -98,7 +98,7 @@ impl Symbols {
             return;
         }
 
-        match self.definition(expected) {
+        match self.dictionary.definition(expected) {
             Some(TypeDefinition::Enum(ty)) => {
                 let Expr::Path(original) = expr else {
                     return;

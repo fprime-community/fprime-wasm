@@ -1,11 +1,10 @@
 //! A call whose arguments are all constants becomes its `Fw::ComBuffer`.
 
-use crate::infer_path::MAX_DEPTH;
 use crate::infer_path::name::unraw;
 use crate::infer_path::scan::{Chain, Lower, Rewrite, arguments, scan};
 use crate::infer_path::symbols::{Point, Symbols};
-use fprime_dictionary::konst::{ENCODE_SUFFIX, SIZE_SUFFIX};
-use fprime_dictionary::naming::{konst_path, split_qualified_name};
+use fprime_dictionary::konst::{ENCODE_SUFFIX, MAX_DEPTH, SIZE_SUFFIX};
+use fprime_dictionary::naming::{konst_path, split_qualified_name, type_label};
 use fprime_dictionary::{Command, TypeDefinition, TypeName};
 use proc_macro2::{Group, Span, TokenStream};
 use quote::quote;
@@ -37,19 +36,8 @@ fn for_example<'a>(names: impl Iterator<Item = &'a str>) -> String {
     }
 }
 
-/// How the dictionary spells a type, for a message.
-fn type_label(ty: &TypeName) -> String {
-    match ty {
-        TypeName::Integer { name } => format!("{name:?}"),
-        TypeName::Float { name } => format!("{name:?}"),
-        TypeName::Bool => "bool".to_string(),
-        TypeName::String { size } => format!("string size {size}"),
-        TypeName::QualifiedIdentifier { name } => name.clone(),
-    }
-}
-
 /// The two ways a test can match a command whose arguments it cannot write out, appended to
-/// every reason [`Symbols::why_not_const`] gives.
+/// every reason [`Symbols::buffer`] refuses with.
 fn matching_alternatives(command: &Command) -> String {
     format!(
         "To match {name} whatever its arguments, leave the parentheses off:\n    \
@@ -177,7 +165,7 @@ impl Symbols {
                 &format!(
                     "`{}` is a {}, which a test cannot write out as bytes",
                     param.name,
-                    type_label(&param.type_name),
+                    type_label(&self.dictionary, &param.type_name),
                 ),
             ));
         }

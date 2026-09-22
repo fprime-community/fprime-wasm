@@ -1,10 +1,7 @@
 //! The dictionary index a scan resolves names against.
 
-use fprime_dictionary::{Command, Dictionary, TypeDefinition, TypeName};
+use fprime_dictionary::{Command, Dictionary};
 use std::collections::HashMap;
-
-/// Aliases followed before concluding the dictionary is cyclic.
-const MAX_ALIAS_HOPS: usize = 32;
 
 /// Which kind of point a dotted name is.
 pub(super) enum Point<'a> {
@@ -81,27 +78,5 @@ impl Symbols {
         self.commands
             .get(name)
             .map(|index| &self.dictionary.commands[*index])
-    }
-
-    /// Follow aliases down to the definition that carries the constants or members.
-    pub(super) fn definition(&self, ty: &TypeName) -> Option<&TypeDefinition> {
-        let TypeName::QualifiedIdentifier { name } = ty else {
-            return None;
-        };
-
-        let mut definition = self.dictionary.type_definitions.get(name)?;
-        for _ in 0..MAX_ALIAS_HOPS {
-            let TypeDefinition::Alias(alias) = definition else {
-                return Some(definition);
-            };
-
-            let TypeName::QualifiedIdentifier { name } = &alias.underlying_type else {
-                return None;
-            };
-
-            definition = self.dictionary.type_definitions.get(name)?;
-        }
-
-        None
     }
 }
