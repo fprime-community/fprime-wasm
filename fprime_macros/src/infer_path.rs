@@ -397,24 +397,29 @@ impl Resolver {
             // sequence crate's glob, so the only thing reported is
             // `CmdResponse: IntoCommand`, which is about neither the argument nor the
             // command.
-            if completing {
-                return (original, found.end + 1);
-            }
-
-            let error = self.why_not_const(command, args).to_compile_error();
+            // A half-written argument is not a mistake to report, so while an editor is
+            // mid-keystroke the reason is left out — but *only* the reason. The author's
+            // tokens come first and identically either way, because the two expansions
+            // rust-analyzer builds have to agree up to the cursor and may only differ after
+            // it. Emitting the error ahead of them moved the offset it maps through, which
+            // `expansions_agree_up_to_the_cursor` now measures.
+            let error = match completing {
+                true => TokenStream::new(),
+                false => self.why_not_const(command, args).to_compile_error(),
+            };
             // `as u32`, as the generated `CmdDesc` does: the dictionary holds an opcode as a
             // u64 and `FwOpcodeType` is narrower.
             let opcode = Literal::u64_unsuffixed(command.opcode);
             return (
                 quote! {
                     {
-                        #error
                         // Kept for type checking and for goto/hover on the command while the
                         // error is on screen, as the const arm above does.
                         if false { #original; }
-                        // A value of the right type, so this is the only error reported: the
-                        // opcode with any arguments, which is the weakest thing the author
-                        // could have meant.
+                        #error
+                        // A value of the right type, so the reason above is the only thing
+                        // reported: the opcode with any arguments, which is the weakest thing
+                        // the author could have meant.
                         ::fprime_test::cmd(#opcode as u32)
                     }
                 },
@@ -1237,6 +1242,19 @@ pub(crate) mod test_support {
     /// Renders a body without rewriting it, for writing expectations as ordinary Rust.
     pub(crate) fn render_block(body: &str) -> syn::Result<String> {
         Ok(syn::parse_str::<TokenStream>(body)?.to_string())
+    }
+
+    /// The `#[fprime_test]` pipeline exactly as the macro runs it, marker detection
+    /// included — which is what [`descriptor_block`] takes as a parameter instead.
+    pub(crate) fn test_body(body: &str) -> syn::Result<String> {
+        let resolver = resolver(Path::new(DICTIONARY))
+            .map_err(|err| syn::Error::new(Span::call_site(), err))?;
+
+        let tokens: TokenStream = syn::parse_str(body)?;
+        let completing = has_completion_marker(&tokens);
+        let qualified = resolver.qualify_calls(tokens);
+
+        Ok(resolver.descriptor_calls(qualified, completing).to_string())
     }
 
     /// Both passes in the order `#[fprime_test]` runs them: qualify, then descriptor.

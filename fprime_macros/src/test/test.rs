@@ -1,5 +1,6 @@
 use crate::infer_path::test_support::{
     const_encode_block, descriptor_block, render_block, rewrite_block,
+    test_body as expand_test_body,
 };
 use crate::{command, parameter, telemetry};
 use pretty_assertions::assert_eq;
@@ -851,6 +852,11 @@ fn descriptor(body: &str) -> String {
     descriptor_block(body, false).expect("failed to rewrite body")
 }
 
+/// The whole `#[fprime_test]` pipeline, marker detection included.
+fn test_body(body: &str) -> String {
+    expand_test_body(body).expect("failed to rewrite body")
+}
+
 /// A test that wrote arguments asked to match their exact bytes. When there are none to
 /// compute, saying so beats falling back on the flight accessor, which reports
 /// `CmdResponse: IntoCommand` — about neither the argument nor the command.
@@ -949,4 +955,147 @@ fn nothing_is_reported_while_completing() {
         expansion.contains("BLraCompletionMarkerUE"),
         "the marker has to survive: {expansion}"
     );
+}
+
+/// rust-analyzer's own sentinel, which it puts where the cursor is.
+const MARKER: &str = "raCompletionMarker";
+
+/// `body` with the marker inserted `prefix` characters into `name` — what rust-analyzer
+/// hands the macro on the keystroke after the cursor lands there.
+fn at_cursor(body: &str, name: &str, prefix: &str) -> String {
+    let typed = format!("{prefix}{MARKER}{}", &name[prefix.len()..]);
+    body.replacen(name, &typed, 1)
+}
+
+/// Whether the two expansions say the same thing on every byte before the cursor.
+fn agrees_before_the_cursor(what: &str, with: &str, without: &str) -> bool {
+    let cut = with.find(MARKER).unwrap_or_else(|| {
+        panic!(
+            "{what}: the marker did not survive into the expansion, so rust-analyzer has \
+             nothing at the cursor to map through:\n{with}"
+        )
+    });
+
+    without.get(..cut) == Some(&with[..cut])
+}
+
+fn agrees_up_to_the_cursor(what: &str, with: &str, without: &str) {
+    assert!(
+        agrees_before_the_cursor(what, with, without),
+        "{what}: the two expansions diverge before the cursor, so rust-analyzer maps the \
+         position through to the wrong place.\n  with the marker: {with}\n  without it:      \
+         {without}"
+    );
+}
+
+/// rust-analyzer expands a macro twice on every keystroke — once with `raCompletionMarker`
+/// where the cursor is, once without — and then finds the cursor in the real expansion at
+/// the raw byte offset the marker sits at in the fake one. So the two have to agree up to
+/// the cursor; after it they may differ freely.
+///
+/// `tools/completion_probe.py` measures what the editor then does with them, which needs
+/// the editor. This measures the agreement itself, which does not.
+#[test]
+fn expansions_agree_up_to_the_cursor() {
+    // A sequence body, through both of the passes `#[fprime]` runs.
+    for (body, name, prefix) in [
+        ("Ref.dpDemo.SelectColor(BLUE);", "BLUE", "BL"),
+        (
+            "Ref.dpDemo.Dp(IMMEDIATE, 0, PROC_TYPE_NONE);",
+            "PROC_TYPE_NONE",
+            "PROC_TYPE_N",
+        ),
+        (
+            "Ref.typeDemo.CHOICE_PAIR(ChoicePair { firstChoice: RED, secondChoice: TWO });",
+            "TWO",
+            "T",
+        ),
+    ] {
+        let typed = at_cursor(body, name, prefix);
+        agrees_up_to_the_cursor(&format!("qualify {name}"), &rewrite(&typed), &rewrite(body));
+        agrees_up_to_the_cursor(
+            &format!("const-encode {name}"),
+            &const_encode(&typed),
+            &const_encode(body),
+        );
+    }
+
+    // And a test body, through the descriptor pass. `test_body` detects the marker itself,
+    // as the macro does, so the lenient and the reporting paths are both reached.
+    for (body, name, prefix) in [
+        (
+            "t.expect_command(Ref.dpDemo.SelectColor(BLUE));",
+            "BLUE",
+            "BL",
+        ),
+        // An argument that is not a constant: the reporting path, where the expansion the
+        // author is mid-keystroke on and the one that carries the diagnostic differ most.
+        (
+            "t.expect_command(Ref.wasmSeq.LOAD(filename));",
+            "filename",
+            "file",
+        ),
+    ] {
+        let typed = at_cursor(body, name, prefix);
+        agrees_up_to_the_cursor(
+            &format!("descriptor {name}"),
+            &test_body(&typed),
+            &test_body(body),
+        );
+    }
+}
+
+/// Characterises a known gap, so a rewrite cannot change it by accident.
+///
+/// An *argument* name is resolved with the marker stripped and then emitted still carrying
+/// it (`WrittenPath::emit`), which is what keeps the two expansions agreeing. A *chain*
+/// segment — the receiver, component or point name — is not: `dotted_point` and
+/// `command_call` look the dotted name up with the marker still in it, so a name being
+/// edited resolves to nothing, is passed through unrewritten in the expansion that has the
+/// marker, and is rewritten in the one that does not. They then disagree from the start of
+/// the chain.
+///
+/// The consequence is measured, not theoretical. `tools/completion_probe.py` records the
+/// same name offered at rank 1 out of 2 items when the tail is deleted and retyped, and not
+/// offered at all out of 3 items when the cursor is put into the middle of it — cases
+/// `test: bare command in a descriptor` against `test: cursor inside a bare command name`.
+///
+/// Closing it means stripping the marker in the chain scan too, which changes what the
+/// macro emits and so is not part of a behaviour-preserving rewrite.
+#[test]
+fn editing_a_dictionary_name_diverges() {
+    for (body, name, prefix, what) in [
+        (
+            "t.never_command(Ref.wasmSeq.LOAD);",
+            "LOAD",
+            "LO",
+            "a bare point in a test body",
+        ),
+        (
+            "t.initial_telemetry(CdhCore.events.EventsDropped, 5);",
+            "EventsDropped",
+            "Events",
+            "a channel in a test body",
+        ),
+        (
+            "CdhCore.cmdDisp.CMD_NO_OP_STRING(\"STRINGS\");",
+            "CMD_NO_OP_STRING",
+            "CMD_NO_OP_S",
+            "a command in a sequence, const-encoded",
+        ),
+    ] {
+        let typed = at_cursor(body, name, prefix);
+        let (with, without) = match body.starts_with("t.") {
+            true => (test_body(&typed), test_body(body)),
+            false => (const_encode(&typed), const_encode(body)),
+        };
+
+        assert!(
+            !agrees_before_the_cursor(what, &with, &without),
+            "{what}: the expansions now agree, which means the chain scan learned to strip \
+             the marker. That is the fix — move this case into \
+             `expansions_agree_up_to_the_cursor` and re-bless \
+             tools/completion_baseline.json."
+        );
+    }
 }

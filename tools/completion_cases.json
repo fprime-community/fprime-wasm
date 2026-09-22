@@ -1,0 +1,127 @@
+[
+  {
+    "why": "control: plain Rust, no macro",
+    "path": "crates/example/tests/descriptors.rs",
+    "anchor": "Desc::Ref::typeDemo::ScalarF32Ch;",
+    "name": "ScalarF32Ch",
+    "keep": "Scal",
+    "expect": "ScalarF32Ch"
+  },
+  {
+    "why": "control: inside #[fprime_main], not a dictionary name",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "set_fail_mode(FailMode::Permissive)",
+    "name": "Permissive",
+    "keep": "Perm",
+    "expect": "Permissive"
+  },
+  {
+    "why": "sequence: enum argument, long prefix",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "Ref.dpDemo.Dp(IMMEDIATE, 0, PROC_TYPE_NONE)",
+    "name": "PROC_TYPE_NONE",
+    "keep": "PROC_TYPE_",
+    "expect": "PROC_TYPE_NONE"
+  },
+  {
+    "why": "sequence: enum argument, short prefix",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "Ref.dpDemo.SelectColor(BLUE)",
+    "name": "BLUE",
+    "keep": "BL",
+    "expect": "BLUE"
+  },
+  {
+    "why": "sequence: enum argument, first position",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "Ref.dpDemo.Dp(ASYNC, 2, PROC_TYPE_ONE)",
+    "name": "ASYNC",
+    "keep": "AS",
+    "expect": "ASYNC"
+  },
+  {
+    "why": "sequence: command name after a component",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "Ref.dpDemo.SelectColor(GREEN)",
+    "name": "SelectColor",
+    "keep": "Sel",
+    "expect": "SelectColor"
+  },
+  {
+    "why": "sequence: enum inside a struct member",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "firstChoice: RED,",
+    "name": "RED",
+    "keep": "R",
+    "expect": "RED"
+  },
+  {
+    "why": "test: enum inside a struct member",
+    "path": "crates/example/tests/behavior.rs",
+    "anchor": "firstChoice: RED,",
+    "name": "RED",
+    "keep": "R",
+    "expect": "RED"
+  },
+  {
+    "why": "test: bare command in a descriptor",
+    "path": "crates/example/tests/behavior.rs",
+    "anchor": "t.never_command(Ref.wasmSeq.LOAD)",
+    "name": "LOAD",
+    "keep": "LO",
+    "expect": "LOAD"
+  },
+  {
+    "why": "test: channel name",
+    "path": "crates/example/tests/behavior.rs",
+    "anchor": "t.initial_telemetry(CdhCore.events.EventsDropped, 5)",
+    "name": "EventsDropped",
+    "keep": "Events",
+    "expect": "EventsDropped"
+  },
+  {
+    "why": "sequence: cursor inside a resolved enum argument",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "Ref.dpDemo.Dp(IMMEDIATE, 2, PROC_TYPE_TWO)",
+    "name": "PROC_TYPE_TWO",
+    "keep": "PROC_TYPE_T",
+    "expect": "PROC_TYPE_TWO",
+    "mode": "inside"
+  },
+  {
+    "why": "sequence: cursor inside a resolved struct member",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "secondChoice: BLUE,",
+    "name": "BLUE",
+    "keep": "BL",
+    "expect": "BLUE",
+    "mode": "inside"
+  },
+  {
+    "why": "test: cursor inside a resolved struct member",
+    "path": "crates/example/tests/behavior.rs",
+    "anchor": "secondChoice: TWO,",
+    "name": "TWO",
+    "keep": "T",
+    "expect": "TWO",
+    "mode": "inside"
+  },
+  {
+    "why": "test: cursor inside a bare command name",
+    "path": "crates/example/tests/behavior.rs",
+    "anchor": "t.never_command(Ref.dpDemo.SelectColor)",
+    "name": "SelectColor",
+    "keep": "Sel",
+    "expect": "SelectColor",
+    "mode": "inside"
+  },
+  {
+    "why": "sequence: cursor inside a command name",
+    "path": "crates/example/src/bin/example.rs",
+    "anchor": "CdhCore.cmdDisp.CMD_NO_OP_STRING(\"STRINGS\")",
+    "name": "CMD_NO_OP_STRING",
+    "keep": "CMD_NO_OP_S",
+    "expect": "CMD_NO_OP_STRING",
+    "mode": "inside"
+  }
+]
