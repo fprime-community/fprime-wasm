@@ -13,6 +13,11 @@
 //! Ref.dpDemo
 //!     .Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
 //! ```
+//!
+//! A name may also carry as much of its dictionary qualifier as the author cares to write, so
+//! `PROC_TYPE_NONE`, `ProcType::PROC_TYPE_NONE` and `Fw::DpCfg::ProcType::PROC_TYPE_NONE` are
+//! all that same constant, and a struct argument may be `SeqArgs { .. }` or
+//! `Svc::SeqArgs { .. }`. A qualifier that is not the type's own names nothing.
 
 use fprime_dictionary::konst::{ENCODE_SUFFIX, SIZE_SUFFIX};
 use fprime_dictionary::naming::{
@@ -20,11 +25,12 @@ use fprime_dictionary::naming::{
     str_to_ident,
 };
 use fprime_dictionary::{Command, Dictionary, TypeDefinition, TypeName};
-use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Group, Ident, Literal, Span, TokenStream, TokenTree};
 use quote::{ToTokens, quote, quote_spanned};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
+use syn::spanned::Spanned;
 use syn::{Expr, ExprPath, ExprStruct, Lit, Member, Path as SynPath, UnOp};
 
 /// Aliases followed before concluding the dictionary is cyclic.
@@ -71,8 +77,23 @@ pub(crate) fn rewrite_test_body(body: TokenStream, span: Span) -> syn::Result<To
 
     let resolver = resolver(Path::new(&dictionary)).map_err(|err| syn::Error::new(span, err))?;
 
+    // An editor expands this on every keystroke, with a marker where the cursor is. A
+    // half-written argument is not a mistake to report, and a `compile_error!` put ahead of
+    // the cursor would move the tokens the editor maps its position through — see
+    // `spanned_desc_path` for the invariant that rests on.
+    let completing = has_completion_marker(&body);
+
     let qualified = resolver.qualify_calls(body);
-    Ok(resolver.descriptor_calls(qualified))
+    Ok(resolver.descriptor_calls(qualified, completing))
+}
+
+/// Whether an editor is partway through typing somewhere in `tokens`.
+fn has_completion_marker(tokens: &TokenStream) -> bool {
+    tokens.clone().into_iter().any(|tree| match tree {
+        TokenTree::Ident(ident) => ident.to_string().contains(COMPLETION_MARKER),
+        TokenTree::Group(group) => has_completion_marker(&group.stream()),
+        _ => false,
+    })
 }
 
 fn signature_span(item: &TokenStream) -> Span {
@@ -295,7 +316,10 @@ impl Resolver {
     /// Rewrites every dictionary path in a test body into a `Desc` descriptor. A chain that
     /// is not a dictionary point (`t.initial_telemetry(..)`, `event().containing(..)`, a
     /// local) is left alone.
-    fn descriptor_calls(&self, tokens: TokenStream) -> TokenStream {
+    ///
+    /// `completing` suppresses the diagnostics a half-written body would otherwise earn —
+    /// see [`rewrite_test_body`].
+    fn descriptor_calls(&self, tokens: TokenStream, completing: bool) -> TokenStream {
         let trees: Vec<TokenTree> = tokens.into_iter().collect();
         let mut out = TokenStream::new();
         let mut index = 0;
@@ -309,7 +333,7 @@ impl Resolver {
             };
 
             if begins_a_chain && let Some(found) = self.dotted_point(&trees, index) {
-                let (rewritten, next) = self.descriptor_for(&trees, index, &found);
+                let (rewritten, next) = self.descriptor_for(&trees, index, &found, completing);
                 out.extend(rewritten);
                 index = next;
                 continue;
@@ -317,8 +341,10 @@ impl Resolver {
 
             match &trees[index] {
                 TokenTree::Group(group) => {
-                    let mut descended =
-                        Group::new(group.delimiter(), self.descriptor_calls(group.stream()));
+                    let mut descended = Group::new(
+                        group.delimiter(),
+                        self.descriptor_calls(group.stream(), completing),
+                    );
                     descended.set_span(group.span());
                     out.extend([TokenTree::Group(descended)]);
                 }
@@ -338,6 +364,7 @@ impl Resolver {
         trees: &[TokenTree],
         start: usize,
         found: &DottedPoint,
+        completing: bool,
     ) -> (TokenStream, usize) {
         // A command *call* carries its arguments; a bare one does not.
         if let Some(Point::Command(command)) = self.point(&found.name)
@@ -345,7 +372,7 @@ impl Resolver {
             && args.delimiter() == Delimiter::Parenthesis
         {
             let original: TokenStream = trees[start..=found.end].iter().cloned().collect();
-            if let Some(encoded) = self.const_encoded_call(command, args, original, {
+            if let Some(encoded) = self.const_encoded_call(command, args, original.clone(), {
                 // desc_path, not spanned_desc_path — this arm already emits the author's
                 // tokens once, inside `if false { .. }`; duplicating spans would give goto
                 // two definitions for one token.
@@ -362,9 +389,37 @@ impl Resolver {
             }) {
                 return (encoded, found.end + 1);
             }
-            // Not const-encodable — left for the accessor to reject against its real signature.
-            let original: TokenStream = trees[start..=found.end].iter().cloned().collect();
-            return (original, found.end + 1);
+
+            // Unlike `#[fprime_main]`, where falling back on the accessor is the right answer
+            // — it encodes the same command at run time — a test that wrote arguments asked
+            // to match the exact bytes they encode to, and there are none to compute. Leaving
+            // the author's tokens here resolves them to the *flight* accessor through the
+            // sequence crate's glob, so the only thing reported is
+            // `CmdResponse: IntoCommand`, which is about neither the argument nor the
+            // command.
+            if completing {
+                return (original, found.end + 1);
+            }
+
+            let error = self.why_not_const(command, args).to_compile_error();
+            // `as u32`, as the generated `CmdDesc` does: the dictionary holds an opcode as a
+            // u64 and `FwOpcodeType` is narrower.
+            let opcode = Literal::u64_unsuffixed(command.opcode);
+            return (
+                quote! {
+                    {
+                        #error
+                        // Kept for type checking and for goto/hover on the command while the
+                        // error is on screen, as the const arm above does.
+                        if false { #original; }
+                        // A value of the right type, so this is the only error reported: the
+                        // opcode with any arguments, which is the weakest thing the author
+                        // could have meant.
+                        ::fprime_test::cmd(#opcode as u32)
+                    }
+                },
+                found.end + 1,
+            );
         }
 
         // A bare descriptor, e.g. `t.never_command(Ref.wasmSeq.LOAD)` — the only chance to
@@ -512,96 +567,271 @@ impl Resolver {
     /// Whether `expr` may appear in the `const` initialiser of a const-encoded
     /// call.
     fn is_const_argument(&self, expr: &Expr, expected: &TypeName) -> bool {
-        self.is_const_argument_at(expr, expected, 0)
+        // No name for the value, since the reason is thrown away: this is the `#[fprime_main]`
+        // side, which only decides between the `const` buffer and the run-time accessor.
+        self.check_const_argument(expr, expected, "").is_ok()
     }
 
-    fn is_const_argument_at(&self, expr: &Expr, expected: &TypeName, depth: usize) -> bool {
+    /// The same question, answered with the reason when the answer is no. `#[fprime_main]`
+    /// only needs the yes or no — a call it cannot fold goes to the run-time accessor — but
+    /// `#[fprime_test]` has to say why, since for a test there is no fallback.
+    ///
+    /// `at` is what to call the value in that reason: the formal parameter's name, extended a
+    /// member or an index at a time on the way down, so a reason about a nested value says
+    /// `choices.choicePair.firstChoice` rather than `choices`.
+    fn check_const_argument(&self, expr: &Expr, expected: &TypeName, at: &str) -> syn::Result<()> {
+        self.check_const_argument_at(expr, expected, at, 0)
+    }
+
+    fn check_const_argument_at(
+        &self,
+        expr: &Expr,
+        expected: &TypeName,
+        at: &str,
+        depth: usize,
+    ) -> syn::Result<()> {
         if depth > MAX_DEPTH {
-            return false;
+            return Err(syn::Error::new_spanned(
+                expr,
+                format!("`{at}` nests too deeply to work out its bytes"),
+            ));
         }
 
         match self.dictionary.resolved_type(expected) {
-            Some(TypeName::String { .. }) => {
-                matches!(expr, Expr::Lit(lit) if matches!(lit.lit, Lit::Str(_)))
-            }
-            Some(TypeName::Bool) => {
-                matches!(expr, Expr::Lit(lit) if matches!(lit.lit, Lit::Bool(_)))
-            }
-            Some(TypeName::Integer { .. } | TypeName::Float { .. }) => is_numeric_literal(expr),
+            Some(TypeName::String { .. }) => require(
+                matches!(expr, Expr::Lit(lit) if matches!(lit.lit, Lit::Str(_))),
+                expr,
+                format!("`{at}` has to be a string written out here, like \"sequencer.wasm\""),
+            ),
+            Some(TypeName::Bool) => require(
+                matches!(expr, Expr::Lit(lit) if matches!(lit.lit, Lit::Bool(_))),
+                expr,
+                format!("`{at}` has to be `true` or `false`"),
+            ),
+            Some(TypeName::Integer { .. } | TypeName::Float { .. }) => require(
+                is_numeric_literal(expr),
+                expr,
+                format!("`{at}` has to be a number written out here, like `0`"),
+            ),
             Some(TypeName::QualifiedIdentifier { name }) => {
                 match self.dictionary.type_definitions.get(name) {
-                    Some(TypeDefinition::Enum(_)) => is_qualified_definition(expr),
+                    // Every constant this pass recognised is already `crate`-rooted, so
+                    // anything else is a name the dictionary does not have.
+                    Some(TypeDefinition::Enum(ty)) => require(
+                        is_qualified_definition(expr),
+                        expr,
+                        format!(
+                            "`{at}` has to be one of {}'s constants{}",
+                            ty.qualified_name,
+                            for_example(ty.enumerated_constants.iter().map(|c| c.name.as_str()))
+                        ),
+                    ),
                     Some(TypeDefinition::Array(ty)) => {
-                        self.is_const_elements(expr, &ty.element_type, ty.size, depth)
+                        self.check_const_elements(expr, &ty.element_type, ty.size, at, depth)
                     }
                     Some(TypeDefinition::Struct(ty)) => {
-                        let Expr::Struct(literal) = expr else {
-                            return false;
-                        };
-
-                        // A literal with `..rest` can't be evaluated.
-                        if literal.rest.is_some() || !is_qualified_path(&literal.path) {
-                            return false;
-                        }
-
-                        // Every member has to be given, and given a constant.
-                        ty.members.len() == literal.fields.len()
-                            && ty.members.iter().all(|member| {
-                                let field = literal.fields.iter().find(|field| {
-                                    matches!(&field.member, Member::Named(name)
-                                        if unraw(name) == member.name)
-                                });
-
-                                let Some(field) = field else {
-                                    return false;
-                                };
-
-                                match member.size {
-                                    None => self.is_const_argument_at(
-                                        &field.expr,
-                                        &member.type_name,
-                                        depth + 1,
-                                    ),
-                                    Some(size) => self.is_const_elements(
-                                        &field.expr,
-                                        &member.type_name,
-                                        size,
-                                        depth,
-                                    ),
-                                }
-                            })
+                        self.check_const_struct(expr, ty, at, depth)
                     }
-                    _ => false,
+                    _ => Err(syn::Error::new_spanned(
+                        expr,
+                        format!("the dictionary does not define {name}, which is what `{at}` is"),
+                    )),
                 }
             }
-            _ => false,
+            _ => Err(syn::Error::new_spanned(
+                expr,
+                format!("`{at}` cannot be written out as a constant"),
+            )),
         }
     }
 
+    /// A struct literal naming the dictionary's own type, with every member written out.
+    fn check_const_struct(
+        &self,
+        expr: &Expr,
+        ty: &fprime_dictionary::StructType,
+        at: &str,
+        depth: usize,
+    ) -> syn::Result<()> {
+        let (_, short_name) = split_qualified_name(&ty.qualified_name);
+
+        let Expr::Struct(literal) = expr else {
+            return Err(syn::Error::new_spanned(
+                expr,
+                format!("`{at}` has to be a `{short_name} {{ .. }}` literal"),
+            ));
+        };
+
+        // A literal with `..rest` can't be evaluated.
+        if let Some(rest) = &literal.rest {
+            return Err(syn::Error::new_spanned(
+                rest,
+                format!(
+                    "every member of `{at}` has to be written out here, so `..` cannot stand in \
+                     for the rest"
+                ),
+            ));
+        }
+
+        if !is_qualified_path(&literal.path) {
+            return Err(syn::Error::new_spanned(
+                &literal.path,
+                format!(
+                    "`{at}` is a {}, so write it as `{short_name} {{ .. }}`",
+                    ty.qualified_name
+                ),
+            ));
+        }
+
+        if ty.members.len() != literal.fields.len() {
+            return Err(syn::Error::new_spanned(
+                literal,
+                format!(
+                    "`{at}` has {} members, but {} {} written",
+                    ty.members.len(),
+                    literal.fields.len(),
+                    were(literal.fields.len()),
+                ),
+            ));
+        }
+
+        // Every member has to be given, and given a constant.
+        for member in &ty.members {
+            let field = literal.fields.iter().find(
+                |field| matches!(&field.member, Member::Named(name) if unraw(name) == member.name),
+            );
+
+            let Some(field) = field else {
+                return Err(syn::Error::new_spanned(
+                    literal,
+                    format!("`{at}` has a member `{}`, which is missing", member.name),
+                ));
+            };
+
+            let at = format!("{at}.{}", member.name);
+            match member.size {
+                None => {
+                    self.check_const_argument_at(&field.expr, &member.type_name, &at, depth + 1)?
+                }
+                Some(size) => {
+                    self.check_const_elements(&field.expr, &member.type_name, size, &at, depth)?
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     /// An array of exactly `size` constants, as a list or `[x; n]` repeat.
-    fn is_const_elements(&self, expr: &Expr, element: &TypeName, size: u32, depth: usize) -> bool {
+    fn check_const_elements(
+        &self,
+        expr: &Expr,
+        element: &TypeName,
+        size: u32,
+        at: &str,
+        depth: usize,
+    ) -> syn::Result<()> {
         match expr {
             Expr::Array(array) => {
-                array.elems.len() == size as usize
-                    && array
-                        .elems
-                        .iter()
-                        .all(|elem| self.is_const_argument_at(elem, element, depth + 1))
+                if array.elems.len() != size as usize {
+                    return Err(syn::Error::new_spanned(
+                        array,
+                        format!(
+                            "`{at}` holds {size} values, but {} {} written",
+                            array.elems.len(),
+                            were(array.elems.len()),
+                        ),
+                    ));
+                }
+
+                for (index, elem) in array.elems.iter().enumerate() {
+                    let at = format!("{at}[{index}]");
+                    self.check_const_argument_at(elem, element, &at, depth + 1)?;
+                }
+                Ok(())
             }
             Expr::Repeat(repeat) => {
                 // The length has to be a plain literal for us to know it matches.
-                let Expr::Lit(lit) = repeat.len.as_ref() else {
-                    return false;
-                };
-                let Lit::Int(len) = &lit.lit else {
-                    return false;
+                let written = match repeat.len.as_ref() {
+                    Expr::Lit(lit) => match &lit.lit {
+                        Lit::Int(len) => len.base10_parse::<u32>().ok(),
+                        _ => None,
+                    },
+                    _ => None,
                 };
 
-                len.base10_parse::<u32>().is_ok_and(|len| len == size)
-                    && self.is_const_argument_at(&repeat.expr, element, depth + 1)
+                if written != Some(size) {
+                    return Err(syn::Error::new_spanned(
+                        &repeat.len,
+                        format!("`{at}` holds {size} values, so the length here has to be {size}"),
+                    ));
+                }
+
+                self.check_const_argument_at(&repeat.expr, element, at, depth + 1)
             }
-            _ => false,
+            _ => Err(syn::Error::new_spanned(
+                expr,
+                format!("`{at}` has to be a list of {size} values, written out here"),
+            )),
         }
+    }
+
+    /// Why a command call in a test body cannot be matched by its exact argument bytes.
+    ///
+    /// Makes the same checks as [`Resolver::const_encoded_call`], in the same order, so this
+    /// is always the one that made it give up.
+    fn why_not_const(&self, command: &Command, args: &Group) -> syn::Error {
+        let help = matching_alternatives(command);
+        let at = |span: Span, reason: &str| syn::Error::new(span, format!("{reason}\n\n{help}"));
+
+        let unencodable = command
+            .formal_params
+            .iter()
+            .find(|param| self.dictionary.const_arg(&param.type_name).is_none());
+
+        if let Some(param) = unencodable {
+            return at(
+                args.span(),
+                &format!(
+                    "`{}` is a {}, which a test cannot write out as bytes",
+                    param.name,
+                    type_label(&param.type_name),
+                ),
+            );
+        }
+
+        let parsed = arguments(args.stream());
+        if parsed.len() != command.formal_params.len() {
+            return at(
+                args.span(),
+                &format!(
+                    "{} takes {} arguments, but {} {} written",
+                    command.name,
+                    command.formal_params.len(),
+                    parsed.len(),
+                    were(parsed.len()),
+                ),
+            );
+        }
+
+        for (param, argument) in command.formal_params.iter().zip(&parsed) {
+            let Ok(expr) = syn::parse2::<Expr>(argument.tokens.clone()) else {
+                return at(
+                    argument.tokens.span(),
+                    &format!("`{}` is not something a test can read", param.name),
+                );
+            };
+
+            if let Err(err) = self.check_const_argument(&expr, &param.type_name, &param.name) {
+                return at(err.span(), &err.to_string());
+            }
+        }
+
+        // Unreachable: every check `const_encoded_call` makes has just passed.
+        at(
+            args.span(),
+            "this command cannot be matched by its exact arguments",
+        )
     }
 
     /// Qualifies `expr` against its expected dictionary type; left untouched if the
@@ -617,17 +847,23 @@ impl Resolver {
                     return;
                 };
 
-                let Some(name) = bare_name(original.qself.as_ref(), &original.path) else {
+                let Some(name) = written_path(original.qself.as_ref(), &original.path) else {
                     return;
                 };
 
                 let Some(constant) = ty
                     .enumerated_constants
                     .iter()
-                    .find(|c| c.name == name.lookup)
+                    .find(|c| c.name == name.leaf())
                 else {
                     return;
                 };
+
+                // `Choice::RED` and `Ref::Choice::RED` are the same constant; a qualifier
+                // that is not the enum's own is some other name entirely.
+                if !name.names(&declared_in(&ty.qualified_name, &constant.name)) {
+                    return;
+                }
 
                 let constant = name.emit(&constant.name);
                 let enum_path = definition_path(&ty.qualified_name);
@@ -721,6 +957,55 @@ struct Argument {
     separator: Option<TokenTree>,
 }
 
+/// `Ok` when the shape held, and why it did not otherwise.
+fn require(held: bool, expr: &Expr, reason: impl std::fmt::Display) -> syn::Result<()> {
+    if held {
+        return Ok(());
+    }
+
+    Err(syn::Error::new_spanned(expr, reason))
+}
+
+/// `was` or `were`, so a count reads as a sentence.
+fn were(count: usize) -> &'static str {
+    if count == 1 { "was" } else { "were" }
+}
+
+/// `, like `RED` or `BLUE`` — enough of a list to show what one looks like, and never the
+/// whole of an enum with two hundred constants in it.
+fn for_example<'a>(names: impl Iterator<Item = &'a str>) -> String {
+    let shown: Vec<String> = names.take(2).map(|name| format!("`{name}`")).collect();
+
+    match shown.len() {
+        0 => String::new(),
+        _ => format!(", like {}", shown.join(" or ")),
+    }
+}
+
+/// How the dictionary spells a type, for a message.
+fn type_label(ty: &TypeName) -> String {
+    match ty {
+        TypeName::Integer { name } => format!("{name:?}"),
+        TypeName::Float { name } => format!("{name:?}"),
+        TypeName::Bool => "bool".to_string(),
+        TypeName::String { size } => format!("string size {size}"),
+        TypeName::QualifiedIdentifier { name } => name.clone(),
+    }
+}
+
+/// The two ways a test can match a command whose arguments it cannot write out, appended to
+/// every reason [`Resolver::why_not_const`] gives.
+fn matching_alternatives(command: &Command) -> String {
+    format!(
+        "To match {name} whatever its arguments, leave the parentheses off:\n    \
+         t.expect_command({name})\n\
+         To match only the first bytes of its arguments:\n    \
+         t.expect_command(cmd({opcode:#010x}).args_starting(&[..]))",
+        name = command.name,
+        opcode = command.opcode,
+    )
+}
+
 /// A numeric literal, or a negated one: `-1` parses as a unary negation.
 fn is_numeric_literal(expr: &Expr) -> bool {
     match expr {
@@ -803,15 +1088,15 @@ fn field_separator_at(trees: &[TokenTree], index: usize) -> Option<usize> {
     (punct.as_char() == '.').then_some(index + 1)
 }
 
-/// Replaces an unqualified struct path with its dictionary path, e.g. `ChoicePair` ->
-/// `crate::Defs::Ref::ChoicePair`.
+/// Replaces a struct path with its dictionary path, e.g. `ChoicePair` or `Ref::ChoicePair`
+/// -> `crate::Defs::Ref::ChoicePair`.
 fn qualify_struct_path(literal: &mut ExprStruct, qualified_name: &str) {
-    let Some(name) = bare_name(literal.qself.as_ref(), &literal.path) else {
+    let Some(name) = written_path(literal.qself.as_ref(), &literal.path) else {
         return;
     };
 
     let (_, short_name) = split_qualified_name(qualified_name);
-    if name.lookup != short_name {
+    if !name.names(&qualified_name.split('.').collect::<Vec<_>>()) {
         return;
     }
 
@@ -821,18 +1106,43 @@ fn qualify_struct_path(literal: &mut ExprStruct, qualified_name: &str) {
     ));
 }
 
-/// A bare identifier, possibly one an editor is partway through typing.
-struct BareName {
-    /// The name to look up, with any editor marker stripped.
-    lookup: String,
-    /// The identifier as written, marker included.
+/// A path an author wrote for a dictionary name, carrying as much of that name's qualifier
+/// as they cared to: `RED`, `Choice::RED` and `Ref::Choice::RED` are all this.
+///
+/// Only the last segment can be one an editor is partway through typing, so it is the only
+/// one whose marker state is tracked.
+struct WrittenPath {
+    /// Each segment's text, with any editor marker stripped from the last. Never empty.
+    lookup: Vec<String>,
+    /// The last segment as written, marker included.
     written: Ident,
     span: Span,
-    /// Whether an editor is mid-completion on this name.
+    /// Whether an editor is mid-completion on the last segment.
     in_progress: bool,
 }
 
-impl BareName {
+impl WrittenPath {
+    /// The last segment: the name itself, the rest being its qualifier.
+    fn leaf(&self) -> &str {
+        self.lookup.last().expect("a path has a last segment")
+    }
+
+    /// Whether this names the dictionary name whose own segments are `full` — the same last
+    /// segment, and a qualifier that is a tail of `full`'s. So `Choice::RED` and a bare `RED`
+    /// both name `Ref.Choice.RED`, while `Other::Choice::RED` names nothing.
+    ///
+    /// A path longer than `full` never matches, which is what leaves the `crate::Defs::..`
+    /// form this pass writes for [`is_qualified_path`] to recognise rather than rewrite.
+    fn names(&self, full: &[&str]) -> bool {
+        self.lookup.len() <= full.len()
+            && self
+                .lookup
+                .iter()
+                .rev()
+                .zip(full.iter().rev())
+                .all(|(written, dictionary)| written == dictionary)
+    }
+
     /// The identifier to emit for a dictionary name this resolved to.
     fn emit(&self, dictionary_name: &str) -> Ident {
         if self.in_progress {
@@ -846,29 +1156,44 @@ impl BareName {
     }
 }
 
-fn bare_name(qself: Option<&syn::QSelf>, path: &SynPath) -> Option<BareName> {
-    if qself.is_some() || path.leading_colon.is_some() || path.segments.len() != 1 {
+/// The path `qself`/`path` spell, if it is a plain one: no `<T as Trait>`, no leading `::`,
+/// no generic arguments — none of which a dictionary name has.
+fn written_path(qself: Option<&syn::QSelf>, path: &SynPath) -> Option<WrittenPath> {
+    if qself.is_some() || path.leading_colon.is_some() {
         return None;
     }
 
-    let segment = path.segments.first()?;
-    if !segment.arguments.is_none() {
-        return None;
+    let mut lookup = Vec::with_capacity(path.segments.len());
+    for segment in &path.segments {
+        if !segment.arguments.is_none() {
+            return None;
+        }
+        lookup.push(unraw(&segment.ident));
     }
 
-    let written = unraw(&segment.ident);
+    let last = path.segments.last()?;
+    let written = unraw(&last.ident);
     let in_progress = written.contains(COMPLETION_MARKER);
+    if in_progress {
+        let leaf = lookup.last_mut().expect("`last` found a segment");
+        *leaf = written.replace(COMPLETION_MARKER, "");
+    }
 
-    Some(BareName {
-        lookup: if in_progress {
-            written.replace(COMPLETION_MARKER, "")
-        } else {
-            written
-        },
-        written: segment.ident.clone(),
-        span: segment.ident.span(),
+    Some(WrittenPath {
+        lookup,
+        written: last.ident.clone(),
+        span: last.ident.span(),
         in_progress,
     })
+}
+
+/// The dictionary's own segments for a name declared inside `qualified_name`, e.g.
+/// `("Ref.Choice", "RED")` becomes `["Ref", "Choice", "RED"]`.
+fn declared_in<'a>(qualified_name: &'a str, member: &'a str) -> Vec<&'a str> {
+    let mut segments: Vec<&str> = qualified_name.split('.').collect();
+    segments.push(member);
+
+    segments
 }
 
 /// The identifier's name with any `r#` prefix stripped.
@@ -912,5 +1237,18 @@ pub(crate) mod test_support {
     /// Renders a body without rewriting it, for writing expectations as ordinary Rust.
     pub(crate) fn render_block(body: &str) -> syn::Result<String> {
         Ok(syn::parse_str::<TokenStream>(body)?.to_string())
+    }
+
+    /// Both passes in the order `#[fprime_test]` runs them: qualify, then descriptor.
+    ///
+    /// `completing` stands in for an editor mid-keystroke, which the marker itself signals in
+    /// the real thing — see [`rewrite_test_body`].
+    pub(crate) fn descriptor_block(body: &str, completing: bool) -> syn::Result<String> {
+        let resolver = resolver(Path::new(DICTIONARY))
+            .map_err(|err| syn::Error::new(Span::call_site(), err))?;
+
+        let qualified = resolver.qualify_calls(syn::parse_str(body)?);
+
+        Ok(resolver.descriptor_calls(qualified, completing).to_string())
     }
 }
