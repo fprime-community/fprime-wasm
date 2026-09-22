@@ -59,6 +59,9 @@ SERVER_GLOBS = [
 
 INDEX_TIMEOUT_S = 300
 
+# Where an inserted body wants the cursor.
+CURSOR = "<|>"
+
 # Mirrors `fprime_wasm/templates/vscode-settings.json.tmpl`, in the nested form LSP wants.
 # `allTargets` and the `wasm` feature are both needed or the sequence bins do not load and
 # every case inside one is inconclusive.
@@ -242,17 +245,21 @@ class Case:
       what going back to edit an existing argument looks like. The name *does* resolve,
       with the marker inside it, so this is the case that reaches `WrittenPath::emit`'s
       `in_progress` arm — and the only kind that can catch a marker being dropped.
+    * `"insert"` — `insert` is written into the file just *after* the anchor line, with
+      `<|>` where the cursor goes, and `name`/`keep` unused. For a position no existing line
+      holds: nothing typed yet, or a control that needs a whole function of its own.
     """
 
     def __init__(self, spec: dict) -> None:
         self.why: str = spec["why"]
         self.path = REPO / spec["path"]
         self.anchor: str = spec["anchor"]
-        self.name: str = spec["name"]
-        self.keep: str = spec["keep"]
+        self.name: str = spec.get("name", "")
+        self.keep: str = spec.get("keep", "")
         self.expect: str = spec["expect"]
         self.occurrence: int = spec.get("occurrence", 1)
-        self.mode: str = spec.get("mode", "truncate")
+        self.insert: str = spec.get("insert", "")
+        self.mode: str = "insert" if self.insert else spec.get("mode", "truncate")
 
     def locate(self, lines: list[str]) -> int:
         """The index of the line this case truncates."""
@@ -292,11 +299,33 @@ def overlay(path: Path, cases: list[Case]) -> tuple[str, dict[int, tuple[int, in
         taken[number] = case.why
 
     for index, case, number in located:
+        if case.mode == "insert":
+            continue
         line = original[number]
         column = line.index(case.name) + len(case.keep)
         if case.mode == "truncate":
             lines[number] = line.replace(case.name, case.keep, 1)
         cursors[index] = (number, column)
+
+    # Insertions last, deepest first, so an earlier one cannot shift a later one's anchor —
+    # and every cursor already recorded above sits on a line no insertion moved, because a
+    # file may not mix the two (`locate` would collide).
+    for index, case, number in sorted(located, key=lambda found: -found[2]):
+        if case.mode != "insert":
+            continue
+
+        written = case.insert.split("\n")
+        at = next(
+            (offset for offset, line in enumerate(written) if CURSOR in line),
+            None,
+        )
+        if at is None:
+            raise ValueError(f"{case.why!r}: an inserted body needs {CURSOR} for the cursor")
+
+        column = written[at].index(CURSOR)
+        written[at] = written[at].replace(CURSOR, "", 1)
+        lines[number + 1 : number + 1] = written
+        cursors[index] = (number + 1 + at, column)
 
     return "\n".join(lines) + "\n", cursors
 

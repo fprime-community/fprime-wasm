@@ -11,6 +11,18 @@
     "items": 34,
     "qualified_rank": null
   },
+  "control: plain Rust, nothing typed, enum argument": {
+    "bare_rank": null,
+    "import": false,
+    "items": 170,
+    "qualified_rank": 4
+  },
+  "glob control: nothing typed, enum in scope": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 169,
+    "qualified_rank": null
+  },
   "sequence: command name after a component": {
     "bare_rank": 1,
     "import": false,
@@ -58,6 +70,12 @@
     "import": false,
     "items": 168,
     "qualified_rank": 3
+  },
+  "sequence: nothing typed, enum argument": {
+    "bare_rank": null,
+    "import": false,
+    "items": 169,
+    "qualified_rank": 4
   },
   "test: bare command in a descriptor": {
     "bare_rank": 1,

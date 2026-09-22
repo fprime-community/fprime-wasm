@@ -123,5 +123,26 @@
     "keep": "CMD_NO_OP_S",
     "expect": "CMD_NO_OP_STRING",
     "mode": "inside"
+  },
+  {
+    "why": "control: plain Rust, nothing typed, enum argument",
+    "path": "crates/example/src/bin/no_op.rs",
+    "anchor": "use example::*;",
+    "insert": "#[allow(dead_code)]\nfn control() {\n    CdhCore.events.SET_EVENT_FILTER(<|>);\n}\n",
+    "expect": "ACTIVITY_HI"
+  },
+  {
+    "why": "sequence: nothing typed, enum argument",
+    "path": "crates/example/src/bin/poller.rs",
+    "anchor": "pub fn main() {",
+    "insert": "    CdhCore.events.SET_EVENT_FILTER(<|>);",
+    "expect": "ACTIVITY_HI"
+  },
+  {
+    "why": "glob control: nothing typed, enum in scope",
+    "path": "crates/example/src/bin/worker.rs",
+    "anchor": "pub fn main() {",
+    "insert": "    {\n        #[allow(unused_imports)]\n        use example::Defs::Svc::EventManager::FilterSeverity::*;\n        CdhCore.events.SET_EVENT_FILTER(<|>);\n    }",
+    "expect": "ACTIVITY_HI"
   }
 ]
