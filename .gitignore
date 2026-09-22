@@ -25,3 +25,6 @@ target
 # Scratch wasm inspected by hand; the real build output lives under target/
 /*/*.wasm
 /*/*.wat
+
+# Python bytecode from the probes in tools/
+__pycache__/
