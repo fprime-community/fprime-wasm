@@ -39,5 +39,7 @@ wasm-opt \
     --mvp-features \
     --enable-mutable-globals \
     --enable-custom-page-sizes \
+    --low-memory-unused \
+    --converge \
     -Os "$output" -o "$output.opt"
 mv "$output.opt" "$output"
