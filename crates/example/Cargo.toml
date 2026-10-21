@@ -48,7 +48,7 @@ test = false
 bench = false
 
 [[bin]]
-name = "strict"
+name = "restrict"
 required-features = ["wasm"]
 test = false
 bench = false

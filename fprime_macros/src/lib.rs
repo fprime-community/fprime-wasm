@@ -7,9 +7,9 @@ mod command;
 mod fprime_test;
 mod infer_path;
 mod parameter;
+mod restrict;
 mod serializable;
 mod signature;
-mod strict;
 mod telemetry;
 
 /// Render a macro result, reporting failures where the macro was invoked.
@@ -73,20 +73,20 @@ pub fn fprime_parameter(attr: TokenStream, item: TokenStream) -> TokenStream {
     expand(parameter::parameter(attr.into(), item.into()))
 }
 
-/// Parse the `#[fprime]` / `#[fprime_main]` arguments: whether `strict` was given.
-fn is_strict(attr: proc_macro2::TokenStream) -> syn::Result<bool> {
-    let mut strict = false;
+/// Parse the `#[fprime]` / `#[fprime_main]` arguments: whether `restrict` was given.
+fn is_restrict(attr: proc_macro2::TokenStream) -> syn::Result<bool> {
+    let mut restrict = false;
     let parser = syn::meta::parser(|meta| {
-        if meta.path.is_ident("strict") {
-            strict = true;
+        if meta.path.is_ident("restrict") {
+            restrict = true;
             Ok(())
         } else {
-            Err(meta.error("unsupported attribute argument, expected `strict`"))
+            Err(meta.error("unsupported attribute argument, expected `restrict`"))
         }
     });
 
     syn::parse::Parser::parse2(parser, attr)?;
-    Ok(strict)
+    Ok(restrict)
 }
 
 /// Enable the F Prime sequencing DSL in a function body.
@@ -106,11 +106,11 @@ fn is_strict(attr: proc_macro2::TokenStream) -> syn::Result<bool> {
 /// `build.rs`, which publishes it through the `FPRIME_DICTIONARY` environment
 /// variable.
 ///
-/// `#[fprime(strict)]` also limits the body to plain steps: no loops, `match`,
+/// `#[fprime(restrict)]` also limits the body to plain steps: no loops, `match`,
 /// references, closures or macros.
 #[proc_macro_attribute]
 pub fn fprime(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let error = strict_errors(attr.into(), &item.clone().into());
+    let error = restrict_errors(attr.into(), &item.clone().into());
     let resolved = infer_enum_paths(item.into());
 
     quote! {
@@ -138,7 +138,7 @@ pub fn fprime_test(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// Wires up the Wasm entry point, and enables the sequencing DSL (see [`fprime`]).
 #[proc_macro_attribute]
 pub fn fprime_main(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let error = strict_errors(attr.into(), &item.clone().into());
+    let error = restrict_errors(attr.into(), &item.clone().into());
     let entry = export(infer_enum_paths(item.into()));
 
     quote! {
@@ -155,18 +155,24 @@ pub fn fprime_main(attr: TokenStream, item: TokenStream) -> TokenStream {
     .into()
 }
 
-/// The errors for `item`, if `attr` is malformed or asks for strict mode and
+/// The errors for `item`, if `attr` is malformed or asks for restrict mode and
 /// `item` breaks it.
 ///
-/// Strict mode checks the body as written: the resolved body uses constructs
-/// strict mode rejects. The errors are emitted beside the item rather than in
+/// Restrict mode checks the body as written: the resolved body uses constructs
+/// restrict mode rejects. The errors are emitted beside the item rather than in
 /// it, so the item keeps its attributes.
-fn strict_errors(
+fn restrict_errors(
     attr: proc_macro2::TokenStream,
     item: &proc_macro2::TokenStream,
 ) -> Option<proc_macro2::TokenStream> {
-    is_strict(attr)
-        .and_then(|strict| if strict { strict::check(item) } else { Ok(()) })
+    is_restrict(attr)
+        .and_then(|restrict| {
+            if restrict {
+                restrict::check(item)
+            } else {
+                Ok(())
+            }
+        })
         .err()
         .map(syn::Error::into_compile_error)
 }

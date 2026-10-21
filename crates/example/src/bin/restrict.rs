@@ -1,11 +1,11 @@
-//! A sequence in strict mode: plain steps, values and `if`, nothing more.
+//! A sequence in restrict mode: plain steps, values and `if`, nothing more.
 
 #![no_std]
 #![no_main]
 
 use example::*;
 
-#[fprime_main(strict)]
+#[fprime_main(restrict)]
 pub fn main() {
     const DROP_LIMIT: u64 = 2;
 
@@ -20,11 +20,11 @@ pub fn main() {
         Ref.dpDemo.SelectColor(GREEN);
     }
 
-    // Strict mode rejects loops, so this would not compile:
+    // Restrict mode rejects loops, so this would not compile:
     //
     // loop {
     //     CdhCore.cmdDisp.CMD_NO_OP();
     // }
     //
-    // error: loops are not allowed in strict mode
+    // error: loops are not allowed in restrict mode
 }

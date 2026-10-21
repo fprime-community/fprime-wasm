@@ -1,6 +1,6 @@
-//! Strict mode for the sequencing DSL: `#[fprime(strict)]` / `#[fprime_main(strict)]`.
+//! Restrict mode for the sequencing DSL: `#[fprime(restrict)]` / `#[fprime_main(restrict)]`.
 //!
-//! Strict mode holds a sequence to a small subset of Rust that reads as a list
+//! Restrict mode holds a sequence to a small subset of Rust that reads as a list
 //! of steps: commands, telemetry and parameters, `let` and `const` values,
 //! arithmetic, and `if`. Loops, `match`, references, closures, macros, `unsafe`
 //! and nested items are rejected.
@@ -13,7 +13,7 @@ use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
 use syn::{Expr, ItemFn, Pat, Stmt, Type, UnOp};
 
-/// Every construct in `item`'s body that strict mode rejects, as one error.
+/// Every construct in `item`'s body that restrict mode rejects, as one error.
 ///
 /// An item that doesn't parse as a function is left for the compiler to report.
 pub(crate) fn check(item: &TokenStream) -> syn::Result<()> {
@@ -21,12 +21,12 @@ pub(crate) fn check(item: &TokenStream) -> syn::Result<()> {
         return Ok(());
     };
 
-    let mut strict = StrictDsl::default();
+    let mut restrict = RestrictDsl::default();
     for stmt in &function.block.stmts {
-        strict.visit_stmt(stmt);
+        restrict.visit_stmt(stmt);
     }
 
-    strict
+    restrict
         .disallowed
         .into_iter()
         .reduce(|mut all, next| {
@@ -37,18 +37,18 @@ pub(crate) fn check(item: &TokenStream) -> syn::Result<()> {
 }
 
 #[derive(Default)]
-struct StrictDsl {
+struct RestrictDsl {
     disallowed: Vec<syn::Error>,
 }
 
-impl StrictDsl {
+impl RestrictDsl {
     fn reject(&mut self, span: Span, message: &str) {
         self.disallowed
-            .push(syn::Error::new(span, format!("{message} in strict mode")));
+            .push(syn::Error::new(span, format!("{message} in restrict mode")));
     }
 }
 
-impl<'ast> Visit<'ast> for StrictDsl {
+impl<'ast> Visit<'ast> for RestrictDsl {
     fn visit_expr(&mut self, i: &'ast Expr) {
         match i {
             Expr::Array(_) // [0, 1, 2] array values
