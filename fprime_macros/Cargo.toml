@@ -19,7 +19,7 @@ path = "src/lib.rs"
 fprime_dictionary = { path = "../fprime_dictionary", version = "=0.0.0" }
 proc-macro2 = "1.0.103"
 quote = "1.0.41"
-syn = { version = "2.0.108", features = ["full"] }
+syn = { version = "2.0.108", features = ["full", "visit"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"

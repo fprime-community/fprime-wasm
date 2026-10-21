@@ -46,3 +46,9 @@ name = "poller"
 required-features = ["wasm"]
 test = false
 bench = false
+
+[[bin]]
+name = "strict"
+required-features = ["wasm"]
+test = false
+bench = false

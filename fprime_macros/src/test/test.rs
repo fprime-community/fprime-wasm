@@ -1,5 +1,5 @@
 use crate::infer_path::test_support::{const_encode_block, render_block, rewrite_block};
-use crate::{command, parameter, telemetry};
+use crate::{command, parameter, strict, telemetry};
 use pretty_assertions::assert_eq;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -781,4 +781,153 @@ fn keeps_the_written_call_for_navigation() {
             "`{token}` should appear in the expansion: {expansion}"
         );
     }
+}
+
+/// The strict-mode errors for a sequence body, one per rejected construct.
+fn strict_errors(body: TokenStream) -> Vec<String> {
+    match strict::check(&quote! { fn main() { #body } }) {
+        Ok(()) => Vec::new(),
+        Err(err) => err.into_iter().map(|err| err.to_string()).collect(),
+    }
+}
+
+/// Assert strict mode accepts `body`.
+#[track_caller]
+fn strict_accepts(body: TokenStream) {
+    assert_eq!(
+        Vec::<String>::new(),
+        strict_errors(body.clone()),
+        "in `{body}`"
+    );
+}
+
+/// Assert strict mode rejects `body` with exactly `message`.
+#[track_caller]
+fn strict_rejects(body: TokenStream, message: &str) {
+    assert_eq!(vec![message], strict_errors(body.clone()), "in `{body}`");
+}
+
+#[test]
+fn strict_accepts_values() {
+    strict_accepts(quote! { const LIMIT: f32 = 21.5; });
+    strict_accepts(quote! { let voltage = Ref.power.BatteryVoltage().0; });
+    strict_accepts(quote! { let mut tries = 0; });
+    strict_accepts(quote! { tries += 1; });
+    strict_accepts(quote! { let x = !(tries > 3) && -voltage < LIMIT; });
+    strict_accepts(quote! { let x = (voltage as u32, [0u8; 4], [1, 2], ARRAY[0]); });
+}
+
+#[test]
+fn strict_accepts_commands() {
+    strict_accepts(quote! { Ref.power.PWR_OFF(Ref::Power::State::OFF, -1); });
+    strict_accepts(quote! {
+        Ref.typeDemo.CHOICE_PAIR(ChoicePair { firstChoice: RED, secondChoice: BLUE });
+    });
+}
+
+#[test]
+fn strict_accepts_if() {
+    strict_accepts(quote! { if ok { return; } else { Ref.cmd.NO_OP(); } });
+    strict_accepts(quote! { if let Some(x) = OPTION { Ref.cmd.SEND(x); } });
+}
+
+#[test]
+fn strict_rejects_loops() {
+    let message = "loops are not allowed in strict mode";
+
+    strict_rejects(quote! { loop {} }, message);
+    strict_rejects(quote! { while ok {} }, message);
+    strict_rejects(quote! { for i in 0..3 { Ref.cmd.NO_OP(); } }, message);
+}
+
+#[test]
+fn strict_rejects_break_and_continue() {
+    // Labelled blocks allow `break` without a loop.
+    strict_rejects(
+        quote! { 'outer: { break 'outer; } },
+        "`break` and `continue` are not allowed in strict mode",
+    );
+}
+
+#[test]
+fn strict_rejects_references() {
+    strict_rejects(
+        quote! { let a = &x; },
+        "references (`&`) are not allowed in strict mode",
+    );
+    strict_rejects(
+        quote! { let b = *a; },
+        "dereferencing with `*` is not allowed in strict mode",
+    );
+    strict_rejects(
+        quote! { let &c = x; },
+        "references (`&`) are not allowed in strict mode",
+    );
+    strict_rejects(
+        quote! { let ref d = x; },
+        "references (`ref`) are not allowed in strict mode",
+    );
+    strict_rejects(
+        quote! { let e: &u32 = y; },
+        "reference types are not allowed in strict mode",
+    );
+}
+
+#[test]
+fn strict_rejects_macros() {
+    let message = "macros are not allowed in strict mode";
+
+    strict_rejects(quote! { println!("hi"); }, message);
+    strict_rejects(quote! { let c = vec![1]; }, message);
+}
+
+#[test]
+fn strict_rejects_other_constructs() {
+    strict_rejects(
+        quote! { let f = || 1; },
+        "closures are not allowed in strict mode",
+    );
+    strict_rejects(
+        quote! { match x { _ => {} } },
+        "`match` is not allowed, use `if` instead in strict mode",
+    );
+    strict_rejects(
+        quote! { unsafe { foo() }; },
+        "`unsafe` is not allowed in strict mode",
+    );
+    strict_rejects(
+        quote! { let g = h()?; },
+        "`?` is not allowed in strict mode",
+    );
+    strict_rejects(
+        quote! { fn helper() {} },
+        "only `const` may be declared inside a sequence in strict mode",
+    );
+}
+
+/// Constructs strict mode rejects are still rejected when nested in ones it accepts.
+#[test]
+fn strict_checks_nested_expressions() {
+    strict_rejects(
+        quote! { Ref.cmd.SEND(&x); },
+        "references (`&`) are not allowed in strict mode",
+    );
+    strict_rejects(
+        quote! { if ok { let f = |y| y; } },
+        "closures are not allowed in strict mode",
+    );
+    strict_rejects(
+        quote! { const N: u32 = { while true {} 0 }; },
+        "loops are not allowed in strict mode",
+    );
+    strict_rejects(
+        quote! { let x = -{ loop {} }; },
+        "loops are not allowed in strict mode",
+    );
+}
+
+/// Every rejected construct is reported, not just the first.
+#[test]
+fn strict_reports_every_error() {
+    assert_eq!(2, strict_errors(quote! { loop {} let a = &x; }).len());
 }

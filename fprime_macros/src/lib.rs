@@ -9,6 +9,7 @@ mod infer_path;
 mod parameter;
 mod serializable;
 mod signature;
+mod strict;
 mod telemetry;
 
 /// Render a macro result, reporting failures where the macro was invoked.
@@ -72,6 +73,22 @@ pub fn fprime_parameter(attr: TokenStream, item: TokenStream) -> TokenStream {
     expand(parameter::parameter(attr.into(), item.into()))
 }
 
+/// Parse the `#[fprime]` / `#[fprime_main]` arguments: whether `strict` was given.
+fn is_strict(attr: proc_macro2::TokenStream) -> syn::Result<bool> {
+    let mut strict = false;
+    let parser = syn::meta::parser(|meta| {
+        if meta.path.is_ident("strict") {
+            strict = true;
+            Ok(())
+        } else {
+            Err(meta.error("unsupported attribute argument, expected `strict`"))
+        }
+    });
+
+    syn::parse::Parser::parse2(parser, attr)?;
+    Ok(strict)
+}
+
 /// Enable the F Prime sequencing DSL in a function body.
 ///
 /// Command arguments may name an enumerated constant on its own, and the
@@ -88,9 +105,19 @@ pub fn fprime_parameter(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// The dictionary comes from the `fprime_build::generate` call in the crate's
 /// `build.rs`, which publishes it through the `FPRIME_DICTIONARY` environment
 /// variable.
+///
+/// `#[fprime(strict)]` also limits the body to plain steps: no loops, `match`,
+/// references, closures or macros.
 #[proc_macro_attribute]
 pub fn fprime(attr: TokenStream, item: TokenStream) -> TokenStream {
-    infer_enum_paths(attr.into(), item.into()).into()
+    let error = strict_errors(attr.into(), &item.clone().into());
+    let resolved = infer_enum_paths(item.into());
+
+    quote! {
+        #error
+        #resolved
+    }
+    .into()
 }
 
 /// A test that runs one sequence on the on-board interpreter and checks what it did.
@@ -111,9 +138,12 @@ pub fn fprime_test(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// Wires up the Wasm entry point, and enables the sequencing DSL (see [`fprime`]).
 #[proc_macro_attribute]
 pub fn fprime_main(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let entry = export(infer_enum_paths(attr.into(), item.into()));
+    let error = strict_errors(attr.into(), &item.clone().into());
+    let entry = export(infer_enum_paths(item.into()));
 
     quote! {
+        #error
+
         #[panic_handler]
         fn __panic_handler(info: &core::panic::PanicInfo) -> ! {
             fprime_core::panic_handler(info);
@@ -125,12 +155,25 @@ pub fn fprime_main(attr: TokenStream, item: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Resolve the sequencing DSL in `item`, keeping the item whatever happens.
-fn infer_enum_paths(
+/// The errors for `item`, if `attr` is malformed or asks for strict mode and
+/// `item` breaks it.
+///
+/// Strict mode checks the body as written: the resolved body uses constructs
+/// strict mode rejects. The errors are emitted beside the item rather than in
+/// it, so the item keeps its attributes.
+fn strict_errors(
     attr: proc_macro2::TokenStream,
-    item: proc_macro2::TokenStream,
-) -> proc_macro2::TokenStream {
-    match infer_path::rewrite(attr, item.clone()) {
+    item: &proc_macro2::TokenStream,
+) -> Option<proc_macro2::TokenStream> {
+    is_strict(attr)
+        .and_then(|strict| if strict { strict::check(item) } else { Ok(()) })
+        .err()
+        .map(syn::Error::into_compile_error)
+}
+
+/// Resolve the sequencing DSL in `item`, keeping the item whatever happens.
+fn infer_enum_paths(item: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+    match infer_path::rewrite(item.clone()) {
         Ok(qualified) => qualified,
         Err(err) => {
             let error = err.to_compile_error();
