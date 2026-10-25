@@ -2,7 +2,7 @@ use crate::infer_path::test_support::{
     const_encode_block, descriptor_block, render_block, rewrite_block,
     test_body as expand_test_body,
 };
-use crate::{command, parameter, telemetry};
+use crate::{command, parameter, restrict, telemetry};
 use pretty_assertions::assert_eq;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -1125,4 +1125,153 @@ fn expansions_agree_up_to_the_cursor() {
             &test_body(body),
         );
     }
+}
+
+/// The restrict-mode errors for a sequence body, one per rejected construct.
+fn restrict_errors(body: TokenStream) -> Vec<String> {
+    match restrict::check(&quote! { fn main() { #body } }) {
+        Ok(()) => Vec::new(),
+        Err(err) => err.into_iter().map(|err| err.to_string()).collect(),
+    }
+}
+
+/// Assert restrict mode accepts `body`.
+#[track_caller]
+fn restrict_accepts(body: TokenStream) {
+    assert_eq!(
+        Vec::<String>::new(),
+        restrict_errors(body.clone()),
+        "in `{body}`"
+    );
+}
+
+/// Assert restrict mode rejects `body` with exactly `message`.
+#[track_caller]
+fn restrict_rejects(body: TokenStream, message: &str) {
+    assert_eq!(vec![message], restrict_errors(body.clone()), "in `{body}`");
+}
+
+#[test]
+fn restrict_accepts_values() {
+    restrict_accepts(quote! { const LIMIT: f32 = 21.5; });
+    restrict_accepts(quote! { let voltage = Ref.power.BatteryVoltage().0; });
+    restrict_accepts(quote! { let mut tries = 0; });
+    restrict_accepts(quote! { tries += 1; });
+    restrict_accepts(quote! { let x = !(tries > 3) && -voltage < LIMIT; });
+    restrict_accepts(quote! { let x = (voltage as u32, [0u8; 4], [1, 2], ARRAY[0]); });
+}
+
+#[test]
+fn restrict_accepts_commands() {
+    restrict_accepts(quote! { Ref.power.PWR_OFF(Ref::Power::State::OFF, -1); });
+    restrict_accepts(quote! {
+        Ref.typeDemo.CHOICE_PAIR(ChoicePair { firstChoice: RED, secondChoice: BLUE });
+    });
+}
+
+#[test]
+fn restrict_accepts_if() {
+    restrict_accepts(quote! { if ok { return; } else { Ref.cmd.NO_OP(); } });
+    restrict_accepts(quote! { if let Some(x) = OPTION { Ref.cmd.SEND(x); } });
+}
+
+#[test]
+fn restrict_rejects_loops() {
+    let message = "loops are not allowed in restrict mode";
+
+    restrict_rejects(quote! { loop {} }, message);
+    restrict_rejects(quote! { while ok {} }, message);
+    restrict_rejects(quote! { for i in 0..3 { Ref.cmd.NO_OP(); } }, message);
+}
+
+#[test]
+fn restrict_rejects_break_and_continue() {
+    // Labelled blocks allow `break` without a loop.
+    restrict_rejects(
+        quote! { 'outer: { break 'outer; } },
+        "`break` and `continue` are not allowed in restrict mode",
+    );
+}
+
+#[test]
+fn restrict_rejects_references() {
+    restrict_rejects(
+        quote! { let a = &x; },
+        "references (`&`) are not allowed in restrict mode",
+    );
+    restrict_rejects(
+        quote! { let b = *a; },
+        "dereferencing with `*` is not allowed in restrict mode",
+    );
+    restrict_rejects(
+        quote! { let &c = x; },
+        "references (`&`) are not allowed in restrict mode",
+    );
+    restrict_rejects(
+        quote! { let ref d = x; },
+        "references (`ref`) are not allowed in restrict mode",
+    );
+    restrict_rejects(
+        quote! { let e: &u32 = y; },
+        "reference types are not allowed in restrict mode",
+    );
+}
+
+#[test]
+fn restrict_rejects_macros() {
+    let message = "macros are not allowed in restrict mode";
+
+    restrict_rejects(quote! { println!("hi"); }, message);
+    restrict_rejects(quote! { let c = vec![1]; }, message);
+}
+
+#[test]
+fn restrict_rejects_other_constructs() {
+    restrict_rejects(
+        quote! { let f = || 1; },
+        "closures are not allowed in restrict mode",
+    );
+    restrict_rejects(
+        quote! { match x { _ => {} } },
+        "`match` is not allowed, use `if` instead in restrict mode",
+    );
+    restrict_rejects(
+        quote! { unsafe { foo() }; },
+        "`unsafe` is not allowed in restrict mode",
+    );
+    restrict_rejects(
+        quote! { let g = h()?; },
+        "`?` is not allowed in restrict mode",
+    );
+    restrict_rejects(
+        quote! { fn helper() {} },
+        "only `const` may be declared inside a sequence in restrict mode",
+    );
+}
+
+/// Constructs restrict mode rejects are still rejected when nested in ones it accepts.
+#[test]
+fn restrict_checks_nested_expressions() {
+    restrict_rejects(
+        quote! { Ref.cmd.SEND(&x); },
+        "references (`&`) are not allowed in restrict mode",
+    );
+    restrict_rejects(
+        quote! { if ok { let f = |y| y; } },
+        "closures are not allowed in restrict mode",
+    );
+    restrict_rejects(
+        quote! { const N: u32 = { while true {} 0 }; },
+        "loops are not allowed in restrict mode",
+    );
+    restrict_rejects(
+        quote! { let x = -{ loop {} }; },
+        "loops are not allowed in restrict mode",
+    );
+}
+
+/// Every rejected construct is reported, not just the first.
+#[test]
+fn restrict_reports_every_error() {
+    assert_eq!(2, restrict_errors(quote! { loop {} let a = &x; }).len());
 }

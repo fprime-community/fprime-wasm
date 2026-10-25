@@ -59,14 +59,7 @@ const MISSING_DICTIONARY: &str = concat!(
 );
 
 /// Rewrite the bare enumerated constants in `item` into fully qualified paths.
-pub(crate) fn rewrite(attr: TokenStream, item: TokenStream) -> syn::Result<TokenStream> {
-    if !attr.is_empty() {
-        return Err(syn::Error::new_spanned(
-            attr,
-            "this attribute takes no arguments",
-        ));
-    }
-
+pub(crate) fn rewrite(item: TokenStream) -> syn::Result<TokenStream> {
     let span = signature_span(&item);
 
     let Ok(dictionary) = std::env::var(fprime_dictionary::DICTIONARY_ENV) else {
