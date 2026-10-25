@@ -11,8 +11,6 @@ pub fn main() {
     CdhCore.cmdDisp.CMD_NO_OP_STRING("STRINGS");
     CdhCore.events.SET_EVENT_FILTER(ACTIVITY_HI, DISABLED);
 
-    CdhCore.cmdDisp.CMD_NO_OP();
-
     CdhCore.health.HLTH_PING_ENABLE("asd", ENABLED);
 
     let (ev_dropped, _) = Tlm::CdhCore.events.EventsDropped();
