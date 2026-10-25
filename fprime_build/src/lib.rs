@@ -58,12 +58,14 @@ pub(crate) fn generate_to_file<W: ?Sized + Write>(
         definitions.push(Definition { qualifier, tokens });
     }
 
-    let mut impls = vec![];
+    let mut cmds = vec![];
+    let mut tlms = vec![];
+    let mut prms = vec![];
     let mut konsts = vec![];
 
     for cmd in &dict.commands {
         let (qualifier, tokens) = commands::command(cmd);
-        impls.push(Definition { qualifier, tokens });
+        cmds.push(Definition { qualifier, tokens });
 
         if let Some((qualifier, tokens)) = konst::command(&dict, cmd) {
             konsts.push(Definition { qualifier, tokens });
@@ -72,23 +74,21 @@ pub(crate) fn generate_to_file<W: ?Sized + Write>(
 
     for tlm in &dict.telemetry_channels {
         let (qualifier, tokens) = telemetry::telemetry_channel(tlm);
-        impls.push(Definition { qualifier, tokens });
+        tlms.push(Definition { qualifier, tokens });
     }
 
     for prm in &dict.parameters {
         let (qualifier, tokens) = parameters::parameter(prm);
-        impls.push(Definition { qualifier, tokens });
+        prms.push(Definition { qualifier, tokens });
     }
 
-    let definitions: CodeTree = definitions.into();
-    let impls: CodeTree = impls.into();
-    let konsts: CodeTree = konsts.into();
-
-    let tokens: TokenStream = definitions
-        .module_nesting()
+    let tokens: TokenStream = util::global_helpers(dict)
         .into_iter()
-        .chain(impls.struct_nesting(dict))
-        .chain(konsts.module_nesting_named("Konst"))
+        .chain(Into::<CodeTree>::into(definitions).module_nesting("Dict"))
+        .chain(Into::<CodeTree>::into(cmds).struct_nesting("Cmd"))
+        .chain(Into::<CodeTree>::into(tlms).struct_nesting("Tlm"))
+        .chain(Into::<CodeTree>::into(prms).struct_nesting("Prm"))
+        .chain(Into::<CodeTree>::into(konsts).module_nesting("Konst"))
         .collect();
 
     writer
@@ -124,7 +124,7 @@ pub(crate) fn generate_descriptors_to_file<W: ?Sized + Write>(
     }
 
     let descs: CodeTree = descs.into();
-    let tokens = descs.module_nesting_named("Desc");
+    let tokens = descs.module_nesting("Desc");
 
     writer
         .write_all(render_tokens(tokens).as_bytes())

@@ -11,7 +11,7 @@
 //!
 //! ```ignore
 //! Ref.dpDemo
-//!     .Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+//!     .Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
 //! ```
 //!
 //! A name may also carry as much of its dictionary qualifier as the author cares to write, so
@@ -26,7 +26,7 @@
 //!   are read.
 //! * [`symbols`] is what a scan resolves them against.
 //! * [`name`] decides how much of a name's qualifier the author wrote.
-//! * [`qualify`] turns a bare name into a `crate::Defs::..` path — pass one of both.
+//! * [`qualify`] turns a bare name into a `crate::Dict::..` path — pass one of both.
 //! * [`encode`] folds a call whose arguments are all constants into its `Fw::ComBuffer` —
 //!   pass two of `#[fprime]`.
 //! * [`describe`] turns a point into the `Desc` descriptor a test matches on — pass two of

@@ -6,7 +6,7 @@ use bench::*;
 
 #[fprime_main]
 pub fn main() {
-    let color = Ref.typeDemo.ChoiceCh().0;
+    let color = Tlm::Ref.typeDemo.ChoiceCh().0;
     Ref.typeDemo.CHOICE_PAIR(ChoicePair {
         firstChoice: color,
         secondChoice: BLUE,

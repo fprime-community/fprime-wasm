@@ -11,7 +11,7 @@ pub fn main() {
 
     set_fail_mode(FailMode::Permissive);
 
-    let (dropped, _) = CdhCore.events.EventsDropped();
+    let (dropped, _) = Tlm::CdhCore.events.EventsDropped();
 
     if dropped > DROP_LIMIT {
         CdhCore.cmdDisp.CMD_NO_OP_STRING("TOO MANY DROPPED");

@@ -1,7 +1,5 @@
-use crate::util;
 use crate::util::str_to_ident;
 use convert_case::{Case, Casing};
-use fprime_dictionary::Dictionary;
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::collections::BTreeMap;
@@ -81,11 +79,7 @@ impl CodeTree {
         }
     }
 
-    pub fn module_nesting(self) -> TokenStream {
-        self.module_nesting_named("Defs")
-    }
-
-    pub fn module_nesting_named(self, root: &str) -> TokenStream {
+    pub fn module_nesting(self, root: &str) -> TokenStream {
         let inner = self.module_nesting_impl();
         let root = str_to_ident(root);
 
@@ -168,7 +162,7 @@ impl CodeTree {
         }
     }
 
-    pub fn struct_nesting(self, dict: &Dictionary) -> TokenStream {
+    pub fn struct_nesting(self, ns: &str) -> TokenStream {
         // Encode the top-level defs as ZST-consts
         let consts: Vec<_> = self
             .modules
@@ -178,30 +172,26 @@ impl CodeTree {
                 let var_name = str_to_ident(top_level_mod);
 
                 quote! {
-                    pub const #var_name: Impl::#type_name = Impl::#type_name::DEFAULT;
+                    pub const #var_name: #type_name = #type_name::DEFAULT;
                 }
             })
             .collect();
 
-        let impl_defs = vec![util::global_memory(dict)];
-        let global_defs = vec![util::time_now(), util::time_cmp()];
-
         let defs = self.struct_nesting_impl(vec![]);
+        let ns = str_to_ident(ns);
 
         quote! {
-            mod Impl {
+            pub mod #ns {
                 #[allow(unused_imports)]
                 use fprime_core::*;
 
                 #[allow(unused_imports)]
-                use super::Defs::FwOpcodeType;
+                use super::Dict::FwOpcodeType;
 
-                #(#impl_defs)*
                 #defs
-            }
 
-            #(#consts)*
-            #(#global_defs)*
+                #(#consts)*
+            }
         }
     }
 }

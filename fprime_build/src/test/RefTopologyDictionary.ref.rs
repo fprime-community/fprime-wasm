@@ -1,12 +1,40 @@
-pub mod Defs {
+#[allow(unused_imports)]
+use fprime_core::*;
+const __SCRATCH_SIZE: usize = 252usize;
+static mut __SCRATCH: [u8; __SCRATCH_SIZE] = [0x0; __SCRATCH_SIZE];
+const __TIME_SIZE: usize = crate::Dict::Fw::TimeValue::SIZE;
+static mut __TIME: [u8; __TIME_SIZE] = [0; __TIME_SIZE];
+pub fn now() -> crate::Dict::Fw::TimeValue {
+    use fprime_core::Serializable;
+    let mut buf: [u8; crate::Dict::Fw::TimeValue::SIZE] = [0; crate::Dict::Fw::TimeValue::SIZE];
+    unsafe {
+        fprime_core::time::time_read(&mut buf);
+    }
+    crate::Dict::Fw::TimeValue::deserialize(&buf)
+}
+impl PartialOrd for crate::Dict::Fw::TimeValue {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        if self.timeBase != other.timeBase {
+            fprime_core::panic(fprime_core::PanicCode::TimeBaseIncomparable);
+        } else if self.timeContext != other.timeContext {
+            fprime_core::panic(fprime_core::PanicCode::TimeContextIncomparable);
+        }
+        match self.seconds.partial_cmp(&other.seconds) {
+            Some(core::cmp::Ordering::Equal) => {}
+            ord => return ord,
+        }
+        self.useconds.partial_cmp(&other.useconds)
+    }
+}
+pub mod Dict {
     #[allow(unused_imports)]
     use fprime_core::*;
     /// The id type.
     pub type FwIdType = u32;
     /// The type of a command opcode
-    pub type FwOpcodeType = crate::Defs::FwIdType;
+    pub type FwOpcodeType = crate::Dict::FwIdType;
     /// The unsigned type of larger sizes internal to the software.
-    pub type FwSizeType = crate::Defs::PlatformSizeType;
+    pub type FwSizeType = crate::Dict::PlatformSizeType;
     /// The type used to serialize a time context value
     pub type FwTimeContextStoreType = u8;
     /// The unsigned type of larger sizes internal to the software.
@@ -44,8 +72,8 @@ pub mod Defs {
         /// A time stamp
         #[derive(Clone, Debug, PartialEq, Serializable)]
         pub struct TimeValue {
-            pub timeBase: crate::Defs::TimeBase,
-            pub timeContext: crate::Defs::FwTimeContextStoreType,
+            pub timeBase: crate::Dict::TimeBase,
+            pub timeContext: crate::Dict::FwTimeContextStoreType,
             pub seconds: u32,
             pub useconds: u32,
         }
@@ -80,19 +108,19 @@ pub mod Defs {
         /// A structure of enumerations
         #[derive(Clone, Debug, PartialEq, Serializable)]
         pub struct ChoicePair {
-            pub firstChoice: crate::Defs::Ref::Choice,
-            pub secondChoice: crate::Defs::Ref::Choice,
+            pub firstChoice: crate::Dict::Ref::Choice,
+            pub secondChoice: crate::Dict::Ref::Choice,
         }
         /// A structure with a nested array, a nested structure and a member array
         #[derive(Clone, Debug, PartialEq, Serializable)]
         pub struct ChoiceSlurry {
-            pub tooManyChoices: crate::Defs::Ref::TooManyChoices,
-            pub separateChoice: crate::Defs::Ref::Choice,
-            pub choicePair: crate::Defs::Ref::ChoicePair,
+            pub tooManyChoices: crate::Dict::Ref::TooManyChoices,
+            pub separateChoice: crate::Dict::Ref::Choice,
+            pub choicePair: crate::Dict::Ref::ChoicePair,
             pub choiceAsMemberArray: [u8; 2],
         }
         /// An array of enumerations
-        pub type ManyChoices = [crate::Defs::Ref::Choice; 2];
+        pub type ManyChoices = [crate::Dict::Ref::Choice; 2];
         /// Every scalar width in one structure
         #[derive(Clone, Debug, PartialEq, Serializable)]
         pub struct ScalarStruct {
@@ -108,7 +136,7 @@ pub mod Defs {
             pub f64: f64,
         }
         /// An array of arrays
-        pub type TooManyChoices = [crate::Defs::Ref::ManyChoices; 2];
+        pub type TooManyChoices = [crate::Dict::Ref::ManyChoices; 2];
         /// An enumeration wide enough to need an i64 on the wire
         #[derive(Clone, Copy, Debug, Eq, PartialEq, Serializable)]
         #[repr(i64)]
@@ -135,7 +163,7 @@ pub mod Defs {
             /// A structure with a string member
             #[derive(Clone, Debug, PartialEq, Serializable)]
             pub struct ColorInfoStruct {
-                pub color: crate::Defs::Ref::DpDemo::ColorEnum,
+                pub color: crate::Dict::Ref::DpDemo::ColorEnum,
                 pub name: String<40>,
             }
             /// How a data product is requested
@@ -146,7 +174,7 @@ pub mod Defs {
                 ASYNC = 1,
             }
             /// An array of enumerations
-            pub type EnumArray = [crate::Defs::Ref::DpDemo::ColorEnum; 3];
+            pub type EnumArray = [crate::Dict::Ref::DpDemo::ColorEnum; 3];
             /// An array of floats
             pub type F32Array = [f32; 3];
             /// An array of strings
@@ -201,15 +229,11 @@ pub mod Defs {
         }
     }
 }
-mod Impl {
+pub mod Cmd {
     #[allow(unused_imports)]
     use fprime_core::*;
     #[allow(unused_imports)]
-    use super::Defs::FwOpcodeType;
-    const __SCRATCH_SIZE: usize = 252usize;
-    static mut __SCRATCH: [u8; __SCRATCH_SIZE] = [0x0; __SCRATCH_SIZE];
-    const __TIME_SIZE: usize = crate::Defs::Fw::TimeValue::SIZE;
-    static mut __TIME: [u8; __TIME_SIZE] = [0; __TIME_SIZE];
+    use super::Dict::FwOpcodeType;
     pub struct CdhCoreCmdDisp {}
     impl CdhCoreCmdDisp {
         pub const DEFAULT: Self = Self {};
@@ -233,9 +257,6 @@ mod Impl {
             arg2: f32,
             arg3: u8,
         ) -> fprime_core::CmdResponse {}
-        /// Commands dispatched
-        #[fprime_telemetry(id = 0x1000000)]
-        pub fn CommandsDispatched(&self) -> (u32, super::Defs::Fw::TimeValue) {}
     }
     pub struct CdhCoreEvents {}
     impl CdhCoreEvents {
@@ -247,14 +268,9 @@ mod Impl {
         #[fprime_command(opcode = 0x1001000)]
         pub fn SET_EVENT_FILTER(
             &self,
-            filterLevel: crate::Defs::Svc::EventManager::FilterSeverity,
-            filterEnabled: crate::Defs::Svc::EventManager::Enabled,
+            filterLevel: crate::Dict::Svc::EventManager::FilterSeverity,
+            filterEnabled: crate::Dict::Svc::EventManager::Enabled,
         ) -> fprime_core::CmdResponse {}
-        /// Events dropped, typed through an alias chain
-        #[fprime_telemetry(id = 0x1001000)]
-        pub fn EventsDropped(
-            &self,
-        ) -> (crate::Defs::FwSizeType, super::Defs::Fw::TimeValue) {}
     }
     pub struct CdhCoreHealth {}
     impl CdhCoreHealth {
@@ -267,7 +283,7 @@ mod Impl {
         pub fn HLTH_PING_ENABLE(
             &self,
             entry: String<40>,
-            enable: crate::Defs::Fw::Enabled,
+            enable: crate::Dict::Fw::Enabled,
         ) -> fprime_core::CmdResponse {}
     }
     pub struct CdhCore {
@@ -293,7 +309,7 @@ mod Impl {
         #[fprime_command(opcode = 0x10011003)]
         pub fn Dp(
             &self,
-            reqType: crate::Defs::Ref::SignalGen::DpReqType,
+            reqType: crate::Dict::Ref::SignalGen::DpReqType,
             records: u32,
             priority: u32,
         ) -> fprime_core::CmdResponse {}
@@ -307,7 +323,7 @@ mod Impl {
         #[fprime_command(opcode = 0xA10)]
         pub fn SelectColor(
             &self,
-            color: crate::Defs::Ref::DpDemo::ColorEnum,
+            color: crate::Dict::Ref::DpDemo::ColorEnum,
         ) -> fprime_core::CmdResponse {}
         /// Request a data product
         ///
@@ -317,17 +333,10 @@ mod Impl {
         #[fprime_command(opcode = 0xA11)]
         pub fn Dp(
             &self,
-            reqType: crate::Defs::Ref::DpDemo::DpReqType,
+            reqType: crate::Dict::Ref::DpDemo::DpReqType,
             priority: u32,
-            proc: crate::Defs::Fw::DpCfg::ProcType,
+            proc: crate::Dict::Fw::DpCfg::ProcType,
         ) -> fprime_core::CmdResponse {}
-    }
-    pub struct RefRecvBuffComp {}
-    impl RefRecvBuffComp {
-        pub const DEFAULT: Self = Self {};
-        /// A u32 parameter
-        #[fprime_parameter(id = 0x10022000)]
-        pub fn parameter1(&self) -> u32 {}
     }
     pub struct RefTypeDemo {}
     impl RefTypeDemo {
@@ -338,7 +347,7 @@ mod Impl {
         #[fprime_command(opcode = 0x10005000)]
         pub fn CHOICE(
             &self,
-            choice: crate::Defs::Ref::Choice,
+            choice: crate::Dict::Ref::Choice,
         ) -> fprime_core::CmdResponse {}
         /// An array of enumerations
         ///
@@ -346,7 +355,7 @@ mod Impl {
         #[fprime_command(opcode = 0x10005003)]
         pub fn CHOICES(
             &self,
-            choices: crate::Defs::Ref::ManyChoices,
+            choices: crate::Dict::Ref::ManyChoices,
         ) -> fprime_core::CmdResponse {}
         /// A structure of enumerations
         ///
@@ -354,7 +363,7 @@ mod Impl {
         #[fprime_command(opcode = 0x1000500B)]
         pub fn CHOICE_PAIR(
             &self,
-            choices: crate::Defs::Ref::ChoicePair,
+            choices: crate::Dict::Ref::ChoicePair,
         ) -> fprime_core::CmdResponse {}
         /// A structure with scalars either side of it
         ///
@@ -365,7 +374,7 @@ mod Impl {
         pub fn CHOICE_PAIR_WITH_FRIENDS(
             &self,
             repeat: u8,
-            choices: crate::Defs::Ref::ChoicePair,
+            choices: crate::Dict::Ref::ChoicePair,
             repeat_max: u8,
         ) -> fprime_core::CmdResponse {}
         /// A nested structure, the deepest shape in the dictionary
@@ -374,7 +383,7 @@ mod Impl {
         #[fprime_command(opcode = 0x1000500F)]
         pub fn GLUTTON_OF_CHOICE(
             &self,
-            choices: crate::Defs::Ref::ChoiceSlurry,
+            choices: crate::Dict::Ref::ChoiceSlurry,
         ) -> fprime_core::CmdResponse {}
         /// Every scalar width, inside a structure
         ///
@@ -382,7 +391,7 @@ mod Impl {
         #[fprime_command(opcode = 0x10005015)]
         pub fn SEND_SCALARS(
             &self,
-            scalar_input: crate::Defs::Ref::ScalarStruct,
+            scalar_input: crate::Dict::Ref::ScalarStruct,
         ) -> fprime_core::CmdResponse {}
         /// Every integer width as a separate argument
         ///
@@ -423,7 +432,7 @@ mod Impl {
         #[fprime_command(opcode = 0x10005019)]
         pub fn SEND_ALIAS(
             &self,
-            aliased: crate::Defs::Ref::AliasedU32,
+            aliased: crate::Dict::Ref::AliasedU32,
         ) -> fprime_core::CmdResponse {}
         /// An enumeration that needs an i64 on the wire
         ///
@@ -431,7 +440,7 @@ mod Impl {
         #[fprime_command(opcode = 0x1000501A)]
         pub fn SEND_WIDE_CHOICE(
             &self,
-            choice: crate::Defs::Ref::WideChoice,
+            choice: crate::Dict::Ref::WideChoice,
         ) -> fprime_core::CmdResponse {}
         /// A string short enough to make truncation easy to hit
         ///
@@ -444,7 +453,7 @@ mod Impl {
         #[fprime_command(opcode = 0x1000501C)]
         pub fn SEND_2D(
             &self,
-            choices: crate::Defs::Ref::TooManyChoices,
+            choices: crate::Dict::Ref::TooManyChoices,
         ) -> fprime_core::CmdResponse {}
         /// An array of scalars
         ///
@@ -452,7 +461,7 @@ mod Impl {
         #[fprime_command(opcode = 0x1000501D)]
         pub fn SEND_U32_ARRAY(
             &self,
-            values: crate::Defs::Ref::DpDemo::U32Array,
+            values: crate::Dict::Ref::DpDemo::U32Array,
         ) -> fprime_core::CmdResponse {}
         /// An array of booleans
         ///
@@ -460,7 +469,7 @@ mod Impl {
         #[fprime_command(opcode = 0x1000501E)]
         pub fn SEND_BOOL_ARRAY(
             &self,
-            flags: crate::Defs::Ref::DpDemo::BooleanArray,
+            flags: crate::Dict::Ref::DpDemo::BooleanArray,
         ) -> fprime_core::CmdResponse {}
         /// An array of floats
         ///
@@ -468,7 +477,7 @@ mod Impl {
         #[fprime_command(opcode = 0x1000501F)]
         pub fn SEND_FLOAT_ARRAY(
             &self,
-            values: crate::Defs::Ref::DpDemo::F32Array,
+            values: crate::Dict::Ref::DpDemo::F32Array,
         ) -> fprime_core::CmdResponse {}
         /// An array of enumerations of a different width
         ///
@@ -476,7 +485,7 @@ mod Impl {
         #[fprime_command(opcode = 0x10005020)]
         pub fn SEND_COLOR_ARRAY(
             &self,
-            colors: crate::Defs::Ref::DpDemo::EnumArray,
+            colors: crate::Dict::Ref::DpDemo::EnumArray,
         ) -> fprime_core::CmdResponse {}
         /// An array of strings, which cannot be encoded at compile time
         ///
@@ -484,7 +493,7 @@ mod Impl {
         #[fprime_command(opcode = 0x10005021)]
         pub fn SEND_NAMES(
             &self,
-            r#names: crate::Defs::Ref::DpDemo::StringArray,
+            r#names: crate::Dict::Ref::DpDemo::StringArray,
         ) -> fprime_core::CmdResponse {}
         /// A structure with a string member, which cannot be encoded at compile time
         ///
@@ -492,59 +501,8 @@ mod Impl {
         #[fprime_command(opcode = 0x10005022)]
         pub fn SEND_COLOR_INFO(
             &self,
-            info: crate::Defs::Ref::DpDemo::ColorInfoStruct,
+            info: crate::Dict::Ref::DpDemo::ColorInfoStruct,
         ) -> fprime_core::CmdResponse {}
-        /// An enumeration channel
-        #[fprime_telemetry(id = 0x10005000)]
-        pub fn ChoiceCh(
-            &self,
-        ) -> (crate::Defs::Ref::Choice, super::Defs::Fw::TimeValue) {}
-        /// An array channel
-        #[fprime_telemetry(id = 0x10005001)]
-        pub fn ChoicesCh(
-            &self,
-        ) -> (crate::Defs::Ref::ManyChoices, super::Defs::Fw::TimeValue) {}
-        /// A string channel
-        #[fprime_telemetry(id = 0x10005002)]
-        pub fn NameCh(&self) -> (String<40>, super::Defs::Fw::TimeValue) {}
-        /// A structure channel
-        #[fprime_telemetry(id = 0x10005009)]
-        pub fn ScalarStructCh(
-            &self,
-        ) -> (crate::Defs::Ref::ScalarStruct, super::Defs::Fw::TimeValue) {}
-        /// A u8 channel
-        #[fprime_telemetry(id = 0x1000500A)]
-        pub fn ScalarU8Ch(&self) -> (u8, super::Defs::Fw::TimeValue) {}
-        /// A u16 channel
-        #[fprime_telemetry(id = 0x1000500B)]
-        pub fn ScalarU16Ch(&self) -> (u16, super::Defs::Fw::TimeValue) {}
-        /// A u32 channel
-        #[fprime_telemetry(id = 0x1000500C)]
-        pub fn ScalarU32Ch(&self) -> (u32, super::Defs::Fw::TimeValue) {}
-        /// A u64 channel
-        #[fprime_telemetry(id = 0x1000500D)]
-        pub fn ScalarU64Ch(&self) -> (u64, super::Defs::Fw::TimeValue) {}
-        /// An i8 channel
-        #[fprime_telemetry(id = 0x1000500E)]
-        pub fn ScalarI8Ch(&self) -> (i8, super::Defs::Fw::TimeValue) {}
-        /// An i16 channel
-        #[fprime_telemetry(id = 0x1000500F)]
-        pub fn ScalarI16Ch(&self) -> (i16, super::Defs::Fw::TimeValue) {}
-        /// An i32 channel
-        #[fprime_telemetry(id = 0x10005010)]
-        pub fn ScalarI32Ch(&self) -> (i32, super::Defs::Fw::TimeValue) {}
-        /// An i64 channel
-        #[fprime_telemetry(id = 0x10005011)]
-        pub fn ScalarI64Ch(&self) -> (i64, super::Defs::Fw::TimeValue) {}
-        /// An f32 channel
-        #[fprime_telemetry(id = 0x10005012)]
-        pub fn ScalarF32Ch(&self) -> (f32, super::Defs::Fw::TimeValue) {}
-        /// An f64 channel
-        #[fprime_telemetry(id = 0x10005013)]
-        pub fn ScalarF64Ch(&self) -> (f64, super::Defs::Fw::TimeValue) {}
-        /// An enumeration parameter
-        #[fprime_parameter(id = 0x10005000)]
-        pub fn CHOICE_PRM(&self) -> crate::Defs::Ref::Choice {}
     }
     pub struct RefWasmSeq {}
     impl RefWasmSeq {
@@ -554,14 +512,10 @@ mod Impl {
         ///  * `fileName`
         #[fprime_command(opcode = 0x10007002)]
         pub fn LOAD(&self, fileName: String<240>) -> fprime_core::CmdResponse {}
-        /// A u64 parameter
-        #[fprime_parameter(id = 0x10007001)]
-        pub fn INSTRUCTION_FUEL(&self) -> u64 {}
     }
     pub struct Ref {
         pub SG1: RefSg1,
         pub dpDemo: RefDpDemo,
-        pub recvBuffComp: RefRecvBuffComp,
         pub typeDemo: RefTypeDemo,
         pub wasmSeq: RefWasmSeq,
     }
@@ -569,35 +523,146 @@ mod Impl {
         pub const DEFAULT: Self = Self {
             SG1: RefSg1::DEFAULT,
             dpDemo: RefDpDemo::DEFAULT,
+            typeDemo: RefTypeDemo::DEFAULT,
+            wasmSeq: RefWasmSeq::DEFAULT,
+        };
+    }
+    pub const CdhCore: CdhCore = CdhCore::DEFAULT;
+    pub const Ref: Ref = Ref::DEFAULT;
+}
+pub mod Tlm {
+    #[allow(unused_imports)]
+    use fprime_core::*;
+    #[allow(unused_imports)]
+    use super::Dict::FwOpcodeType;
+    pub struct CdhCoreCmdDisp {}
+    impl CdhCoreCmdDisp {
+        pub const DEFAULT: Self = Self {};
+        /// Commands dispatched
+        #[fprime_telemetry(id = 0x1000000)]
+        pub fn CommandsDispatched(&self) -> (u32, super::Dict::Fw::TimeValue) {}
+    }
+    pub struct CdhCoreEvents {}
+    impl CdhCoreEvents {
+        pub const DEFAULT: Self = Self {};
+        /// Events dropped, typed through an alias chain
+        #[fprime_telemetry(id = 0x1001000)]
+        pub fn EventsDropped(
+            &self,
+        ) -> (crate::Dict::FwSizeType, super::Dict::Fw::TimeValue) {}
+    }
+    pub struct CdhCore {
+        pub cmdDisp: CdhCoreCmdDisp,
+        pub events: CdhCoreEvents,
+    }
+    impl CdhCore {
+        pub const DEFAULT: Self = Self {
+            cmdDisp: CdhCoreCmdDisp::DEFAULT,
+            events: CdhCoreEvents::DEFAULT,
+        };
+    }
+    pub struct RefTypeDemo {}
+    impl RefTypeDemo {
+        pub const DEFAULT: Self = Self {};
+        /// An enumeration channel
+        #[fprime_telemetry(id = 0x10005000)]
+        pub fn ChoiceCh(
+            &self,
+        ) -> (crate::Dict::Ref::Choice, super::Dict::Fw::TimeValue) {}
+        /// An array channel
+        #[fprime_telemetry(id = 0x10005001)]
+        pub fn ChoicesCh(
+            &self,
+        ) -> (crate::Dict::Ref::ManyChoices, super::Dict::Fw::TimeValue) {}
+        /// A string channel
+        #[fprime_telemetry(id = 0x10005002)]
+        pub fn NameCh(&self) -> (String<40>, super::Dict::Fw::TimeValue) {}
+        /// A structure channel
+        #[fprime_telemetry(id = 0x10005009)]
+        pub fn ScalarStructCh(
+            &self,
+        ) -> (crate::Dict::Ref::ScalarStruct, super::Dict::Fw::TimeValue) {}
+        /// A u8 channel
+        #[fprime_telemetry(id = 0x1000500A)]
+        pub fn ScalarU8Ch(&self) -> (u8, super::Dict::Fw::TimeValue) {}
+        /// A u16 channel
+        #[fprime_telemetry(id = 0x1000500B)]
+        pub fn ScalarU16Ch(&self) -> (u16, super::Dict::Fw::TimeValue) {}
+        /// A u32 channel
+        #[fprime_telemetry(id = 0x1000500C)]
+        pub fn ScalarU32Ch(&self) -> (u32, super::Dict::Fw::TimeValue) {}
+        /// A u64 channel
+        #[fprime_telemetry(id = 0x1000500D)]
+        pub fn ScalarU64Ch(&self) -> (u64, super::Dict::Fw::TimeValue) {}
+        /// An i8 channel
+        #[fprime_telemetry(id = 0x1000500E)]
+        pub fn ScalarI8Ch(&self) -> (i8, super::Dict::Fw::TimeValue) {}
+        /// An i16 channel
+        #[fprime_telemetry(id = 0x1000500F)]
+        pub fn ScalarI16Ch(&self) -> (i16, super::Dict::Fw::TimeValue) {}
+        /// An i32 channel
+        #[fprime_telemetry(id = 0x10005010)]
+        pub fn ScalarI32Ch(&self) -> (i32, super::Dict::Fw::TimeValue) {}
+        /// An i64 channel
+        #[fprime_telemetry(id = 0x10005011)]
+        pub fn ScalarI64Ch(&self) -> (i64, super::Dict::Fw::TimeValue) {}
+        /// An f32 channel
+        #[fprime_telemetry(id = 0x10005012)]
+        pub fn ScalarF32Ch(&self) -> (f32, super::Dict::Fw::TimeValue) {}
+        /// An f64 channel
+        #[fprime_telemetry(id = 0x10005013)]
+        pub fn ScalarF64Ch(&self) -> (f64, super::Dict::Fw::TimeValue) {}
+    }
+    pub struct Ref {
+        pub typeDemo: RefTypeDemo,
+    }
+    impl Ref {
+        pub const DEFAULT: Self = Self {
+            typeDemo: RefTypeDemo::DEFAULT,
+        };
+    }
+    pub const CdhCore: CdhCore = CdhCore::DEFAULT;
+    pub const Ref: Ref = Ref::DEFAULT;
+}
+pub mod Prm {
+    #[allow(unused_imports)]
+    use fprime_core::*;
+    #[allow(unused_imports)]
+    use super::Dict::FwOpcodeType;
+    pub struct RefRecvBuffComp {}
+    impl RefRecvBuffComp {
+        pub const DEFAULT: Self = Self {};
+        /// A u32 parameter
+        #[fprime_parameter(id = 0x10022000)]
+        pub fn parameter1(&self) -> u32 {}
+    }
+    pub struct RefTypeDemo {}
+    impl RefTypeDemo {
+        pub const DEFAULT: Self = Self {};
+        /// An enumeration parameter
+        #[fprime_parameter(id = 0x10005000)]
+        pub fn CHOICE_PRM(&self) -> crate::Dict::Ref::Choice {}
+    }
+    pub struct RefWasmSeq {}
+    impl RefWasmSeq {
+        pub const DEFAULT: Self = Self {};
+        /// A u64 parameter
+        #[fprime_parameter(id = 0x10007001)]
+        pub fn INSTRUCTION_FUEL(&self) -> u64 {}
+    }
+    pub struct Ref {
+        pub recvBuffComp: RefRecvBuffComp,
+        pub typeDemo: RefTypeDemo,
+        pub wasmSeq: RefWasmSeq,
+    }
+    impl Ref {
+        pub const DEFAULT: Self = Self {
             recvBuffComp: RefRecvBuffComp::DEFAULT,
             typeDemo: RefTypeDemo::DEFAULT,
             wasmSeq: RefWasmSeq::DEFAULT,
         };
     }
-}
-pub const CdhCore: Impl::CdhCore = Impl::CdhCore::DEFAULT;
-pub const Ref: Impl::Ref = Impl::Ref::DEFAULT;
-pub fn now() -> crate::Defs::Fw::TimeValue {
-    use fprime_core::Serializable;
-    let mut buf: [u8; crate::Defs::Fw::TimeValue::SIZE] = [0; crate::Defs::Fw::TimeValue::SIZE];
-    unsafe {
-        fprime_core::time::time_read(&mut buf);
-    }
-    crate::Defs::Fw::TimeValue::deserialize(&buf)
-}
-impl PartialOrd for crate::Defs::Fw::TimeValue {
-    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-        if self.timeBase != other.timeBase {
-            fprime_core::panic(fprime_core::PanicCode::TimeBaseIncomparable);
-        } else if self.timeContext != other.timeContext {
-            fprime_core::panic(fprime_core::PanicCode::TimeContextIncomparable);
-        }
-        match self.seconds.partial_cmp(&other.seconds) {
-            Some(core::cmp::Ordering::Equal) => {}
-            ord => return ord,
-        }
-        self.useconds.partial_cmp(&other.useconds)
-    }
+    pub const Ref: Ref = Ref::DEFAULT;
 }
 pub mod Konst {
     #[allow(unused_imports)]
@@ -673,8 +738,8 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn SET_EVENT_FILTER__size(
-                filterLevel: crate::Defs::Svc::EventManager::FilterSeverity,
-                filterEnabled: crate::Defs::Svc::EventManager::Enabled,
+                filterLevel: crate::Dict::Svc::EventManager::FilterSeverity,
+                filterEnabled: crate::Dict::Svc::EventManager::Enabled,
             ) -> usize {
                 6
             }
@@ -684,8 +749,8 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn SET_EVENT_FILTER__encode<const N: usize>(
-                filterLevel: crate::Defs::Svc::EventManager::FilterSeverity,
-                filterEnabled: crate::Defs::Svc::EventManager::Enabled,
+                filterLevel: crate::Dict::Svc::EventManager::FilterSeverity,
+                filterEnabled: crate::Dict::Svc::EventManager::Enabled,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 16781312);
@@ -702,7 +767,7 @@ pub mod Konst {
             #[allow(unused_variables)]
             pub const fn HLTH_PING_ENABLE__size(
                 entry: &str,
-                enable: crate::Defs::Fw::Enabled,
+                enable: crate::Dict::Fw::Enabled,
             ) -> usize {
                 5 + str_len(entry, 40)
             }
@@ -713,7 +778,7 @@ pub mod Konst {
             /// costs nothing at runtime.
             pub const fn HLTH_PING_ENABLE__encode<const N: usize>(
                 entry: &str,
-                enable: crate::Defs::Fw::Enabled,
+                enable: crate::Dict::Fw::Enabled,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 16785409);
@@ -733,7 +798,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn Dp__size(
-                reqType: crate::Defs::Ref::SignalGen::DpReqType,
+                reqType: crate::Dict::Ref::SignalGen::DpReqType,
                 records: u32,
                 priority: u32,
             ) -> usize {
@@ -745,7 +810,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn Dp__encode<const N: usize>(
-                reqType: crate::Defs::Ref::SignalGen::DpReqType,
+                reqType: crate::Dict::Ref::SignalGen::DpReqType,
                 records: u32,
                 priority: u32,
             ) -> [u8; N] {
@@ -764,7 +829,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn SelectColor__size(
-                color: crate::Defs::Ref::DpDemo::ColorEnum,
+                color: crate::Dict::Ref::DpDemo::ColorEnum,
             ) -> usize {
                 8
             }
@@ -774,7 +839,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn SelectColor__encode<const N: usize>(
-                color: crate::Defs::Ref::DpDemo::ColorEnum,
+                color: crate::Dict::Ref::DpDemo::ColorEnum,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 2576);
@@ -785,9 +850,9 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn Dp__size(
-                reqType: crate::Defs::Ref::DpDemo::DpReqType,
+                reqType: crate::Dict::Ref::DpDemo::DpReqType,
                 priority: u32,
-                proc: crate::Defs::Fw::DpCfg::ProcType,
+                proc: crate::Dict::Fw::DpCfg::ProcType,
             ) -> usize {
                 13
             }
@@ -797,9 +862,9 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn Dp__encode<const N: usize>(
-                reqType: crate::Defs::Ref::DpDemo::DpReqType,
+                reqType: crate::Dict::Ref::DpDemo::DpReqType,
                 priority: u32,
-                proc: crate::Defs::Fw::DpCfg::ProcType,
+                proc: crate::Dict::Fw::DpCfg::ProcType,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 2577);
@@ -815,7 +880,7 @@ pub mod Konst {
             use fprime_core::*;
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
-            pub const fn CHOICE__size(choice: crate::Defs::Ref::Choice) -> usize {
+            pub const fn CHOICE__size(choice: crate::Dict::Ref::Choice) -> usize {
                 8
             }
             /// The encoded `Fw::ComBuffer` for this command with these arguments.
@@ -824,7 +889,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn CHOICE__encode<const N: usize>(
-                choice: crate::Defs::Ref::Choice,
+                choice: crate::Dict::Ref::Choice,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455936);
@@ -834,7 +899,7 @@ pub mod Konst {
             }
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
-            pub const fn CHOICES__size(choices: crate::Defs::Ref::ManyChoices) -> usize {
+            pub const fn CHOICES__size(choices: crate::Dict::Ref::ManyChoices) -> usize {
                 12
             }
             /// The encoded `Fw::ComBuffer` for this command with these arguments.
@@ -843,7 +908,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn CHOICES__encode<const N: usize>(
-                choices: crate::Defs::Ref::ManyChoices,
+                choices: crate::Dict::Ref::ManyChoices,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455939);
@@ -858,7 +923,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn CHOICE_PAIR__size(
-                choices: crate::Defs::Ref::ChoicePair,
+                choices: crate::Dict::Ref::ChoicePair,
             ) -> usize {
                 12
             }
@@ -868,7 +933,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn CHOICE_PAIR__encode<const N: usize>(
-                choices: crate::Defs::Ref::ChoicePair,
+                choices: crate::Dict::Ref::ChoicePair,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455947);
@@ -881,7 +946,7 @@ pub mod Konst {
             #[allow(unused_variables)]
             pub const fn CHOICE_PAIR_WITH_FRIENDS__size(
                 repeat: u8,
-                choices: crate::Defs::Ref::ChoicePair,
+                choices: crate::Dict::Ref::ChoicePair,
                 repeat_max: u8,
             ) -> usize {
                 14
@@ -893,7 +958,7 @@ pub mod Konst {
             /// costs nothing at runtime.
             pub const fn CHOICE_PAIR_WITH_FRIENDS__encode<const N: usize>(
                 repeat: u8,
-                choices: crate::Defs::Ref::ChoicePair,
+                choices: crate::Dict::Ref::ChoicePair,
                 repeat_max: u8,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
@@ -908,7 +973,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn GLUTTON_OF_CHOICE__size(
-                choices: crate::Defs::Ref::ChoiceSlurry,
+                choices: crate::Dict::Ref::ChoiceSlurry,
             ) -> usize {
                 34
             }
@@ -918,7 +983,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn GLUTTON_OF_CHOICE__encode<const N: usize>(
-                choices: crate::Defs::Ref::ChoiceSlurry,
+                choices: crate::Dict::Ref::ChoiceSlurry,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455951);
@@ -961,7 +1026,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn SEND_SCALARS__size(
-                scalar_input: crate::Defs::Ref::ScalarStruct,
+                scalar_input: crate::Dict::Ref::ScalarStruct,
             ) -> usize {
                 46
             }
@@ -971,7 +1036,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn SEND_SCALARS__encode<const N: usize>(
-                scalar_input: crate::Defs::Ref::ScalarStruct,
+                scalar_input: crate::Dict::Ref::ScalarStruct,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455957);
@@ -1071,7 +1136,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn SEND_ALIAS__size(
-                aliased: crate::Defs::Ref::AliasedU32,
+                aliased: crate::Dict::Ref::AliasedU32,
             ) -> usize {
                 8
             }
@@ -1081,7 +1146,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn SEND_ALIAS__encode<const N: usize>(
-                aliased: crate::Defs::Ref::AliasedU32,
+                aliased: crate::Dict::Ref::AliasedU32,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455961);
@@ -1092,7 +1157,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn SEND_WIDE_CHOICE__size(
-                choice: crate::Defs::Ref::WideChoice,
+                choice: crate::Dict::Ref::WideChoice,
             ) -> usize {
                 12
             }
@@ -1102,7 +1167,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn SEND_WIDE_CHOICE__encode<const N: usize>(
-                choice: crate::Defs::Ref::WideChoice,
+                choice: crate::Dict::Ref::WideChoice,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455962);
@@ -1132,7 +1197,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn SEND_2D__size(
-                choices: crate::Defs::Ref::TooManyChoices,
+                choices: crate::Dict::Ref::TooManyChoices,
             ) -> usize {
                 20
             }
@@ -1142,7 +1207,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn SEND_2D__encode<const N: usize>(
-                choices: crate::Defs::Ref::TooManyChoices,
+                choices: crate::Dict::Ref::TooManyChoices,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455964);
@@ -1165,7 +1230,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn SEND_U32_ARRAY__size(
-                values: crate::Defs::Ref::DpDemo::U32Array,
+                values: crate::Dict::Ref::DpDemo::U32Array,
             ) -> usize {
                 24
             }
@@ -1175,7 +1240,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn SEND_U32_ARRAY__encode<const N: usize>(
-                values: crate::Defs::Ref::DpDemo::U32Array,
+                values: crate::Dict::Ref::DpDemo::U32Array,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455965);
@@ -1190,7 +1255,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn SEND_BOOL_ARRAY__size(
-                flags: crate::Defs::Ref::DpDemo::BooleanArray,
+                flags: crate::Dict::Ref::DpDemo::BooleanArray,
             ) -> usize {
                 6
             }
@@ -1200,7 +1265,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn SEND_BOOL_ARRAY__encode<const N: usize>(
-                flags: crate::Defs::Ref::DpDemo::BooleanArray,
+                flags: crate::Dict::Ref::DpDemo::BooleanArray,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455966);
@@ -1215,7 +1280,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn SEND_FLOAT_ARRAY__size(
-                values: crate::Defs::Ref::DpDemo::F32Array,
+                values: crate::Dict::Ref::DpDemo::F32Array,
             ) -> usize {
                 16
             }
@@ -1225,7 +1290,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn SEND_FLOAT_ARRAY__encode<const N: usize>(
-                values: crate::Defs::Ref::DpDemo::F32Array,
+                values: crate::Dict::Ref::DpDemo::F32Array,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455967);
@@ -1240,7 +1305,7 @@ pub mod Konst {
             /// Wire size of this command with these arguments.
             #[allow(unused_variables)]
             pub const fn SEND_COLOR_ARRAY__size(
-                colors: crate::Defs::Ref::DpDemo::EnumArray,
+                colors: crate::Dict::Ref::DpDemo::EnumArray,
             ) -> usize {
                 16
             }
@@ -1250,7 +1315,7 @@ pub mod Konst {
             /// proven during const evaluation, so a mismatch is a compile error and
             /// costs nothing at runtime.
             pub const fn SEND_COLOR_ARRAY__encode<const N: usize>(
-                colors: crate::Defs::Ref::DpDemo::EnumArray,
+                colors: crate::Dict::Ref::DpDemo::EnumArray,
             ) -> [u8; N] {
                 let mut __buf = [0u8; N];
                 let mut __offset = put_u32(&mut __buf, 0, 268455968);

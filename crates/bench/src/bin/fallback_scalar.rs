@@ -7,6 +7,6 @@ use bench::*;
 
 #[fprime_main]
 pub fn main() {
-    let priority = CdhCore.cmdDisp.CommandsDispatched().0;
+    let priority = Tlm::CdhCore.cmdDisp.CommandsDispatched().0;
     Ref.dpDemo.Dp(IMMEDIATE, priority, PROC_TYPE_NONE);
 }

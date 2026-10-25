@@ -34,18 +34,18 @@ pub(crate) fn telemetry(attr: TokenStream, item: TokenStream) -> syn::Result<Tok
     // Span the body onto the stub's own braces, see `command`
     let body = quote_spanned! { stub.block.span() =>
         {
-            const { assert!(<#value as Serializable>::SIZE <= __SCRATCH_SIZE) };
-            const { assert!(<#time as Serializable>::SIZE <= __TIME_SIZE) };
+            const { assert!(<#value as Serializable>::SIZE <= super::__SCRATCH_SIZE) };
+            const { assert!(<#time as Serializable>::SIZE <= super::__TIME_SIZE) };
 
             let __time = unsafe {
-                let ptr = (&raw mut __TIME) as *mut u8;
+                let ptr = (&raw mut super::__TIME) as *mut u8;
                 let len = <#time as Serializable>::SIZE;
 
                 core::slice::from_raw_parts_mut(ptr, len)
             };
 
             let __value = unsafe {
-                let ptr = (&raw mut __SCRATCH) as *mut u8;
+                let ptr = (&raw mut super::__SCRATCH) as *mut u8;
                 let len = <#value as Serializable>::SIZE;
 
                 core::slice::from_raw_parts_mut(ptr, len)

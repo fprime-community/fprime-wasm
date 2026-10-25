@@ -49,7 +49,7 @@ pub fn split_qualified_name(qualified_name: &str) -> (Vec<&str>, &str) {
 }
 
 /// The Rust path of a generated type definition, e.g. `Ref.DpDemo.DpReqType` becomes
-/// `crate::Defs::Ref::DpDemo::DpReqType`.
+/// `crate::Dict::Ref::DpDemo::DpReqType`.
 pub fn definition_path(qualified_name: &str) -> TokenStream {
     let (_, name) = split_qualified_name(qualified_name);
 
@@ -61,7 +61,7 @@ pub fn definition_path_with_name(qualified_name: &str, name: Ident) -> TokenStre
     let (qualifier, _) = split_qualified_name(qualified_name);
     let modules = qualifier.into_iter().map(str_to_ident);
 
-    quote! { crate::Defs::#(#modules::)*#name }
+    quote! { crate::Dict::#(#modules::)*#name }
 }
 
 /// The Rust path of a generated descriptor, e.g. `Ref.power.BatteryVoltage` becomes

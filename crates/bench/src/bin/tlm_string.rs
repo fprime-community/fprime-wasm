@@ -6,7 +6,7 @@ use bench::*;
 
 #[fprime_main]
 pub fn main() {
-    let (name, _) = Ref.typeDemo.NameCh();
+    let (name, _) = Tlm::Ref.typeDemo.NameCh();
     if !name.is_empty() {
         CdhCore.cmdDisp.CMD_NO_OP();
     }

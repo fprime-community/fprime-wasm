@@ -227,7 +227,7 @@ PROBES = [
     Probe(SEQUENCE, "CdhCore.cmdDisp.CMD_NO_OP()", "cmdDisp", "sequence: component"),
     Probe(SEQUENCE, "CdhCore.cmdDisp.CMD_NO_OP()", "CMD_NO_OP", "sequence: command"),
     Probe(SEQUENCE, 'CMD_NO_OP_STRING("STRINGS")', "CMD_NO_OP_STRING", "sequence: string command"),
-    Probe(SEQUENCE, "CdhCore.events.EventsDropped()", "EventsDropped", "sequence: telemetry"),
+    Probe(SEQUENCE, "Tlm::CdhCore.events.EventsDropped()", "EventsDropped", "sequence: telemetry"),
     Probe(SEQUENCE, "Ref.dpDemo.SelectColor(BLUE)", "SelectColor", "sequence: command"),
     Probe(SEQUENCE, "Ref.dpDemo.SelectColor(BLUE)", "BLUE", "sequence: enum constant"),
     Probe(SEQUENCE, "GLUTTON_OF_CHOICE(ChoiceSlurry", "GLUTTON_OF_CHOICE", "sequence: struct arg"),

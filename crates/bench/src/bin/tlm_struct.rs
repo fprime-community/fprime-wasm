@@ -6,7 +6,7 @@ use bench::*;
 
 #[fprime_main]
 pub fn main() {
-    let (scalars, _) = Ref.typeDemo.ScalarStructCh();
+    let (scalars, _) = Tlm::Ref.typeDemo.ScalarStructCh();
     if scalars.u32 > 0 {
         CdhCore.cmdDisp.CMD_NO_OP();
     }

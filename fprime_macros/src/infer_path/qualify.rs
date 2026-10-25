@@ -1,4 +1,4 @@
-//! Bare dictionary names become `crate::Defs::..` paths.
+//! Bare dictionary names become `crate::Dict::..` paths.
 
 use crate::infer_path::name::{declared_in, unraw, written_path};
 use crate::infer_path::scan::{Chain, Lower, Rewrite, arguments, scan};
@@ -10,7 +10,7 @@ use quote::{ToTokens, quote};
 use syn::{Expr, ExprBlock, ExprPath, ExprStruct, Member};
 
 /// Replaces a struct path with its dictionary path, e.g. `ChoicePair` or `Ref::ChoicePair`
-/// -> `crate::Defs::Ref::ChoicePair`.
+/// -> `crate::Dict::Ref::ChoicePair`.
 fn qualify_struct_path(literal: &mut ExprStruct, qualified_name: &str) {
     let Some(name) = written_path(literal.qself.as_ref(), &literal.path) else {
         return;
@@ -51,7 +51,7 @@ fn parse<T: syn::parse::Parse>(tokens: TokenStream) -> T {
 }
 
 /// Pass one of both pipelines: the bare dictionary names in `tokens` become
-/// `crate::Defs::..` paths.
+/// `crate::Dict::..` paths.
 ///
 /// It runs first because a constant is only recognisable as one once qualified, and a call
 /// rewritten by a later pass is no longer in a command position for this one to find.

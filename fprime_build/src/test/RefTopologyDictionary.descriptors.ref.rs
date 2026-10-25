@@ -38,7 +38,7 @@ pub mod Desc {
                 path: "CdhCore.events.SET_EVENT_FILTER",
             };
             /// Events dropped, typed through an alias chain
-            pub const EventsDropped: fprime_core::desc::Chan<crate::Defs::FwSizeType> = fprime_core::desc::Chan::new(
+            pub const EventsDropped: fprime_core::desc::Chan<crate::Dict::FwSizeType> = fprime_core::desc::Chan::new(
                 0x1001000 as i64,
                 "CdhCore.events.EventsDropped",
                 "FwSizeType",
@@ -189,14 +189,14 @@ pub mod Desc {
                 path: "Ref.typeDemo.SEND_COLOR_INFO",
             };
             /// An enumeration channel
-            pub const ChoiceCh: fprime_core::desc::Chan<crate::Defs::Ref::Choice> = fprime_core::desc::Chan::new(
+            pub const ChoiceCh: fprime_core::desc::Chan<crate::Dict::Ref::Choice> = fprime_core::desc::Chan::new(
                 0x10005000 as i64,
                 "Ref.typeDemo.ChoiceCh",
                 "Ref.Choice",
             );
             /// An array channel
             pub const ChoicesCh: fprime_core::desc::Chan<
-                crate::Defs::Ref::ManyChoices,
+                crate::Dict::Ref::ManyChoices,
             > = fprime_core::desc::Chan::new(
                 0x10005001 as i64,
                 "Ref.typeDemo.ChoicesCh",
@@ -210,7 +210,7 @@ pub mod Desc {
             );
             /// A structure channel
             pub const ScalarStructCh: fprime_core::desc::Chan<
-                crate::Defs::Ref::ScalarStruct,
+                crate::Dict::Ref::ScalarStruct,
             > = fprime_core::desc::Chan::new(
                 0x10005009 as i64,
                 "Ref.typeDemo.ScalarStructCh",
@@ -277,7 +277,7 @@ pub mod Desc {
                 "F64",
             );
             /// An enumeration parameter
-            pub const CHOICE_PRM: fprime_core::desc::Prm<crate::Defs::Ref::Choice> = fprime_core::desc::Prm::new(
+            pub const CHOICE_PRM: fprime_core::desc::Prm<crate::Dict::Ref::Choice> = fprime_core::desc::Prm::new(
                 0x10005000 as i64,
                 "Ref.typeDemo.CHOICE_PRM",
                 "Ref.Choice",

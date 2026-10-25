@@ -142,7 +142,7 @@
     "why": "glob control: nothing typed, enum in scope",
     "path": "crates/example/src/bin/worker.rs",
     "anchor": "pub fn main() {",
-    "insert": "    {\n        #[allow(unused_imports)]\n        use example::Defs::Svc::EventManager::FilterSeverity::*;\n        CdhCore.events.SET_EVENT_FILTER(<|>);\n    }",
+    "insert": "    {\n        #[allow(unused_imports)]\n        use example::Dict::Svc::EventManager::FilterSeverity::*;\n        CdhCore.events.SET_EVENT_FILTER(<|>);\n    }",
     "expect": "ACTIVITY_HI"
   },
   {

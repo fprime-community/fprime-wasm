@@ -20,8 +20,8 @@ pub fn main() {
         let started = now();
         let response = CdhCore.cmdDisp.CMD_NO_OP();
 
-        let (dropped, _) = CdhCore.events.EventsDropped();
-        let fuel = Ref.wasmSeq.INSTRUCTION_FUEL();
+        let (dropped, _) = Tlm::CdhCore.events.EventsDropped();
+        let fuel = Prm::Ref.wasmSeq.INSTRUCTION_FUEL();
 
         if response == CmdResponse::Ok {
             message(EventSeverity::ActivityHigh, "handled a request");
