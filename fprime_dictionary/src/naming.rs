@@ -1,3 +1,4 @@
+use crate::TypeName;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 
@@ -14,6 +15,26 @@ pub fn str_to_ident(name: &str) -> Ident {
             Ident::new_raw(name, Span::call_site())
         }
         name => Ident::new(name, Span::call_site()),
+    }
+}
+
+/// How the dictionary spells a type, for a message an author reads: `"F32"`, `"bool"`,
+/// `"string size 40"`, `"Ref.Choice"`.
+///
+/// An alias is reported as itself — `"FwSizeType"`, not `"U64"` — because that is the name in
+/// the model. The one exception is a `string size N`, whose capacity is the part a message
+/// needs and which the alias hides.
+pub fn type_label(dictionary: &crate::Dictionary, type_name: &TypeName) -> String {
+    if let TypeName::String { size } = dictionary.underlying_type(type_name) {
+        return format!("string size {size}");
+    }
+
+    match type_name {
+        TypeName::Integer { name } => format!("{name:?}"),
+        TypeName::Float { name } => format!("{name:?}"),
+        TypeName::Bool => "bool".to_string(),
+        TypeName::String { size } => format!("string size {size}"),
+        TypeName::QualifiedIdentifier { name } => name.clone(),
     }
 }
 

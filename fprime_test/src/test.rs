@@ -200,6 +200,19 @@ impl Test {
     /// t.expect_command(cmd(0x1234));          // an opcode with no dictionary entry
     /// ```
     ///
+    /// Arguments are written as the sequence itself writes them — a bare constant, a struct, an
+    /// array — carrying as much of the dictionary's own name for a type as reads well:
+    ///
+    /// ```ignore
+    /// t.expect_command(Ref.wasmSeq.RUN("sequencer.wasm", NO_BLOCK, SeqArgs { size: 0 }));
+    /// t.expect_command(Ref.wasmSeq.RUN("sequencer.wasm", Svc::BlockType::NO_BLOCK, ..));
+    /// ```
+    ///
+    /// Each one has to be written out here, because a command with arguments matches the exact
+    /// bytes they encode to. For one that cannot be — a local, or something the sequence
+    /// computed — match the opcode on its own (`Ref.wasmSeq.RUN`) or the first bytes of the
+    /// arguments (`cmd(opcode).args_starting(..)`) instead.
+    ///
     /// Chain onto what it returns to say how the spacecraft answers, or what changes when the
     /// command arrives:
     ///

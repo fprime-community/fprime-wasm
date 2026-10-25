@@ -3,6 +3,7 @@
 use crate::tree::Qualifier;
 use crate::types::type_name;
 use crate::util::{annotate, hex_literal, split_identifier, str_to_ident};
+use fprime_dictionary::naming::type_label as label;
 use fprime_dictionary::{
     Command, Dictionary, Parameter, TelemetryChannel, TypeDefinition, TypeName,
 };
@@ -98,20 +99,6 @@ fn wire_type(dict: &Dictionary, ty: &TypeName) -> TokenStream {
     }
 
     type_name(ty)
-}
-
-/// How the dictionary spells a type, for a failure message.
-fn label(dict: &Dictionary, ty: &TypeName) -> String {
-    match dict.underlying_type(ty) {
-        TypeName::String { size } => format!("string size {size}"),
-        _ => match ty {
-            TypeName::Integer { name } => format!("{name:?}"),
-            TypeName::Float { name } => format!("{name:?}"),
-            TypeName::Bool => "bool".to_string(),
-            TypeName::String { size } => format!("string size {size}"),
-            TypeName::QualifiedIdentifier { name } => name.clone(),
-        },
-    }
 }
 
 /// Panics if two points in one component would collide in the flat `Desc` namespace.

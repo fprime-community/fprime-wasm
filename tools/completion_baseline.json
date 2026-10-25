@@ -1,0 +1,134 @@
+{
+  "control: inside #[fprime_main], not a dictionary name": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 4,
+    "qualified_rank": null
+  },
+  "control: plain Rust, no macro": {
+    "bare_rank": 25,
+    "import": false,
+    "items": 34,
+    "qualified_rank": null
+  },
+  "control: plain Rust, nothing typed, enum argument": {
+    "bare_rank": null,
+    "import": false,
+    "items": 170,
+    "qualified_rank": 4
+  },
+  "glob control: nothing typed, enum in scope": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 169,
+    "qualified_rank": null
+  },
+  "sequence: command name after a component": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 2,
+    "qualified_rank": null
+  },
+  "sequence: cursor inside a command name": {
+    "bare_rank": 2,
+    "import": false,
+    "items": 4,
+    "qualified_rank": null
+  },
+  "sequence: cursor inside a resolved enum argument": {
+    "bare_rank": null,
+    "import": false,
+    "items": 164,
+    "qualified_rank": null
+  },
+  "sequence: cursor inside a resolved struct member": {
+    "bare_rank": 4,
+    "import": false,
+    "items": 10,
+    "qualified_rank": null
+  },
+  "sequence: dot completion at the end of a long body": {
+    "bare_rank": 2,
+    "import": false,
+    "items": 5,
+    "qualified_rank": null
+  },
+  "sequence: dot completion late in a long body": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 3,
+    "qualified_rank": null
+  },
+  "sequence: dot completion on a component": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 4,
+    "qualified_rank": null
+  },
+  "sequence: dot completion on a receiver": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 3,
+    "qualified_rank": null
+  },
+  "sequence: enum argument, first position": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 181,
+    "qualified_rank": null
+  },
+  "sequence: enum argument, long prefix": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 183,
+    "qualified_rank": null
+  },
+  "sequence: enum argument, short prefix": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 182,
+    "qualified_rank": null
+  },
+  "sequence: enum inside a struct member": {
+    "bare_rank": 3,
+    "import": false,
+    "items": 183,
+    "qualified_rank": null
+  },
+  "sequence: nothing typed, enum argument": {
+    "bare_rank": null,
+    "import": false,
+    "items": 169,
+    "qualified_rank": 4
+  },
+  "test: bare command in a descriptor": {
+    "bare_rank": 1,
+    "import": false,
+    "items": 2,
+    "qualified_rank": null
+  },
+  "test: channel name": {
+    "bare_rank": 2,
+    "import": false,
+    "items": 2,
+    "qualified_rank": null
+  },
+  "test: cursor inside a bare command name": {
+    "bare_rank": 2,
+    "import": false,
+    "items": 2,
+    "qualified_rank": null
+  },
+  "test: cursor inside a resolved struct member": {
+    "bare_rank": 2,
+    "import": false,
+    "items": 10,
+    "qualified_rank": null
+  },
+  "test: enum inside a struct member": {
+    "bare_rank": 3,
+    "import": false,
+    "items": 234,
+    "qualified_rank": null
+  }
+}

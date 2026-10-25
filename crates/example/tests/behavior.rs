@@ -49,6 +49,21 @@ fn refused_command_stops_checked_sequence(t: Test) {
     t.expect_panic(2);
 }
 
+/// An argument may carry as much of its dictionary qualifier as reads well. `no_op` sends
+/// none of these, so this is about the spellings compiling to the one command.
+#[fprime_test(sequence = "no_op")]
+fn qualified_argument_paths_name_one_command(t: Test) {
+    t.never_command(Ref.typeDemo.CHOICE_PAIR(ChoicePair {
+        firstChoice: RED,
+        secondChoice: TWO,
+    }));
+    t.never_command(Ref.typeDemo.CHOICE_PAIR(Ref::ChoicePair {
+        firstChoice: Choice::RED,
+        secondChoice: Ref::Choice::TWO,
+    }));
+    t.expect_ok();
+}
+
 /// Sends the drop report only when `EventsDropped` is above 2.
 #[fprime_test(sequence = "example")]
 fn reports_dropped_events_above_two(t: Test) {

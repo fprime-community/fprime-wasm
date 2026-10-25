@@ -72,6 +72,18 @@ impl Dictionary {
         None
     }
 
+    /// The definition an alias chain bottoms out in, for a type that has one.
+    ///
+    /// `None` for a primitive, for an alias to one, and for a name the dictionary does not
+    /// define — none of which carries the enumerated constants or members a caller asking this
+    /// is after. [`Dictionary::resolved_type`] is the same walk stopping one step earlier.
+    pub fn definition(&self, type_name: &TypeName) -> Option<&TypeDefinition> {
+        match self.resolved_type(type_name)? {
+            TypeName::QualifiedIdentifier { name } => self.type_definitions.get(name),
+            _ => None,
+        }
+    }
+
     /// How a whole formal parameter of type `type_name` is written by a const
     /// encoder, or `None` if it cannot be.
     pub fn const_arg(&self, type_name: &TypeName) -> Option<ConstArg> {

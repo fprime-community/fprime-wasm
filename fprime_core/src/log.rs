@@ -26,13 +26,6 @@ impl<const N: usize> StrTruncate<N> for String<N> {
 }
 
 #[macro_export]
-macro_rules! print_message {
-    ($sev:expr, $($arg:tt)+) => {
-        fprime_core::messagef($sev, format_args!($($arg)+));
-    };
-}
-
-#[macro_export]
 macro_rules! format {
     ($size:expr, $($arg:tt)+) => {
         fprime_core::heapless::string::format::<$size, u16>(format_args!($($arg)+)).unwrap()
@@ -49,8 +42,7 @@ pub enum EventSeverity {
     Diagnostic = 7,
 }
 
-/// Emit a message via the F Prime event system.
-/// The message should be serialized into a UTF-8 buffer
+/// Emit a message via the F Prime event system
 ///
 /// # Arguments
 ///
@@ -63,8 +55,15 @@ pub fn message(severity: EventSeverity, msg: &str) {
     unsafe { abi::event(severity as i32, ptr, len) }
 }
 
+#[macro_export]
+macro_rules! messagef {
+    ($sev:ident, $($arg:tt)+) => {
+        fprime_core::messagef_impl(EventSeverity::$sev, format_args!($($arg)+));
+    };
+}
+
 #[inline]
-pub fn messagef(severity: EventSeverity, args: Arguments<'_>) {
+pub fn messagef_impl(severity: EventSeverity, args: Arguments<'_>) {
     let s: String<120> = heapless::string::format(args).unwrap();
     message(severity, &s)
 }

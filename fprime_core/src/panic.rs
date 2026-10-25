@@ -1,4 +1,4 @@
-use crate::{EventSeverity, abi, message, messagef};
+use crate::{EventSeverity, abi, message, messagef_impl};
 
 #[derive(Copy, Clone, Debug)]
 #[repr(i32)]
@@ -58,7 +58,7 @@ pub fn panic_handler(info: &core::panic::PanicInfo) -> ! {
         }
 
         if let Some(loc) = info.location() {
-            messagef(EventSeverity::ActivityLo, format_args!("{}", loc));
+            messagef_impl(EventSeverity::ActivityLo, format_args!("{}", loc));
         }
     }
 

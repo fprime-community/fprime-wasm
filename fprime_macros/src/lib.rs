@@ -216,5 +216,6 @@ fn export(item: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
 
 #[cfg(test)]
 mod test {
+    mod dsl_corpus;
     mod test;
 }

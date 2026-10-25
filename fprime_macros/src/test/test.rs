@@ -1,4 +1,7 @@
-use crate::infer_path::test_support::{const_encode_block, render_block, rewrite_block};
+use crate::infer_path::test_support::{
+    const_encode_block, descriptor_block, render_block, rewrite_block,
+    test_body as expand_test_body,
+};
 use crate::{command, parameter, restrict, telemetry};
 use pretty_assertions::assert_eq;
 use proc_macro2::TokenStream;
@@ -385,12 +388,17 @@ fn completion_marker_resolves() {
         )
     );
 
-    // Half typed, so not a constant: left alone.
+    // Half typed, so not a constant: the enum's constants are put in scope for the editor to
+    // offer, marker preserved.
     let half_typed = "Ref.dpDemo.Dp(IMMEDIATE, 2, PROC_raCompletionMarker);";
     assert_eq!(
         rewrite(half_typed),
         expect(
-            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, PROC_raCompletionMarker);"
+            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, {
+                 #[allow(unused_imports)]
+                 use crate::Defs::Fw::DpCfg::ProcType:: * ;
+                 PROC_raCompletionMarker
+             });"
         )
     );
 
@@ -531,10 +539,35 @@ fn completion_marker_resolves_in_broken_body() {
 
 #[test]
 fn passes_through_unknown_names() {
-    // A constant of the user's own in an enum slot, a local in a numeric slot
-    // and an already qualified path
-    let untouched = "Ref.dpDemo.Dp(MY_REQ_TYPE, priority, ProcType::PROC_TYPE_NONE);";
-    assert_eq!(rewrite(untouched), expect(untouched));
+    // A local in a numeric slot, and the fully qualified path this pass writes itself —
+    // longer than the dictionary's own name for the constant, so never a name it resolves.
+    let untouched = "Ref.dpDemo.Dp(
+         IMMEDIATE,
+         priority,
+         crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
+     );";
+    assert_eq!(
+        rewrite(untouched),
+        expect(
+            "Ref.dpDemo.Dp(
+                 crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                 priority,
+                 crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
+             );"
+        )
+    );
+
+    // A qualifier that is not the enum's own names no constant at all.
+    assert_eq!(
+        rewrite("Ref.dpDemo.Dp(IMMEDIATE, 0, Other::ProcType::PROC_TYPE_NONE);"),
+        expect(
+            "Ref.dpDemo.Dp(
+                 crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                 0,
+                 Other::ProcType::PROC_TYPE_NONE
+             );"
+        )
+    );
 
     // An instance the dictionary does not know
     let unknown_command = "Ref.notAThing.Dp(IMMEDIATE, 0, PROC_TYPE_NONE);";
@@ -547,6 +580,40 @@ fn passes_through_unknown_names() {
     // Non enum parameters are never rewritten
     let string_argument = "Ref.wasmSeq.LOAD(\"helloworld\");";
     assert_eq!(rewrite(string_argument), expect(string_argument));
+}
+
+/// A bare name in an enum slot that is none of its constants — a misspelling, a local, a
+/// constant of the author's — is wrapped in the enum's scope rather than passed through, so a
+/// misspelling earns rustc's similar-name hint into the enum. A qualified path is not wrapped,
+/// and an attribute stays on the argument.
+#[test]
+fn scopes_an_unknown_name_to_its_enum() {
+    assert_eq!(
+        rewrite("Ref.dpDemo.Dp(MY_REQ_TYPE, 0, #[cfg(all())] PROC_TYPE_N);"),
+        expect(
+            "Ref.dpDemo.Dp(
+                 {
+                     #[allow(unused_imports)]
+                     use crate::Defs::Ref::DpDemo::DpReqType:: * ;
+                     MY_REQ_TYPE
+                 },
+                 0,
+                 #[cfg(all())] {
+                     #[allow(unused_imports)]
+                     use crate::Defs::Fw::DpCfg::ProcType:: * ;
+                     PROC_TYPE_N
+                 }
+             );"
+        )
+    );
+
+    let qualified = "Ref.dpDemo.Dp(IMMEDIATE, 0, ProcType::PROC_TYPE_N);";
+    assert_eq!(
+        rewrite(qualified),
+        expect(
+            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, ProcType::PROC_TYPE_N);"
+        )
+    );
 }
 
 fn const_encode(body: &str) -> String {
@@ -638,8 +705,17 @@ fn runtime_argument_left_for_accessor() {
     let body = r#"CdhCore.cmdDisp.CMD_NO_OP_STRING(name);"#;
     assert_eq!(const_encode(body), expect(body));
 
-    let body = "Ref.dpDemo.SelectColor(chosen);";
-    assert_eq!(const_encode(body), expect(body));
+    // Wrapped in the enum's scope, which is a block and so never a constant.
+    assert_eq!(
+        const_encode("Ref.dpDemo.SelectColor(chosen);"),
+        expect(
+            "Ref.dpDemo.SelectColor({
+                 #[allow(unused_imports)]
+                 use crate::Defs::Ref::DpDemo::ColorEnum:: * ;
+                 chosen
+             });"
+        )
+    );
 }
 
 /// A bare local name, even of the right enum type, stays unqualified, on the accessor.
@@ -779,6 +855,274 @@ fn keeps_the_written_call_for_navigation() {
         assert!(
             expansion.contains(&format!("{token} ")) || expansion.contains(&format!("{token}.")),
             "`{token}` should appear in the expansion: {expansion}"
+        );
+    }
+}
+
+/// A struct or enum name may carry as much of its dictionary qualifier as the author cares
+/// to write, and every spelling has to mean the one name — otherwise `Svc::SeqArgs { .. }`,
+/// which is how the dictionary itself spells the type, resolves to nothing.
+#[test]
+fn qualifier_may_be_written_out_in_part() {
+    let qualified = expect(
+        "Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {
+             firstChoice: crate::Defs::Ref::Choice::RED,
+             secondChoice: crate::Defs::Ref::Choice::TWO
+         });",
+    );
+
+    for written in [
+        "ChoicePair { firstChoice: RED, secondChoice: TWO }",
+        "Ref::ChoicePair { firstChoice: Choice::RED, secondChoice: TWO }",
+        "Ref::ChoicePair { firstChoice: Ref::Choice::RED, secondChoice: Ref::Choice::TWO }",
+    ] {
+        assert_eq!(
+            rewrite(&format!("Ref.typeDemo.CHOICE_PAIR({written});")),
+            qualified,
+            "`{written}` should name the same struct"
+        )
+    }
+}
+
+/// And each of those spellings const-encodes, which is what a test needs to match bytes.
+#[test]
+fn const_encodes_a_partly_qualified_struct() {
+    let arg = "crate::Defs::Ref::ChoicePair {
+         firstChoice: crate::Defs::Ref::Choice::RED,
+         secondChoice: crate::Defs::Ref::Choice::BLUE
+     }";
+
+    assert_eq!(
+        const_encode(
+            "Ref.typeDemo.CHOICE_PAIR(Ref::ChoicePair {
+                 firstChoice: Choice::RED,
+                 secondChoice: Ref::Choice::BLUE
+             });"
+        ),
+        format!("{} ;", encoded("Ref.typeDemo.CHOICE_PAIR", arg))
+    )
+}
+
+/// The descriptor pass, as `#[fprime_test]` runs it.
+fn descriptor(body: &str) -> String {
+    descriptor_block(body, false).expect("failed to rewrite body")
+}
+
+/// The whole `#[fprime_test]` pipeline, marker detection included.
+fn test_body(body: &str) -> String {
+    expand_test_body(body).expect("failed to rewrite body")
+}
+
+/// A test that wrote arguments asked to match their exact bytes. When there are none to
+/// compute, saying so beats falling back on the flight accessor, which reports
+/// `CmdResponse: IntoCommand` — about neither the argument nor the command.
+#[test]
+fn a_runtime_argument_is_a_test_error() {
+    let expansion = descriptor("t.expect_command(CdhCore.cmdDisp.CMD_NO_OP_STRING(name));");
+
+    assert!(
+        expansion.contains("compile_error"),
+        "expected an error, got: {expansion}"
+    );
+    // Names the argument, says what it has to be, and offers the two ways to match without
+    // it.
+    for expected in [
+        "arg1",
+        "written out",
+        "leave the parentheses off",
+        "args_starting",
+    ] {
+        assert!(
+            expansion.contains(expected),
+            "the message should mention {expected:?}: {expansion}"
+        )
+    }
+    // Still a `CmdMatch` on the opcode, so the error above is the only one reported.
+    assert!(
+        expansion.contains("fprime_test :: cmd"),
+        "expected a recovery value, got: {expansion}"
+    );
+}
+
+/// The reason is about the offending member, not just the whole argument.
+#[test]
+fn a_runtime_member_names_itself() {
+    let expansion = descriptor(
+        "t.expect_command(Ref.typeDemo.CHOICE_PAIR(ChoicePair { firstChoice: RED, secondChoice: chosen }));",
+    );
+
+    assert!(
+        expansion.contains("Ref.Choice's constants"),
+        "the message should name the member's enum: {expansion}"
+    )
+}
+
+/// `[0; u8]`, where the length was reached for and not written.
+#[test]
+fn a_non_literal_array_length_says_what_it_should_be() {
+    let expansion = descriptor("t.expect_command(Ref.typeDemo.CHOICES([ONE; count]));");
+
+    assert!(
+        expansion.contains("the length here has to be 2"),
+        "the message should give the dictionary's length: {expansion}"
+    )
+}
+
+/// Arity is the accessor's to complain about in a sequence, but a test has no accessor to
+/// fall back on.
+#[test]
+fn wrong_arity_is_a_test_error() {
+    let expansion = descriptor("t.expect_command(Ref.dpDemo.Dp(IMMEDIATE, 0));");
+
+    assert!(
+        expansion.contains("takes 3 arguments, but 2 were written"),
+        "expected an arity error, got: {expansion}"
+    )
+}
+
+/// A const-encodable call is a descriptor, not an error — the ordinary case.
+#[test]
+fn a_constant_call_is_a_descriptor() {
+    let expansion = descriptor("t.expect_command(Ref.wasmSeq.LOAD(\"helloworld\"));");
+
+    assert!(
+        !expansion.contains("compile_error"),
+        "expected a descriptor, got: {expansion}"
+    );
+    assert!(
+        expansion.contains("crate :: Desc :: Ref :: wasmSeq :: LOAD"),
+        "expected a descriptor, got: {expansion}"
+    );
+}
+
+/// An editor expands this on every keystroke. A half-written argument is not a mistake to
+/// report, and a `compile_error!` ahead of the cursor would move the tokens the editor maps
+/// its position through — see `spanned_desc_path`.
+#[test]
+fn nothing_is_reported_while_completing() {
+    let body = "t.expect_command(Ref.dpDemo.SelectColor(BLraCompletionMarkerUE));";
+    let expansion = descriptor_block(body, true).expect("failed to rewrite body");
+
+    assert!(
+        !expansion.contains("compile_error"),
+        "a half-written body should be left alone, got: {expansion}"
+    );
+    assert!(
+        expansion.contains("BLraCompletionMarkerUE"),
+        "the marker has to survive: {expansion}"
+    );
+}
+
+/// rust-analyzer's own sentinel, which it puts where the cursor is.
+const MARKER: &str = "raCompletionMarker";
+
+/// `body` with the marker inserted `prefix` characters into `name` — what rust-analyzer
+/// hands the macro on the keystroke after the cursor lands there.
+fn at_cursor(body: &str, name: &str, prefix: &str) -> String {
+    let typed = format!("{prefix}{MARKER}{}", &name[prefix.len()..]);
+    body.replacen(name, &typed, 1)
+}
+
+/// Whether the two expansions say the same thing on every byte before the cursor.
+fn agrees_before_the_cursor(what: &str, with: &str, without: &str) -> bool {
+    let cut = with.find(MARKER).unwrap_or_else(|| {
+        panic!(
+            "{what}: the marker did not survive into the expansion, so rust-analyzer has \
+             nothing at the cursor to map through:\n{with}"
+        )
+    });
+
+    without.get(..cut) == Some(&with[..cut])
+}
+
+fn agrees_up_to_the_cursor(what: &str, with: &str, without: &str) {
+    assert!(
+        agrees_before_the_cursor(what, with, without),
+        "{what}: the two expansions diverge before the cursor, so rust-analyzer maps the \
+         position through to the wrong place.\n  with the marker: {with}\n  without it:      \
+         {without}"
+    );
+}
+
+/// rust-analyzer expands a macro twice on every keystroke — once with `raCompletionMarker`
+/// where the cursor is, once without — and then finds the cursor in the real expansion at
+/// the raw byte offset the marker sits at in the fake one. So the two have to agree up to
+/// the cursor; after it they may differ freely.
+///
+/// `tools/completion_probe.py` measures what the editor then does with them, which needs
+/// the editor. This measures the agreement itself, which does not.
+#[test]
+fn expansions_agree_up_to_the_cursor() {
+    // A sequence body, through both of the passes `#[fprime]` runs.
+    for (body, name, prefix) in [
+        ("Ref.dpDemo.SelectColor(BLUE);", "BLUE", "BL"),
+        (
+            "Ref.dpDemo.Dp(IMMEDIATE, 0, PROC_TYPE_NONE);",
+            "PROC_TYPE_NONE",
+            "PROC_TYPE_N",
+        ),
+        (
+            "Ref.typeDemo.CHOICE_PAIR(ChoicePair { firstChoice: RED, secondChoice: TWO });",
+            "TWO",
+            "T",
+        ),
+    ] {
+        let typed = at_cursor(body, name, prefix);
+        agrees_up_to_the_cursor(&format!("qualify {name}"), &rewrite(&typed), &rewrite(body));
+        agrees_up_to_the_cursor(
+            &format!("const-encode {name}"),
+            &const_encode(&typed),
+            &const_encode(body),
+        );
+    }
+
+    // A chain segment, not an argument: the receiver, component or point name itself. These
+    // only agree because the scan looks a name up by what has been typed so far.
+    for (body, name, prefix) in [
+        (
+            "CdhCore.cmdDisp.CMD_NO_OP_STRING(\"STRINGS\");",
+            "CMD_NO_OP_STRING",
+            "CMD_NO_OP_S",
+        ),
+        ("Ref.dpDemo.SelectColor(BLUE);", "dpDemo", "dpD"),
+    ] {
+        let typed = at_cursor(body, name, prefix);
+        agrees_up_to_the_cursor(
+            &format!("const-encode {name}"),
+            &const_encode(&typed),
+            &const_encode(body),
+        );
+    }
+
+    // And a test body, through the descriptor pass. `test_body` detects the marker itself,
+    // as the macro does, so the lenient and the reporting paths are both reached.
+    for (body, name, prefix) in [
+        (
+            "t.expect_command(Ref.dpDemo.SelectColor(BLUE));",
+            "BLUE",
+            "BL",
+        ),
+        // An argument that is not a constant: the reporting path, where the expansion the
+        // author is mid-keystroke on and the one that carries the diagnostic differ most.
+        (
+            "t.expect_command(Ref.wasmSeq.LOAD(filename));",
+            "filename",
+            "file",
+        ),
+        // A bare point, which has no `if false { .. }` copy of the author's tokens — so the
+        // `Desc` path this emits is the only thing the cursor can land in.
+        ("t.never_command(Ref.wasmSeq.LOAD);", "LOAD", "LO"),
+        (
+            "t.initial_telemetry(CdhCore.events.EventsDropped, 5);",
+            "EventsDropped",
+            "Events",
+        ),
+    ] {
+        let typed = at_cursor(body, name, prefix);
+        agrees_up_to_the_cursor(
+            &format!("descriptor {name}"),
+            &test_body(&typed),
+            &test_body(body),
         );
     }
 }
