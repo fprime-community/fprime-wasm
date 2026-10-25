@@ -1,33 +1,18 @@
 #!/usr/bin/env python3
-"""Check that argument completion still works through the `fprime_macros` expansions.
+"""Report how rust-analyzer's completions through the `fprime_macros` expansions changed.
 
-rust-analyzer expands a macro twice at every keystroke: once with `raCompletionMarker`
-where the cursor is, and once without. It then finds the cursor in the real expansion at
-the *raw byte offset* the marker sits at in the fake one. So the two expansions have to
-agree up to the cursor — after it they may differ freely — and an expansion that inserts
-so much as one token ahead of the cursor moves the offset the editor maps through and the
-completion list silently degrades.
+rust-analyzer expands a macro twice per keystroke, with and without `raCompletionMarker` at
+the cursor, and the two must agree up to the cursor. `expansions_agree_up_to_the_cursor`
+checks that agreement; this checks what the editor then offers.
 
-Nothing about that is visible to `cargo build`, to a token-string test, or to
-`goto_probe.py`. `fprime_macros`' own unit tests can prove the two expansions agree
-byte-for-byte (see `expansions_agree_up_to_the_cursor`), which is the cheap half. This is
-the other half: whether the editor, given those expansions, actually offers the name.
+It compares against a blessed baseline (`--bless`), not a quality bar, so it answers "did
+this change what the editor offers, and where" — not "does it feel right". The baseline
+depends on the rust-analyzer version, so re-bless after updating the extension.
 
-**This compares against a blessed baseline rather than an absolute bar.** The known fix
-for ranking bare constants — a per-statement glob scope, so a constant reachable only by
-its full path is not the only thing offered — lives on a branch elsewhere and is not in
-this repo. Demanding a quality bar this tree has never met would make the probe fail
-always and mean nothing; recording what it does today and failing on *divergence* is what
-makes it useful during a refactor. Bless with `--bless`, same idea as `FPRIME_UPDATE_REF`.
-
-Each case truncates one identifier in a real file to a prefix, puts the cursor after that
-prefix, and asks for completions. The edit is a `didOpen` overlay — nothing is written to
-disk. Two controls come first: a plain-Rust one and one inside `#[fprime_main]` that is
-not a dictionary name, so "the DSL broke completion" is separable from "macro expansion
-broke completion" and from "the server was not ready".
-
-Settings mirror `fprime_wasm/templates/vscode-settings.json.tmpl`, so what is measured is
-what an author of a scaffolded project actually sees.
+Each case edits a real file through a `didOpen` overlay (nothing is written to disk) and
+asks for completions at one cursor. The first two cases are controls, so a server that is
+not answering reads as inconclusive rather than as a regression. Settings mirror
+`fprime_wasm/templates/vscode-settings.json.tmpl`.
 
 Usage:
     python3 tools/completion_probe.py            # compare against the baseline
@@ -63,8 +48,7 @@ INDEX_TIMEOUT_S = 300
 CURSOR = "<|>"
 
 # Mirrors `fprime_wasm/templates/vscode-settings.json.tmpl`, in the nested form LSP wants.
-# `allTargets` and the `wasm` feature are both needed or the sequence bins do not load and
-# every case inside one is inconclusive.
+# Without `allTargets` and `wasm`, the sequence bins do not load.
 OPTIONS = {
     "cargo": {"allTargets": True, "features": ["wasm"]},
     "procMacro": {"enable": True},
@@ -236,18 +220,12 @@ class Client:
 class Case:
     """One cursor placed `keep` characters into an identifier.
 
-    `mode` is which half of the marker story the case is about:
-
-    * `"truncate"` — the rest of the name is deleted, so the author is partway through
-      typing something new. The name does not resolve, and what is measured is the scope
-      the macro left around the cursor.
-    * `"inside"` — the name is left whole and the cursor put in the middle of it, which is
-      what going back to edit an existing argument looks like. The name *does* resolve,
-      with the marker inside it, so this is the case that reaches `WrittenPath::emit`'s
-      `in_progress` arm — and the only kind that can catch a marker being dropped.
-    * `"insert"` — `insert` is written into the file just *after* the anchor line, with
-      `<|>` where the cursor goes, and `name`/`keep` unused. For a position no existing line
-      holds: nothing typed yet, or a control that needs a whole function of its own.
+    * `"truncate"` — the rest of the name is deleted: typing something new. The name does
+      not resolve.
+    * `"inside"` — the name is kept whole with the cursor in it: editing an existing one.
+      The name resolves with the marker inside it, so only this catches a dropped marker.
+    * `"insert"` — `insert` is added after the anchor line, with `<|>` for the cursor; for a
+      position no existing line holds, such as nothing typed yet.
     """
 
     def __init__(self, spec: dict) -> None:
@@ -273,24 +251,19 @@ class Case:
 
 
 def overlay(path: Path, cases: list[Case]) -> tuple[str, dict[int, tuple[int, int]]]:
-    """`path`'s text with every case's identifier truncated, and each case's cursor.
+    """`path`'s text with every case for it applied at once, and each case's cursor.
 
-    Every case for a file is applied at once and the file is opened once. The other
-    truncated names are left as ordinary unresolvable identifiers, which is what the DSL
-    passes through anyway, and they are in other statements — so they cannot reach the
-    expansion the cursor is in. One process per case would be more faithful to a real
-    editing session and far slower; `--verbose` twice over is how to check it is stable.
+    The other cases' edits are in other statements, so they cannot reach the expansion the
+    cursor is in.
     """
     original = path.read_text().splitlines()
     lines = list(original)
     cursors: dict[int, tuple[int, int]] = {}
 
-    # Located against the untouched text, then mutated — otherwise one case's truncation
-    # hides the anchor the next one is looking for.
+    # Located against the untouched text, so one case's edit cannot hide another's anchor.
     located = [(index, case, case.locate(original)) for index, case in enumerate(cases)]
 
-    # Two cases may share a line only if at most one of them rewrites it. An inserted body
-    # goes *after* its anchor, so it sits happily beside a truncation on that same line.
+    # Two cases may share a line only if at most one rewrites it; an insertion goes after it.
     for kind in ("edit", "insert"):
         taken: dict[int, str] = {}
         for _, case, number in located:
@@ -312,11 +285,7 @@ def overlay(path: Path, cases: list[Case]) -> tuple[str, dict[int, tuple[int, in
             lines[number] = line.replace(case.name, case.keep, 1)
         cursors[index] = (number, column)
 
-    # Insertions last, shallowest first, carrying a running offset — and shifting every cursor
-    # already recorded at or below each insertion point. Two inserted bodies in one file
-    # otherwise leave the deeper one's cursor pointing at whatever the shallower one pushed
-    # down, and the probe then asks the wrong position and reports every name in scope. That
-    # read exactly like a regression in the macro; hence `verify` below.
+    # Insertions last, shallowest first, shifting every cursor at or below each one.
     shift = 0
     for index, case, number in sorted(located, key=lambda found: found[2]):
         if case.mode != "insert":
@@ -347,9 +316,8 @@ def overlay(path: Path, cases: list[Case]) -> tuple[str, dict[int, tuple[int, in
 def verify(path: Path, cases: list[Case], text: str, cursors: dict[int, tuple[int, int]]) -> None:
     """Every cursor sits where its case meant it to.
 
-    An overlay is line surgery, and a cursor that lands a few lines off still returns a long,
-    plausible completion list — every name in scope, none of them the one expected. That is
-    indistinguishable from the feature being broken, so it is checked rather than assumed.
+    A cursor a few lines off returns every name in scope, which looks exactly like the macro
+    being broken.
     """
     lines = text.split("\n")
 
@@ -374,12 +342,8 @@ def verify(path: Path, cases: list[Case], text: str, cursors: dict[int, tuple[in
 
 
 def inserted(item: dict) -> str:
-    """The text taking the item would actually write.
-
-    Matched on instead of `label`, because a generated `const` is labelled with its whole
-    value — `ScalarF32Ch = Chan { id: 268455954, .. }` — and the label is the one part of
-    an item that exists for a human rather than for the buffer.
-    """
+    """The text taking the item would write — not its `label`, which for a generated
+    `const` includes its whole value."""
     edit = item.get("textEdit") or {}
     return edit.get("newText") or item.get("insertText") or item.get("label", "")
 
@@ -390,13 +354,8 @@ def ranked(items: list[dict]) -> list[dict]:
 
 
 def measure(items: list[dict], case: Case) -> dict:
-    """What the list says about `case.expect`.
-
-    `bare_rank` is the DSL working as intended: the name on its own. `qualified_rank` is
-    the same constant reachable only as `Ref::Choice::RED`, which is what this tree still
-    does for a command argument — the per-statement glob scope that fixes it is not here.
-    Recording both means the probe reports which one changed.
-    """
+    """What the list says about `case.expect`: where it ranks as itself (`bare_rank`) and as a
+    path ending in it, like `Ref::Choice::RED` (`qualified_rank`)."""
     bare_rank = None
     qualified_rank = None
     found = None
@@ -411,8 +370,7 @@ def measure(items: list[dict], case: Case) -> dict:
             found = found or item
 
     return {
-        # Drops to 0 when the cursor maps to nothing, which is the failure the byte-offset
-        # invariant guards against.
+        # 0 when the cursor maps to nothing: the two expansions disagree before it.
         "items": len(items),
         "bare_rank": bare_rank,
         "qualified_rank": qualified_rank,
@@ -469,13 +427,12 @@ def main() -> int:
                     if text == case.expect or text.endswith(f"::{case.expect}"):
                         print(f"      {text}")
 
-        # Both controls have to come back, or nothing else measured means anything.
+        # Without both controls, nothing else measured means anything.
         for case in cases[:2]:
             if measured[case.why]["bare_rank"] is None:
                 print(
                     f"completion_probe: INCONCLUSIVE — the control {case.why!r} did not\n"
-                    "  offer its own name, so the server is not answering and any other\n"
-                    "  failure here would say nothing about the expansions.",
+                    "  offer its own name, so the server is not answering.",
                     file=sys.stderr,
                 )
                 return 2
@@ -509,13 +466,9 @@ def main() -> int:
     print(f"\ncompletion_probe: {len(cases) - changed}/{len(cases)} unchanged")
     if changed:
         print(
-            "\n`offered` going false is the one that matters most: rust-analyzer found\n"
-            "nothing to complete at the cursor, which is what happens when the two\n"
-            "expansions stop agreeing up to it. Check that nothing was inserted ahead of\n"
-            "the cursor, and that a marker-bearing name is still emitted carrying its\n"
-            "marker — a mapped token whose text lost the marker is discarded.\n"
-            "\n`bare` going false means the name is only reachable by its full path again.\n"
-            "`rank` climbing means something else in scope now sorts above it.\n"
+            "\n`items` dropping to 0 matters most: the two expansions no longer agree up to the\n"
+            "cursor, or a marker-bearing name lost its marker on the way out.\n"
+            "`bare_rank` going null means the name is only offered by its full path.\n"
             "\nIf the change is deliberate, re-bless with --bless and say so in the commit.",
             file=sys.stderr,
         )

@@ -1,27 +1,15 @@
 #!/usr/bin/env python3
 """Check that goto-definition still works through the `fprime_macros` expansions.
 
-Span damage in a proc macro is invisible to `cargo build`. rustc reports "method defined
-here" from an ident's span alone, and a byte-identical `.wasm` proves runtime equivalence
-while saying nothing about spans. Only a node-range consumer notices — so measure the
-consumer.
+Span damage in a proc macro is invisible to `cargo build` and to the `.wasm` it produces, so
+this asks rust-analyzer to resolve tokens the author wrote inside a macro-expanded body. A
+token the macro deleted or re-spanned on `Span::call_site()` resolves to nothing.
 
-Each probe asks rust-analyzer to resolve a token the author wrote inside a macro-expanded
-body. A token the macro deleted, or re-minted on `Span::call_site()`, has nothing to map back
-to and resolves to nothing.
+The `sequence = ".."` probes name the file they must open: the string only resolves through
+the `include_str!` path literal `#[fprime_test]` gives its span.
 
-The `sequence = ".."` probes are the other direction: that string is not Rust at all, and only
-resolves because `#[fprime_test]` emits an `include_str!` whose path literal borrows the
-string's span. Those probes name the file they must open, since a link to the wrong sequence
-would otherwise pass.
-
-Two things this refuses to do, both learned the hard way:
-
-* **Report without a control.** An unprimed rust-analyzer answers every request with nothing,
-  which is indistinguishable from a total regression. A plain-Rust reference has to resolve
-  first or the run is inconclusive rather than failing.
-* **Measure a stale proc-macro dylib.** `cargo check` runs first, or the answers describe the
-  macro as it was last built.
+A plain-Rust control has to resolve first, or the run is inconclusive: an unready server
+answers everything with nothing. `cargo check` runs first so the proc macro is current.
 
 Usage:
     python3 tools/goto_probe.py            # all probes
