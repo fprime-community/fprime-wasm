@@ -8,7 +8,7 @@ use fprime_dictionary::naming::{definition_path, definition_path_with_name, spli
 use fprime_dictionary::{Command, TypeDefinition, TypeName};
 use proc_macro2::{Group, TokenStream, TokenTree};
 use quote::{ToTokens, quote};
-use syn::{Expr, ExprPath, ExprStruct, Member};
+use syn::{Expr, ExprBlock, ExprPath, ExprStruct, Member};
 
 /// Replaces a struct path with its dictionary path, e.g. `ChoicePair` or `Ref::ChoicePair`
 /// -> `crate::Defs::Ref::ChoicePair`.
@@ -26,6 +26,34 @@ fn qualify_struct_path(literal: &mut ExprStruct, qualified_name: &str) {
         qualified_name,
         name.emit(short_name),
     ));
+}
+
+/// `{ use <enum>::*; NAME }`, for a bare name in an enum argument that is none of its
+/// constants.
+///
+/// A local or a constant of the author's still resolves as it did, since the glob only adds
+/// names and a name that was one of these constants was qualified instead. A misspelt constant
+/// now earns rustc's "a unit variant with a similar name exists" pointing into the enum, rather
+/// than a bare "cannot find value". It also puts the constants in scope for an editor
+/// completing a prefix, which then offers them by their bare names.
+///
+/// Whether to wrap depends only on the stripped name, so the two expansions rust-analyzer
+/// builds wrap alike — see `name::dictionary_name`.
+fn with_constants_in_scope(written: &mut ExprPath, enum_name: &str) -> Expr {
+    let enum_path = definition_path(enum_name);
+
+    // An attribute stays on the argument, as it does when the name is qualified instead.
+    let attrs = std::mem::take(&mut written.attrs);
+    let mut scoped: ExprBlock = parse(quote! {
+        {
+            #[allow(unused_imports)]
+            use #enum_path::*;
+            #written
+        }
+    });
+    scoped.attrs = attrs;
+
+    Expr::Block(scoped)
 }
 
 fn parse<T: syn::parse::Parse>(tokens: TokenStream) -> T {
@@ -113,6 +141,11 @@ impl Symbols {
                     .iter()
                     .find(|c| c.name == name.leaf())
                 else {
+                    // Nothing typed yet is left bare, as is a qualified path, which is not a
+                    // misspelt constant of this enum.
+                    if original.path.segments.len() == 1 && !name.leaf().is_empty() {
+                        *expr = with_constants_in_scope(original, &ty.qualified_name);
+                    }
                     return;
                 };
 

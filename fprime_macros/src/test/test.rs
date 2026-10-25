@@ -388,12 +388,17 @@ fn completion_marker_resolves() {
         )
     );
 
-    // Half typed, so not a constant: left alone.
+    // Half typed, so not a constant: the enum's constants are put in scope for the editor to
+    // offer, marker preserved.
     let half_typed = "Ref.dpDemo.Dp(IMMEDIATE, 2, PROC_raCompletionMarker);";
     assert_eq!(
         rewrite(half_typed),
         expect(
-            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, PROC_raCompletionMarker);"
+            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, {
+                 #[allow(unused_imports)]
+                 use crate::Defs::Fw::DpCfg::ProcType:: * ;
+                 PROC_raCompletionMarker
+             });"
         )
     );
 
@@ -534,15 +539,23 @@ fn completion_marker_resolves_in_broken_body() {
 
 #[test]
 fn passes_through_unknown_names() {
-    // A constant of the user's own in an enum slot, a local in a numeric slot, and the fully
-    // qualified path this pass writes itself — longer than the dictionary's own name for the
-    // constant, so never a name it resolves.
+    // A local in a numeric slot, and the fully qualified path this pass writes itself —
+    // longer than the dictionary's own name for the constant, so never a name it resolves.
     let untouched = "Ref.dpDemo.Dp(
-         MY_REQ_TYPE,
+         IMMEDIATE,
          priority,
          crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
      );";
-    assert_eq!(rewrite(untouched), expect(untouched));
+    assert_eq!(
+        rewrite(untouched),
+        expect(
+            "Ref.dpDemo.Dp(
+                 crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                 priority,
+                 crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
+             );"
+        )
+    );
 
     // A qualifier that is not the enum's own names no constant at all.
     assert_eq!(
@@ -567,6 +580,40 @@ fn passes_through_unknown_names() {
     // Non enum parameters are never rewritten
     let string_argument = "Ref.wasmSeq.LOAD(\"helloworld\");";
     assert_eq!(rewrite(string_argument), expect(string_argument));
+}
+
+/// A bare name in an enum slot that is none of its constants — a misspelling, a local, a
+/// constant of the author's — is wrapped in the enum's scope rather than passed through, so a
+/// misspelling earns rustc's similar-name hint into the enum. A qualified path is not wrapped,
+/// and an attribute stays on the argument.
+#[test]
+fn scopes_an_unknown_name_to_its_enum() {
+    assert_eq!(
+        rewrite("Ref.dpDemo.Dp(MY_REQ_TYPE, 0, #[cfg(all())] PROC_TYPE_N);"),
+        expect(
+            "Ref.dpDemo.Dp(
+                 {
+                     #[allow(unused_imports)]
+                     use crate::Defs::Ref::DpDemo::DpReqType:: * ;
+                     MY_REQ_TYPE
+                 },
+                 0,
+                 #[cfg(all())] {
+                     #[allow(unused_imports)]
+                     use crate::Defs::Fw::DpCfg::ProcType:: * ;
+                     PROC_TYPE_N
+                 }
+             );"
+        )
+    );
+
+    let qualified = "Ref.dpDemo.Dp(IMMEDIATE, 0, ProcType::PROC_TYPE_N);";
+    assert_eq!(
+        rewrite(qualified),
+        expect(
+            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, ProcType::PROC_TYPE_N);"
+        )
+    );
 }
 
 fn const_encode(body: &str) -> String {
@@ -658,8 +705,17 @@ fn runtime_argument_left_for_accessor() {
     let body = r#"CdhCore.cmdDisp.CMD_NO_OP_STRING(name);"#;
     assert_eq!(const_encode(body), expect(body));
 
-    let body = "Ref.dpDemo.SelectColor(chosen);";
-    assert_eq!(const_encode(body), expect(body));
+    // Wrapped in the enum's scope, which is a block and so never a constant.
+    assert_eq!(
+        const_encode("Ref.dpDemo.SelectColor(chosen);"),
+        expect(
+            "Ref.dpDemo.SelectColor({
+                 #[allow(unused_imports)]
+                 use crate::Defs::Ref::DpDemo::ColorEnum:: * ;
+                 chosen
+             });"
+        )
+    );
 }
 
 /// A bare local name, even of the right enum type, stays unqualified, on the accessor.

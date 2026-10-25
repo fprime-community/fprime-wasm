@@ -1006,7 +1006,7 @@ pub fn main() {
 // ===== sequence: fallback_struct
 pub fn main() {
     let color = Ref.typeDemo.ChoiceCh().0;
-    Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:color, secondChoice:crate::Defs::Ref::Choice::BLUE,});
+    Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:{#[allow(unused_imports)] use crate::Defs::Ref::Choice::*; color}, secondChoice:crate::Defs::Ref::Choice::BLUE,});
 }
 
 // ===== descriptor: fallback_struct
@@ -1014,7 +1014,7 @@ pub fn main() {
     let color = crate::Desc::Ref::typeDemo::ChoiceCh().0;
     {
         if false {
-            Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:color, secondChoice:crate::Defs::Ref::Choice::BLUE,});
+            Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:{#[allow(unused_imports)] use crate::Defs::Ref::Choice::*; color}, secondChoice:crate::Defs::Ref::Choice::BLUE,});
         }::core::compile_error!{
             "`choices.firstChoice` has to be one of Ref.Choice's constants, like `ONE` or `TWO`\n\nTo match Ref.typeDemo.CHOICE_PAIR whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICE_PAIR)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x1000500b).args_starting(&[..]))"
         }::fprime_test::cmd(268455947 as u32)
@@ -1865,5 +1865,5 @@ t.expect_command({if false {CdhCore.cmdDisp.CMD_TEST_CMD_1(count + 1, 0.0, 0);}:
 
 
 // ===== test body: an enum constant the dictionary does not have
-t.expect_command({if false {Ref.dpDemo.SelectColor(MAUVE);}::core::compile_error!{"`color` has to be one of Ref.DpDemo.ColorEnum's constants, like `RED` or `GREEN`\n\nTo match Ref.dpDemo.SelectColor whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.dpDemo.SelectColor)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x00000a10).args_starting(&[..]))"}::fprime_test::cmd(2576 as u32)});
+t.expect_command({if false {Ref.dpDemo.SelectColor({#[allow(unused_imports)] use crate::Defs::Ref::DpDemo::ColorEnum::*; MAUVE});}::core::compile_error!{"`color` has to be one of Ref.DpDemo.ColorEnum's constants, like `RED` or `GREEN`\n\nTo match Ref.dpDemo.SelectColor whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.dpDemo.SelectColor)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x00000a10).args_starting(&[..]))"}::fprime_test::cmd(2576 as u32)});
 
