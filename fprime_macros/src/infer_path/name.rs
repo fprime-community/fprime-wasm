@@ -24,7 +24,7 @@ impl WrittenPath {
     /// segment, and a qualifier that is a tail of `full`'s. So `Choice::RED` and `RED` both
     /// name `Ref.Choice.RED`, while `Other::Choice::RED` names nothing.
     ///
-    /// A path longer than `full` never matches, which leaves the `crate::Defs::..` form this
+    /// A path longer than `full` never matches, which leaves the `crate::Dict::..` form this
     /// pass writes unrewritten.
     pub(super) fn names(&self, full: &[&str]) -> bool {
         self.lookup.len() <= full.len()

@@ -62,7 +62,24 @@ fn cmd_size(dictionary: &Dictionary, cmd: &Command) -> usize {
         })
 }
 
-pub(crate) fn global_memory(dictionary: &Dictionary) -> TokenStream {
+/// The crate-root items every accessor leans on: the scratch buffers, `now()` and
+/// `TimeValue`'s ordering.
+pub(crate) fn global_helpers(dictionary: &Dictionary) -> TokenStream {
+    let memory = global_memory(dictionary);
+    let now = time_now();
+    let cmp = time_cmp();
+
+    quote! {
+        #[allow(unused_imports)]
+        use fprime_core::*;
+
+        #memory
+        #now
+        #cmp
+    }
+}
+
+fn global_memory(dictionary: &Dictionary) -> TokenStream {
     // Compute the upper bound scratch space needed
     // Scratch memory is used for telemetry, commands and parameters
     // TODO(tumbar) Add parameters
@@ -83,28 +100,28 @@ pub(crate) fn global_memory(dictionary: &Dictionary) -> TokenStream {
         const __SCRATCH_SIZE: usize = #max_size;
         static mut __SCRATCH: [u8; __SCRATCH_SIZE] = [0x0; __SCRATCH_SIZE];
 
-        const __TIME_SIZE: usize = crate::Defs::Fw::TimeValue::SIZE;
+        const __TIME_SIZE: usize = crate::Dict::Fw::TimeValue::SIZE;
         static mut __TIME: [u8; __TIME_SIZE] = [0; __TIME_SIZE];
     }
 }
 
-pub(crate) fn time_now() -> TokenStream {
+fn time_now() -> TokenStream {
     quote! {
-        pub fn now() -> crate::Defs::Fw::TimeValue {
+        pub fn now() -> crate::Dict::Fw::TimeValue {
             use fprime_core::Serializable;
-            let mut buf: [u8; crate::Defs::Fw::TimeValue::SIZE] = [0; crate::Defs::Fw::TimeValue::SIZE];
+            let mut buf: [u8; crate::Dict::Fw::TimeValue::SIZE] = [0; crate::Dict::Fw::TimeValue::SIZE];
             unsafe {
                 fprime_core::time::time_read(&mut buf);
             }
 
-            crate::Defs::Fw::TimeValue::deserialize(&buf)
+            crate::Dict::Fw::TimeValue::deserialize(&buf)
         }
     }
 }
 
-pub(crate) fn time_cmp() -> TokenStream {
+fn time_cmp() -> TokenStream {
     quote! {
-        impl PartialOrd for crate::Defs::Fw::TimeValue {
+        impl PartialOrd for crate::Dict::Fw::TimeValue {
             fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
                 if self.timeBase != other.timeBase {
                     fprime_core::panic(fprime_core::PanicCode::TimeBaseIncomparable);

@@ -25,20 +25,20 @@ fn round_trip_on_host() {
     let mut offset = 0usize;
 
     // An enum serialises as its representation type, big-endian.
-    example::Defs::Ref::Choice::BLUE.serialize_to(&mut buffer, &mut offset);
+    example::Dict::Ref::Choice::BLUE.serialize_to(&mut buffer, &mut offset);
     assert_eq!((&buffer[..4], offset), (&[0, 0, 0, 3][..], 4));
 
     // A struct serialises its members in dictionary order.
-    let pair = example::Defs::Ref::ChoicePair {
-        firstChoice: example::Defs::Ref::Choice::RED,
-        secondChoice: example::Defs::Ref::Choice::BLUE,
+    let pair = example::Dict::Ref::ChoicePair {
+        firstChoice: example::Dict::Ref::Choice::RED,
+        secondChoice: example::Dict::Ref::Choice::BLUE,
     };
     let mut offset = 0usize;
     pair.serialize_to(&mut buffer, &mut offset);
     assert_eq!(&buffer[..8], &[0, 0, 0, 2, 0, 0, 0, 3]);
     assert_eq!(
-        example::Defs::Ref::ChoicePair::deserialize(&buffer).secondChoice,
-        example::Defs::Ref::Choice::BLUE
+        example::Dict::Ref::ChoicePair::deserialize(&buffer).secondChoice,
+        example::Dict::Ref::Choice::BLUE
     );
 }
 

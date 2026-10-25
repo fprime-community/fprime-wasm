@@ -41,10 +41,10 @@ pub fn main() {
 // ===== sequence: cmd_array_2d
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_2D__size([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_2D__encode::<__FPRIME_LEN>([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_2D__size([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_2D__encode::<__FPRIME_LEN>([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
         if false {
-            Ref.typeDemo.SEND_2D([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
+            Ref.typeDemo.SEND_2D([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -54,10 +54,10 @@ pub fn main() {
 // ===== descriptor: cmd_array_2d
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_2D__size([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_2D__encode::<__FPRIME_LEN>([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_2D__size([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_2D__encode::<__FPRIME_LEN>([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
         if false {
-            Ref.typeDemo.SEND_2D([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
+            Ref.typeDemo.SEND_2D([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::SEND_2D.with(__FPRIME_BUF)
@@ -97,10 +97,10 @@ pub fn main() {
 // ===== sequence: cmd_array_enum
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
         if false {
-            Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
+            Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -110,10 +110,10 @@ pub fn main() {
 // ===== descriptor: cmd_array_enum
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
         if false {
-            Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
+            Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::CHOICES.with(__FPRIME_BUF)
@@ -153,10 +153,10 @@ pub fn main() {
 // ===== sequence: cmd_array_repeat
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Defs::Ref::Choice::ONE; 2]);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Defs::Ref::Choice::ONE; 2]);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Dict::Ref::Choice::ONE; 2]);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Dict::Ref::Choice::ONE; 2]);
         if false {
-            Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::ONE; 2]);
+            Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE; 2]);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -166,10 +166,10 @@ pub fn main() {
 // ===== descriptor: cmd_array_repeat
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Defs::Ref::Choice::ONE; 2]);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Defs::Ref::Choice::ONE; 2]);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Dict::Ref::Choice::ONE; 2]);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Dict::Ref::Choice::ONE; 2]);
         if false {
-            Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::ONE; 2]);
+            Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE; 2]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::CHOICES.with(__FPRIME_BUF)
@@ -237,10 +237,10 @@ pub fn main() {
 // ===== sequence: cmd_enum
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE__size(crate::Defs::Ref::Choice::TWO);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE__encode::<__FPRIME_LEN>(crate::Defs::Ref::Choice::TWO);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE__size(crate::Dict::Ref::Choice::TWO);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE__encode::<__FPRIME_LEN>(crate::Dict::Ref::Choice::TWO);
         if false {
-            Ref.typeDemo.CHOICE(crate::Defs::Ref::Choice::TWO);
+            Ref.typeDemo.CHOICE(crate::Dict::Ref::Choice::TWO);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -250,10 +250,10 @@ pub fn main() {
 // ===== descriptor: cmd_enum
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE__size(crate::Defs::Ref::Choice::TWO);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE__encode::<__FPRIME_LEN>(crate::Defs::Ref::Choice::TWO);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE__size(crate::Dict::Ref::Choice::TWO);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE__encode::<__FPRIME_LEN>(crate::Dict::Ref::Choice::TWO);
         if false {
-            Ref.typeDemo.CHOICE(crate::Defs::Ref::Choice::TWO);
+            Ref.typeDemo.CHOICE(crate::Dict::Ref::Choice::TWO);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::CHOICE.with(__FPRIME_BUF)
@@ -265,10 +265,10 @@ pub fn main() {
 // ===== sequence: cmd_enum_wide
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__size(crate::Defs::Ref::WideChoice::WIDE_HIGH);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__encode::<__FPRIME_LEN>(crate::Defs::Ref::WideChoice::WIDE_HIGH);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__size(crate::Dict::Ref::WideChoice::WIDE_HIGH);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__encode::<__FPRIME_LEN>(crate::Dict::Ref::WideChoice::WIDE_HIGH);
         if false {
-            Ref.typeDemo.SEND_WIDE_CHOICE(crate::Defs::Ref::WideChoice::WIDE_HIGH);
+            Ref.typeDemo.SEND_WIDE_CHOICE(crate::Dict::Ref::WideChoice::WIDE_HIGH);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -278,10 +278,10 @@ pub fn main() {
 // ===== descriptor: cmd_enum_wide
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__size(crate::Defs::Ref::WideChoice::WIDE_HIGH);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__encode::<__FPRIME_LEN>(crate::Defs::Ref::WideChoice::WIDE_HIGH);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__size(crate::Dict::Ref::WideChoice::WIDE_HIGH);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__encode::<__FPRIME_LEN>(crate::Dict::Ref::WideChoice::WIDE_HIGH);
         if false {
-            Ref.typeDemo.SEND_WIDE_CHOICE(crate::Defs::Ref::WideChoice::WIDE_HIGH);
+            Ref.typeDemo.SEND_WIDE_CHOICE(crate::Dict::Ref::WideChoice::WIDE_HIGH);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::SEND_WIDE_CHOICE.with(__FPRIME_BUF)
@@ -517,10 +517,10 @@ pub fn main() {
 // ===== sequence: cmd_struct_enums
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR__size(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,});
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR__encode::<__FPRIME_LEN>(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,});
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR__size(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,});
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR__encode::<__FPRIME_LEN>(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,});
         if false {
-            Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,});
+            Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,});
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -530,10 +530,10 @@ pub fn main() {
 // ===== descriptor: cmd_struct_enums
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR__size(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,});
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR__encode::<__FPRIME_LEN>(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,});
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR__size(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,});
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR__encode::<__FPRIME_LEN>(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,});
         if false {
-            Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,});
+            Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,});
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::CHOICE_PAIR.with(__FPRIME_BUF)
@@ -545,10 +545,10 @@ pub fn main() {
 // ===== sequence: cmd_struct_nested
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__size(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__encode::<__FPRIME_LEN>(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__size(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__encode::<__FPRIME_LEN>(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
         if false {
-            Ref.typeDemo.GLUTTON_OF_CHOICE(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
+            Ref.typeDemo.GLUTTON_OF_CHOICE(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -558,10 +558,10 @@ pub fn main() {
 // ===== descriptor: cmd_struct_nested
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__size(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__encode::<__FPRIME_LEN>(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__size(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__encode::<__FPRIME_LEN>(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
         if false {
-            Ref.typeDemo.GLUTTON_OF_CHOICE(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
+            Ref.typeDemo.GLUTTON_OF_CHOICE(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::GLUTTON_OF_CHOICE.with(__FPRIME_BUF)
@@ -573,10 +573,10 @@ pub fn main() {
 // ===== sequence: cmd_struct_scalars
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_SCALARS__size(crate::Defs::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_SCALARS__encode::<__FPRIME_LEN>(crate::Defs::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_SCALARS__size(crate::Dict::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_SCALARS__encode::<__FPRIME_LEN>(crate::Dict::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
         if false {
-            Ref.typeDemo.SEND_SCALARS(crate::Defs::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
+            Ref.typeDemo.SEND_SCALARS(crate::Dict::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -586,10 +586,10 @@ pub fn main() {
 // ===== descriptor: cmd_struct_scalars
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_SCALARS__size(crate::Defs::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_SCALARS__encode::<__FPRIME_LEN>(crate::Defs::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_SCALARS__size(crate::Dict::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_SCALARS__encode::<__FPRIME_LEN>(crate::Dict::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
         if false {
-            Ref.typeDemo.SEND_SCALARS(crate::Defs::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
+            Ref.typeDemo.SEND_SCALARS(crate::Dict::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::SEND_SCALARS.with(__FPRIME_BUF)
@@ -601,10 +601,10 @@ pub fn main() {
 // ===== sequence: cmd_struct_with_friends
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS__size(1, crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, 2,);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS__encode::<__FPRIME_LEN>(1, crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, 2,);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS__size(1, crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, 2,);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS__encode::<__FPRIME_LEN>(1, crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, 2,);
         if false {
-            Ref.typeDemo.CHOICE_PAIR_WITH_FRIENDS(1, crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, 2,);
+            Ref.typeDemo.CHOICE_PAIR_WITH_FRIENDS(1, crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, 2,);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -614,10 +614,10 @@ pub fn main() {
 // ===== descriptor: cmd_struct_with_friends
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS__size(1, crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, 2,);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS__encode::<__FPRIME_LEN>(1, crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, 2,);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS__size(1, crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, 2,);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS__encode::<__FPRIME_LEN>(1, crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, 2,);
         if false {
-            Ref.typeDemo.CHOICE_PAIR_WITH_FRIENDS(1, crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, 2,);
+            Ref.typeDemo.CHOICE_PAIR_WITH_FRIENDS(1, crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, 2,);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS.with(__FPRIME_BUF)
@@ -629,73 +629,73 @@ pub fn main() {
 // ===== sequence: dedup_distinct_cmd
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -705,80 +705,80 @@ pub fn main() {
 // ===== descriptor: dedup_distinct_cmd
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
@@ -790,73 +790,73 @@ pub fn main() {
 // ===== sequence: dedup_same_cmd
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -866,80 +866,80 @@ pub fn main() {
 // ===== descriptor: dedup_same_cmd
 pub fn main() {
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
@@ -967,8 +967,8 @@ pub fn main() {
 
 // ===== sequence: fallback_scalar
 pub fn main() {
-    let priority = CdhCore.cmdDisp.CommandsDispatched().0;
-    Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, priority, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+    let priority = Tlm::CdhCore.cmdDisp.CommandsDispatched().0;
+    Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, priority, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
 }
 
 // ===== descriptor: fallback_scalar
@@ -976,7 +976,7 @@ pub fn main() {
     let priority = crate::Desc::CdhCore::cmdDisp::CommandsDispatched().0;
     {
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, priority, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, priority, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         }::core::compile_error!{
             "`priority` has to be a number written out here, like `0`\n\nTo match Ref.dpDemo.Dp whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.dpDemo.Dp)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x00000a11).args_starting(&[..]))"
         }::fprime_test::cmd(2577 as u32)
@@ -986,7 +986,7 @@ pub fn main() {
 
 // ===== sequence: fallback_string
 pub fn main() {
-    let busy = CdhCore.events.EventsDropped().0> 0;
+    let busy = Tlm::CdhCore.events.EventsDropped().0> 0;
     CdhCore.cmdDisp.CMD_NO_OP_STRING(if busy {"busy"} else {"idle"});
 }
 
@@ -1005,8 +1005,8 @@ pub fn main() {
 
 // ===== sequence: fallback_struct
 pub fn main() {
-    let color = Ref.typeDemo.ChoiceCh().0;
-    Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:{#[allow(unused_imports)] use crate::Defs::Ref::Choice::*; color}, secondChoice:crate::Defs::Ref::Choice::BLUE,});
+    let color = Tlm::Ref.typeDemo.ChoiceCh().0;
+    Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:{#[allow(unused_imports)] use crate::Dict::Ref::Choice::*; color}, secondChoice:crate::Dict::Ref::Choice::BLUE,});
 }
 
 // ===== descriptor: fallback_struct
@@ -1014,7 +1014,7 @@ pub fn main() {
     let color = crate::Desc::Ref::typeDemo::ChoiceCh().0;
     {
         if false {
-            Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:{#[allow(unused_imports)] use crate::Defs::Ref::Choice::*; color}, secondChoice:crate::Defs::Ref::Choice::BLUE,});
+            Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:{#[allow(unused_imports)] use crate::Dict::Ref::Choice::*; color}, secondChoice:crate::Dict::Ref::Choice::BLUE,});
         }::core::compile_error!{
             "`choices.firstChoice` has to be one of Ref.Choice's constants, like `ONE` or `TWO`\n\nTo match Ref.typeDemo.CHOICE_PAIR whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICE_PAIR)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x1000500b).args_starting(&[..]))"
         }::fprime_test::cmd(268455947 as u32)
@@ -1024,14 +1024,14 @@ pub fn main() {
 
 // ===== sequence: fallback_struct_string
 pub fn main() {
-    Ref.typeDemo.SEND_COLOR_INFO(crate::Defs::Ref::DpDemo::ColorInfoStruct {color:crate::Defs::Ref::DpDemo::ColorEnum::RED, name:StrTruncate::truncate("crimson"),});
+    Ref.typeDemo.SEND_COLOR_INFO(crate::Dict::Ref::DpDemo::ColorInfoStruct {color:crate::Dict::Ref::DpDemo::ColorEnum::RED, name:StrTruncate::truncate("crimson"),});
 }
 
 // ===== descriptor: fallback_struct_string
 pub fn main() {
     {
         if false {
-            Ref.typeDemo.SEND_COLOR_INFO(crate::Defs::Ref::DpDemo::ColorInfoStruct {color:crate::Defs::Ref::DpDemo::ColorEnum::RED, name:StrTruncate::truncate("crimson"),});
+            Ref.typeDemo.SEND_COLOR_INFO(crate::Dict::Ref::DpDemo::ColorInfoStruct {color:crate::Dict::Ref::DpDemo::ColorEnum::RED, name:StrTruncate::truncate("crimson"),});
         }::core::compile_error!{
             "`info` is a Ref.DpDemo.ColorInfoStruct, which a test cannot write out as bytes\n\nTo match Ref.typeDemo.SEND_COLOR_INFO whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.SEND_COLOR_INFO)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x10005022).args_starting(&[..]))"
         }::fprime_test::cmd(268455970 as u32)
@@ -1060,19 +1060,19 @@ pub fn main() {
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::CdhCore::events::SET_EVENT_FILTER__size(crate::Defs::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Defs::Svc::EventManager::Enabled::DISABLED);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::events::SET_EVENT_FILTER__encode::<__FPRIME_LEN>(crate::Defs::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Defs::Svc::EventManager::Enabled::DISABLED);
+        const __FPRIME_LEN:usize = crate::Konst::CdhCore::events::SET_EVENT_FILTER__size(crate::Dict::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Dict::Svc::EventManager::Enabled::DISABLED);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::events::SET_EVENT_FILTER__encode::<__FPRIME_LEN>(crate::Dict::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Dict::Svc::EventManager::Enabled::DISABLED);
         if false {
-            CdhCore.events.SET_EVENT_FILTER(crate::Defs::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Defs::Svc::EventManager::Enabled::DISABLED);
+            CdhCore.events.SET_EVENT_FILTER(crate::Dict::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Dict::Svc::EventManager::Enabled::DISABLED);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::CdhCore::health::HLTH_PING_ENABLE__size("pinger", crate::Defs::Fw::Enabled::ENABLED);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::health::HLTH_PING_ENABLE__encode::<__FPRIME_LEN>("pinger", crate::Defs::Fw::Enabled::ENABLED);
+        const __FPRIME_LEN:usize = crate::Konst::CdhCore::health::HLTH_PING_ENABLE__size("pinger", crate::Dict::Fw::Enabled::ENABLED);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::health::HLTH_PING_ENABLE__encode::<__FPRIME_LEN>("pinger", crate::Dict::Fw::Enabled::ENABLED);
         if false {
-            CdhCore.health.HLTH_PING_ENABLE("pinger", crate::Defs::Fw::Enabled::ENABLED);
+            CdhCore.health.HLTH_PING_ENABLE("pinger", crate::Dict::Fw::Enabled::ENABLED);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -1105,43 +1105,43 @@ pub fn main() {
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__size(crate::Defs::Ref::WideChoice::WIDE_HIGH);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__encode::<__FPRIME_LEN>(crate::Defs::Ref::WideChoice::WIDE_HIGH);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__size(crate::Dict::Ref::WideChoice::WIDE_HIGH);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__encode::<__FPRIME_LEN>(crate::Dict::Ref::WideChoice::WIDE_HIGH);
         if false {
-            Ref.typeDemo.SEND_WIDE_CHOICE(crate::Defs::Ref::WideChoice::WIDE_HIGH);
+            Ref.typeDemo.SEND_WIDE_CHOICE(crate::Dict::Ref::WideChoice::WIDE_HIGH);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
         if false {
-            Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
+            Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_2D__size([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_2D__encode::<__FPRIME_LEN>([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_2D__size([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_2D__encode::<__FPRIME_LEN>([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
         if false {
-            Ref.typeDemo.SEND_2D([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
+            Ref.typeDemo.SEND_2D([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__size(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__encode::<__FPRIME_LEN>(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__size(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__encode::<__FPRIME_LEN>(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
         if false {
-            Ref.typeDemo.GLUTTON_OF_CHOICE(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
+            Ref.typeDemo.GLUTTON_OF_CHOICE(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
-    let(dropped, _) = CdhCore.events.EventsDropped();
-    if dropped> 2 &&Ref.recvBuffComp.parameter1()> 0 {
+    let(dropped, _) = Tlm::CdhCore.events.EventsDropped();
+    if dropped> 2 &&Prm::Ref.recvBuffComp.parameter1()> 0 {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP_STRING__size("dropped");
             const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP_STRING__encode::<__FPRIME_LEN>("dropped");
@@ -1151,7 +1151,7 @@ pub fn main() {
                 fprime_core::command(&__FPRIME_CMD)
             }
         };
-    } Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, dropped as u32, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+    } Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, dropped as u32, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
     Ref.typeDemo.SEND_NAMES([StrTruncate::truncate("first"), StrTruncate::truncate("second"),]);
     {
         const __FPRIME_LEN:usize = crate::Konst::Ref::wasmSeq::LOAD__size("finished");
@@ -1163,10 +1163,10 @@ pub fn main() {
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::SelectColor__size(crate::Defs::Ref::DpDemo::ColorEnum::GREEN);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::SelectColor__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::ColorEnum::GREEN);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::SelectColor__size(crate::Dict::Ref::DpDemo::ColorEnum::GREEN);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::SelectColor__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::ColorEnum::GREEN);
         if false {
-            Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::GREEN);
+            Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::GREEN);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -1196,20 +1196,20 @@ pub fn main() {
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::CdhCore::events::SET_EVENT_FILTER__size(crate::Defs::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Defs::Svc::EventManager::Enabled::DISABLED);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::events::SET_EVENT_FILTER__encode::<__FPRIME_LEN>(crate::Defs::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Defs::Svc::EventManager::Enabled::DISABLED);
+        const __FPRIME_LEN:usize = crate::Konst::CdhCore::events::SET_EVENT_FILTER__size(crate::Dict::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Dict::Svc::EventManager::Enabled::DISABLED);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::events::SET_EVENT_FILTER__encode::<__FPRIME_LEN>(crate::Dict::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Dict::Svc::EventManager::Enabled::DISABLED);
         if false {
-            CdhCore.events.SET_EVENT_FILTER(crate::Defs::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Defs::Svc::EventManager::Enabled::DISABLED);
+            CdhCore.events.SET_EVENT_FILTER(crate::Dict::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Dict::Svc::EventManager::Enabled::DISABLED);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::CdhCore::events::SET_EVENT_FILTER.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::CdhCore::health::HLTH_PING_ENABLE__size("pinger", crate::Defs::Fw::Enabled::ENABLED);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::health::HLTH_PING_ENABLE__encode::<__FPRIME_LEN>("pinger", crate::Defs::Fw::Enabled::ENABLED);
+        const __FPRIME_LEN:usize = crate::Konst::CdhCore::health::HLTH_PING_ENABLE__size("pinger", crate::Dict::Fw::Enabled::ENABLED);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::health::HLTH_PING_ENABLE__encode::<__FPRIME_LEN>("pinger", crate::Dict::Fw::Enabled::ENABLED);
         if false {
-            CdhCore.health.HLTH_PING_ENABLE("pinger", crate::Defs::Fw::Enabled::ENABLED);
+            CdhCore.health.HLTH_PING_ENABLE("pinger", crate::Dict::Fw::Enabled::ENABLED);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::CdhCore::health::HLTH_PING_ENABLE.with(__FPRIME_BUF)
@@ -1246,40 +1246,40 @@ pub fn main() {
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__size(crate::Defs::Ref::WideChoice::WIDE_HIGH);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__encode::<__FPRIME_LEN>(crate::Defs::Ref::WideChoice::WIDE_HIGH);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__size(crate::Dict::Ref::WideChoice::WIDE_HIGH);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_WIDE_CHOICE__encode::<__FPRIME_LEN>(crate::Dict::Ref::WideChoice::WIDE_HIGH);
         if false {
-            Ref.typeDemo.SEND_WIDE_CHOICE(crate::Defs::Ref::WideChoice::WIDE_HIGH);
+            Ref.typeDemo.SEND_WIDE_CHOICE(crate::Dict::Ref::WideChoice::WIDE_HIGH);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::SEND_WIDE_CHOICE.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICES__size([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICES__encode::<__FPRIME_LEN>([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
         if false {
-            Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]);
+            Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::CHOICES.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_2D__size([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_2D__encode::<__FPRIME_LEN>([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::SEND_2D__size([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::SEND_2D__encode::<__FPRIME_LEN>([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
         if false {
-            Ref.typeDemo.SEND_2D([[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]]);
+            Ref.typeDemo.SEND_2D([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::SEND_2D.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__size(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__encode::<__FPRIME_LEN>(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
+        const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__size(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::GLUTTON_OF_CHOICE__encode::<__FPRIME_LEN>(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
         if false {
-            Ref.typeDemo.GLUTTON_OF_CHOICE(crate::Defs::Ref::ChoiceSlurry {tooManyChoices:[[crate::Defs::Ref::Choice::BLUE, crate::Defs::Ref::Choice::RED],[crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::BLUE,}, separateChoice:crate::Defs::Ref::Choice::ONE,});
+            Ref.typeDemo.GLUTTON_OF_CHOICE(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::typeDemo::GLUTTON_OF_CHOICE.with(__FPRIME_BUF)
@@ -1299,7 +1299,7 @@ pub fn main() {
         };
     } {
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, dropped as u32, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, dropped as u32, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         }::core::compile_error!{
             "`priority` has to be a number written out here, like `0`\n\nTo match Ref.dpDemo.Dp whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.dpDemo.Dp)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x00000a11).args_starting(&[..]))"
         }::fprime_test::cmd(2577 as u32)
@@ -1322,10 +1322,10 @@ pub fn main() {
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::SelectColor__size(crate::Defs::Ref::DpDemo::ColorEnum::GREEN);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::SelectColor__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::ColorEnum::GREEN);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::SelectColor__size(crate::Dict::Ref::DpDemo::ColorEnum::GREEN);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::SelectColor__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::ColorEnum::GREEN);
         if false {
-            Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::GREEN);
+            Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::GREEN);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::SelectColor.with(__FPRIME_BUF)
@@ -1355,19 +1355,19 @@ pub fn main() {
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::SelectColor__size(crate::Defs::Ref::DpDemo::ColorEnum::BLUE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::SelectColor__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::ColorEnum::BLUE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::SelectColor__size(crate::Dict::Ref::DpDemo::ColorEnum::BLUE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::SelectColor__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::ColorEnum::BLUE);
         if false {
-            Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::BLUE);
+            Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::BLUE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } unsafe {
             fprime_core::command(&__FPRIME_CMD)
         }
@@ -1397,20 +1397,20 @@ pub fn main() {
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::SelectColor__size(crate::Defs::Ref::DpDemo::ColorEnum::BLUE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::SelectColor__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::ColorEnum::BLUE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::SelectColor__size(crate::Dict::Ref::DpDemo::ColorEnum::BLUE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::SelectColor__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::ColorEnum::BLUE);
         if false {
-            Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::BLUE);
+            Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::BLUE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::SelectColor.with(__FPRIME_BUF)
         }
     };
     {
-        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
-        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_LEN:usize = crate::Konst::Ref::dpDemo::Dp__size(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+        const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::dpDemo::Dp__encode::<__FPRIME_LEN>(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         if false {
-            Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
+            Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
             crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
@@ -1421,7 +1421,7 @@ pub fn main() {
 
 // ===== sequence: prm_scalar
 pub fn main() {
-    if Ref.recvBuffComp.parameter1()> 0 {
+    if Prm::Ref.recvBuffComp.parameter1()> 0 {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size();
             const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__encode::<__FPRIME_LEN>();
@@ -1635,8 +1635,8 @@ pub fn main() {
 
 // ===== sequence: serial_struct
 pub fn main() {
-    let inbox = serial_in!(Ref::ScalarStruct, 0);
-    let outbox = serial_out!(Ref::ScalarStruct, 0);
+    let inbox = serial_in!(Dict::Ref::ScalarStruct, 0);
+    let outbox = serial_out!(Dict::Ref::ScalarStruct, 0);
     let mut request = inbox.recv_block();
     request.u32 + = 1;
     outbox.send(request);
@@ -1644,8 +1644,8 @@ pub fn main() {
 
 // ===== descriptor: serial_struct
 pub fn main() {
-    let inbox = serial_in!(Ref::ScalarStruct, 0);
-    let outbox = serial_out!(Ref::ScalarStruct, 0);
+    let inbox = serial_in!(Dict::Ref::ScalarStruct, 0);
+    let outbox = serial_out!(Dict::Ref::ScalarStruct, 0);
     let mut request = inbox.recv_block();
     request.u32 + = 1;
     outbox.send(request);
@@ -1654,7 +1654,7 @@ pub fn main() {
 
 // ===== sequence: tlm_scalar
 pub fn main() {
-    let(value, time) = Ref.typeDemo.ScalarU32Ch();
+    let(value, time) = Tlm::Ref.typeDemo.ScalarU32Ch();
     if value> 2 &&time.seconds> 1 {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size();
@@ -1688,7 +1688,7 @@ pub fn main() {
 
 // ===== sequence: tlm_scalar_x8
 pub fn main() {
-    let total = Ref.typeDemo.ScalarU8Ch().0 as u64 + Ref.typeDemo.ScalarU16Ch().0 as u64 + Ref.typeDemo.ScalarU32Ch().0 as u64 + Ref.typeDemo.ScalarU64Ch().0 + Ref.typeDemo.ScalarI8Ch().0 as u64 + Ref.typeDemo.ScalarI16Ch().0 as u64 + Ref.typeDemo.ScalarI32Ch().0 as u64 + Ref.typeDemo.ScalarI64Ch().0 as u64;
+    let total = Tlm::Ref.typeDemo.ScalarU8Ch().0 as u64 + Tlm::Ref.typeDemo.ScalarU16Ch().0 as u64 + Tlm::Ref.typeDemo.ScalarU32Ch().0 as u64 + Tlm::Ref.typeDemo.ScalarU64Ch().0 + Tlm::Ref.typeDemo.ScalarI8Ch().0 as u64 + Tlm::Ref.typeDemo.ScalarI16Ch().0 as u64 + Tlm::Ref.typeDemo.ScalarI32Ch().0 as u64 + Tlm::Ref.typeDemo.ScalarI64Ch().0 as u64;
     if total> 0 {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size();
@@ -1722,7 +1722,7 @@ pub fn main() {
 
 // ===== sequence: tlm_string
 pub fn main() {
-    let(name, _) = Ref.typeDemo.NameCh();
+    let(name, _) = Tlm::Ref.typeDemo.NameCh();
     if!name.is_empty() {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size();
@@ -1756,7 +1756,7 @@ pub fn main() {
 
 // ===== sequence: tlm_struct
 pub fn main() {
-    let(scalars, _) = Ref.typeDemo.ScalarStructCh();
+    let(scalars, _) = Tlm::Ref.typeDemo.ScalarStructCh();
     if scalars.u32> 0 {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size();
@@ -1817,7 +1817,7 @@ t.initial_parameter(crate::Desc::Ref::wasmSeq::INSTRUCTION_FUEL, 20);
 
 
 // ===== test body: struct argument, partly qualified
-t.never_command({const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR__size(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::TWO,}); const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR__encode::<__FPRIME_LEN>(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::TWO,}); if false {Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::TWO,});} {const __FPRIME_BUF:&[u8] = &__FPRIME_CMD; crate::Desc::Ref::typeDemo::CHOICE_PAIR.with(__FPRIME_BUF)}});
+t.never_command({const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR__size(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::TWO,}); const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR__encode::<__FPRIME_LEN>(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::TWO,}); if false {Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::TWO,});} {const __FPRIME_BUF:&[u8] = &__FPRIME_CMD; crate::Desc::Ref::typeDemo::CHOICE_PAIR.with(__FPRIME_BUF)}});
 
 
 // ===== test body: runtime argument
@@ -1825,7 +1825,7 @@ t.expect_command({if false {Ref.wasmSeq.LOAD(filename);}::core::compile_error!{"
 
 
 // ===== test body: wrong arity
-t.expect_command({if false {Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0);}::core::compile_error!{"Ref.dpDemo.Dp takes 3 arguments, but 2 were written\n\nTo match Ref.dpDemo.Dp whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.dpDemo.Dp)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x00000a11).args_starting(&[..]))"}::fprime_test::cmd(2577 as u32)});
+t.expect_command({if false {Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0);}::core::compile_error!{"Ref.dpDemo.Dp takes 3 arguments, but 2 were written\n\nTo match Ref.dpDemo.Dp whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.dpDemo.Dp)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x00000a11).args_starting(&[..]))"}::fprime_test::cmd(2577 as u32)});
 
 
 // ===== test body: a parameter a test cannot write out
@@ -1833,27 +1833,27 @@ t.expect_command({if false {Ref.typeDemo.SEND_NAMES(["a", "b"]);}::core::compile
 
 
 // ===== test body: a struct member a test cannot write out
-t.expect_command({if false {Ref.typeDemo.SEND_COLOR_INFO(crate::Defs::Ref::DpDemo::ColorInfoStruct {color:crate::Defs::Ref::DpDemo::ColorEnum::RED, name:"crimson",});}::core::compile_error!{"`info` is a Ref.DpDemo.ColorInfoStruct, which a test cannot write out as bytes\n\nTo match Ref.typeDemo.SEND_COLOR_INFO whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.SEND_COLOR_INFO)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x10005022).args_starting(&[..]))"}::fprime_test::cmd(268455970 as u32)});
+t.expect_command({if false {Ref.typeDemo.SEND_COLOR_INFO(crate::Dict::Ref::DpDemo::ColorInfoStruct {color:crate::Dict::Ref::DpDemo::ColorEnum::RED, name:"crimson",});}::core::compile_error!{"`info` is a Ref.DpDemo.ColorInfoStruct, which a test cannot write out as bytes\n\nTo match Ref.typeDemo.SEND_COLOR_INFO whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.SEND_COLOR_INFO)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x10005022).args_starting(&[..]))"}::fprime_test::cmd(268455970 as u32)});
 
 
 // ===== test body: array of the wrong length
-t.expect_command({if false {Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO, crate::Defs::Ref::Choice::ONE]);}::core::compile_error!{"`choices` holds 2 values, but 3 were written\n\nTo match Ref.typeDemo.CHOICES whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICES)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x10005003).args_starting(&[..]))"}::fprime_test::cmd(268455939 as u32)});
+t.expect_command({if false {Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]);}::core::compile_error!{"`choices` holds 2 values, but 3 were written\n\nTo match Ref.typeDemo.CHOICES whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICES)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x10005003).args_starting(&[..]))"}::fprime_test::cmd(268455939 as u32)});
 
 
 // ===== test body: array length that is not written out
-t.expect_command({if false {Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::ONE; count]);}::core::compile_error!{"`choices` holds 2 values, so the length here has to be 2\n\nTo match Ref.typeDemo.CHOICES whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICES)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x10005003).args_starting(&[..]))"}::fprime_test::cmd(268455939 as u32)});
+t.expect_command({if false {Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE; count]);}::core::compile_error!{"`choices` holds 2 values, so the length here has to be 2\n\nTo match Ref.typeDemo.CHOICES whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICES)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x10005003).args_starting(&[..]))"}::fprime_test::cmd(268455939 as u32)});
 
 
 // ===== test body: struct completed from elsewhere
-t.expect_command({if false {Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED,..other});}::core::compile_error!{"every member of `choices` has to be written out here, so `..` cannot stand in for the rest\n\nTo match Ref.typeDemo.CHOICE_PAIR whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICE_PAIR)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x1000500b).args_starting(&[..]))"}::fprime_test::cmd(268455947 as u32)});
+t.expect_command({if false {Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED,..other});}::core::compile_error!{"every member of `choices` has to be written out here, so `..` cannot stand in for the rest\n\nTo match Ref.typeDemo.CHOICE_PAIR whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICE_PAIR)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x1000500b).args_starting(&[..]))"}::fprime_test::cmd(268455947 as u32)});
 
 
 // ===== test body: struct with a member missing
-t.expect_command({if false {Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED});}::core::compile_error!{"`choices` has 2 members, but 1 was written\n\nTo match Ref.typeDemo.CHOICE_PAIR whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICE_PAIR)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x1000500b).args_starting(&[..]))"}::fprime_test::cmd(268455947 as u32)});
+t.expect_command({if false {Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED});}::core::compile_error!{"`choices` has 2 members, but 1 was written\n\nTo match Ref.typeDemo.CHOICE_PAIR whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICE_PAIR)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x1000500b).args_starting(&[..]))"}::fprime_test::cmd(268455947 as u32)});
 
 
 // ===== test body: struct named by a qualifier that is not its own
-t.expect_command({if false {Ref.typeDemo.CHOICE_PAIR(Other::ChoicePair {firstChoice:crate::Defs::Ref::Choice::RED, secondChoice:crate::Defs::Ref::Choice::TWO,});}::core::compile_error!{"`choices` is a Ref.ChoicePair, so write it as `ChoicePair { .. }`\n\nTo match Ref.typeDemo.CHOICE_PAIR whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICE_PAIR)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x1000500b).args_starting(&[..]))"}::fprime_test::cmd(268455947 as u32)});
+t.expect_command({if false {Ref.typeDemo.CHOICE_PAIR(Other::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::TWO,});}::core::compile_error!{"`choices` is a Ref.ChoicePair, so write it as `ChoicePair { .. }`\n\nTo match Ref.typeDemo.CHOICE_PAIR whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.typeDemo.CHOICE_PAIR)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x1000500b).args_starting(&[..]))"}::fprime_test::cmd(268455947 as u32)});
 
 
 // ===== test body: a bool that is not written out
@@ -1865,5 +1865,5 @@ t.expect_command({if false {CdhCore.cmdDisp.CMD_TEST_CMD_1(count + 1, 0.0, 0);}:
 
 
 // ===== test body: an enum constant the dictionary does not have
-t.expect_command({if false {Ref.dpDemo.SelectColor({#[allow(unused_imports)] use crate::Defs::Ref::DpDemo::ColorEnum::*; MAUVE});}::core::compile_error!{"`color` has to be one of Ref.DpDemo.ColorEnum's constants, like `RED` or `GREEN`\n\nTo match Ref.dpDemo.SelectColor whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.dpDemo.SelectColor)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x00000a10).args_starting(&[..]))"}::fprime_test::cmd(2576 as u32)});
+t.expect_command({if false {Ref.dpDemo.SelectColor({#[allow(unused_imports)] use crate::Dict::Ref::DpDemo::ColorEnum::*; MAUVE});}::core::compile_error!{"`color` has to be one of Ref.DpDemo.ColorEnum's constants, like `RED` or `GREEN`\n\nTo match Ref.dpDemo.SelectColor whatever its arguments, leave the parentheses off:\n    t.expect_command(Ref.dpDemo.SelectColor)\nTo match only the first bytes of its arguments:\n    t.expect_command(cmd(0x00000a10).args_starting(&[..]))"}::fprime_test::cmd(2576 as u32)});
 

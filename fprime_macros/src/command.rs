@@ -51,8 +51,8 @@ pub(crate) fn command(attr: TokenStream, item: TokenStream) -> syn::Result<Token
     let body = quote_spanned! { stub.block.span() =>
         {
             let __encoded = unsafe {
-                let ptr = (&raw mut __SCRATCH) as *mut u8;
-                let len = __SCRATCH_SIZE;
+                let ptr = (&raw mut super::__SCRATCH) as *mut u8;
+                let len = super::__SCRATCH_SIZE;
 
                 core::slice::from_raw_parts_mut(ptr, len)
             };

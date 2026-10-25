@@ -7,7 +7,7 @@ use interp::*;
 
 #[fprime_main]
 pub fn main() {
-    let (dropped, _) = CdhCore.events.EventsDropped();
+    let (dropped, _) = Tlm::CdhCore.events.EventsDropped();
     // The value is never used, so without this the read itself could be optimised away.
     core::hint::black_box(dropped);
 }

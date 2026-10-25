@@ -383,7 +383,7 @@ mod tests {
             lib.contains("include!(concat!(env!(\"OUT_DIR\"), \"/dictionary.rs\"))"),
             "{lib}"
         );
-        assert!(lib.contains("pub use Defs::*;"), "{lib}");
+        assert!(lib.contains("pub use Cmd::*;"), "{lib}");
         assert!(lib.contains("pub use fprime_core::*;"), "{lib}");
     }
 

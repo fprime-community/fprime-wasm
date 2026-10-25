@@ -31,7 +31,7 @@ pub fn derive_serializable(input: TokenStream) -> TokenStream {
 ///
 /// ```ignore
 /// #[fprime_command(opcode = 0x1000001)]
-/// pub fn CMD_NO_OP_STRING(&self, arg1: String<40>) -> super::Defs::Fw::CmdResponse {}
+/// pub fn CMD_NO_OP_STRING(&self, arg1: String<40>) -> super::Dict::Fw::CmdResponse {}
 /// ```
 ///
 /// A `String<N>` parameter is the wire type, not the calling convention: the
@@ -52,7 +52,7 @@ pub fn fprime_command(attr: TokenStream, item: TokenStream) -> TokenStream {
 ///
 /// ```ignore
 /// #[fprime_telemetry(id = 0x1000000)]
-/// pub fn CommandsDispatched(&self) -> (u32, super::Defs::Fw::TimeValue) {}
+/// pub fn CommandsDispatched(&self) -> (u32, super::Dict::Fw::TimeValue) {}
 /// ```
 #[proc_macro_attribute]
 pub fn fprime_telemetry(attr: TokenStream, item: TokenStream) -> TokenStream {

@@ -12,7 +12,7 @@ pub fn telemetry_channel(tlm: &fprime_dictionary::TelemetryChannel) -> (Qualifie
 
     let def = quote! {
         #[fprime_telemetry(id = #id)]
-        pub fn #name(&self) -> (#ty, super::Defs::Fw::TimeValue) {}
+        pub fn #name(&self) -> (#ty, super::Dict::Fw::TimeValue) {}
     };
 
     (q, annotate(def, &tlm.annotation))

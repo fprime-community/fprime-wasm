@@ -9,5 +9,5 @@ include!(concat!(env!("OUT_DIR"), "/dictionary.rs"));
 #[cfg(not(target_family = "wasm"))]
 include!(concat!(env!("OUT_DIR"), "/descriptors.rs"));
 
-pub use Defs::*;
+pub use Cmd::*;
 pub use fprime_core::*;

@@ -22,5 +22,5 @@ pub const HUNGRY_PAGES: usize = 100_000;
 #[cfg(not(target_family = "wasm"))]
 include!(concat!(env!("OUT_DIR"), "/descriptors.rs"));
 
-pub use Defs::*;
+pub use Cmd::*;
 pub use fprime_core::*;

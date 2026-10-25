@@ -6,8 +6,8 @@ use bench::*;
 
 #[fprime_main]
 pub fn main() {
-    let inbox = serial_in!(Ref::ScalarStruct, 0);
-    let outbox = serial_out!(Ref::ScalarStruct, 0);
+    let inbox = serial_in!(Dict::Ref::ScalarStruct, 0);
+    let outbox = serial_out!(Dict::Ref::ScalarStruct, 0);
 
     let mut request = inbox.recv_block();
     request.u32 += 1;

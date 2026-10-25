@@ -68,7 +68,7 @@ pub(crate) fn return_type(stub: &ItemFn) -> syn::Result<&Type> {
 
 /// `Some(N)` when `ty` is a [`fprime_core::String<N>`](fprime_core::String).
 ///
-/// Modeled types always carry their full `crate::Defs::` path, so an
+/// Modeled types always carry their full `crate::Dict::` path, so an
 /// unqualified `String<N>` is unambiguously the `fprime_core` re-export that a
 /// string-typed dictionary member renders as.
 pub(crate) fn string_capacity(ty: &Type) -> Option<&Expr> {

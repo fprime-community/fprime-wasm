@@ -29,8 +29,8 @@ pub fn main() {
         separateChoice: ONE,
     });
 
-    let (dropped, _) = CdhCore.events.EventsDropped();
-    if dropped > 2 && Ref.recvBuffComp.parameter1() > 0 {
+    let (dropped, _) = Tlm::CdhCore.events.EventsDropped();
+    if dropped > 2 && Prm::Ref.recvBuffComp.parameter1() > 0 {
         CdhCore.cmdDisp.CMD_NO_OP_STRING("dropped");
     }
 

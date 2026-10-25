@@ -38,7 +38,7 @@ fn enum_channel_takes_generated_enum() {
     let chan = Desc::Ref::typeDemo::ChoiceCh;
     assert_eq!(chan.ty, "Ref.Choice");
     assert_eq!(
-        wire(chan, example::Defs::Ref::Choice::BLUE),
+        wire(chan, example::Dict::Ref::Choice::BLUE),
         vec![0x00, 0x00, 0x00, 0x03]
     );
 }
@@ -144,7 +144,7 @@ fn struct_channel_encodes_members_in_dictionary_order() {
     let chan = Desc::Ref::typeDemo::ScalarStructCh;
     let bytes = wire(
         chan,
-        example::Defs::Ref::ScalarStruct {
+        example::Dict::Ref::ScalarStruct {
             // Deliberately out of declaration order, to prove the derive orders it.
             f64: 0.0,
             u8: 0xab,
@@ -160,7 +160,7 @@ fn struct_channel_encodes_members_in_dictionary_order() {
     );
     assert_eq!(
         bytes.len(),
-        <example::Defs::Ref::ScalarStruct as Serializable>::SIZE
+        <example::Dict::Ref::ScalarStruct as Serializable>::SIZE
     );
     // i8, i16, i32, i64, u8, ... — so byte 0 is `i8` and byte 15 is `u8`.
     assert_eq!(bytes[0], 0xff, "i8 comes first: {bytes:02x?}");
@@ -170,7 +170,7 @@ fn struct_channel_encodes_members_in_dictionary_order() {
 /// An array channel takes the generated array type.
 #[test]
 fn array_channel_takes_generated_array() {
-    use example::Defs::Ref::Choice;
+    use example::Dict::Ref::Choice;
     let chan = Desc::Ref::typeDemo::ChoicesCh;
     assert_eq!(chan.ty, "Ref.ManyChoices");
     assert_eq!(

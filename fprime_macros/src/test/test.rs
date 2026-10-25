@@ -25,15 +25,15 @@ fn command_without_arguments() {
             quote! { opcode = 0x1000000 },
             quote! {
                 /// No-op command
-                pub fn CMD_NO_OP(&self) -> super::Defs::Fw::CmdResponse {}
+                pub fn CMD_NO_OP(&self) -> super::Dict::Fw::CmdResponse {}
             },
         ),
         quote! {
             /// No-op command
-            pub fn CMD_NO_OP(&self) -> super::Defs::Fw::CmdResponse {
+            pub fn CMD_NO_OP(&self) -> super::Dict::Fw::CmdResponse {
                 let __encoded = unsafe {
-                    let ptr = (&raw mut __SCRATCH) as *mut u8;
-                    let len = __SCRATCH_SIZE;
+                    let ptr = (&raw mut super::__SCRATCH) as *mut u8;
+                    let len = super::__SCRATCH_SIZE;
 
                     core::slice::from_raw_parts_mut(ptr, len)
                 };
@@ -57,19 +57,19 @@ fn command_serializes_arguments_in_order() {
                 pub fn CMD_TEST_CMD_1(
                     &self,
                     arg1: i32,
-                    arg2: crate::Defs::Ref::DpDemo::DpReqType,
-                ) -> super::Defs::Fw::CmdResponse {}
+                    arg2: crate::Dict::Ref::DpDemo::DpReqType,
+                ) -> super::Dict::Fw::CmdResponse {}
             },
         ),
         quote! {
             pub fn CMD_TEST_CMD_1(
                 &self,
                 arg1: i32,
-                arg2: crate::Defs::Ref::DpDemo::DpReqType,
-            ) -> super::Defs::Fw::CmdResponse {
+                arg2: crate::Dict::Ref::DpDemo::DpReqType,
+            ) -> super::Dict::Fw::CmdResponse {
                 let __encoded = unsafe {
-                    let ptr = (&raw mut __SCRATCH) as *mut u8;
-                    let len = __SCRATCH_SIZE;
+                    let ptr = (&raw mut super::__SCRATCH) as *mut u8;
+                    let len = super::__SCRATCH_SIZE;
 
                     core::slice::from_raw_parts_mut(ptr, len)
                 };
@@ -93,15 +93,15 @@ fn command_truncates_string_arguments() {
         command::command(
             quote! { opcode = 0x1000001 },
             quote! {
-                pub fn CMD_NO_OP_STRING(&self, arg1: String<40>) -> super::Defs::Fw::CmdResponse {}
+                pub fn CMD_NO_OP_STRING(&self, arg1: String<40>) -> super::Dict::Fw::CmdResponse {}
             },
         ),
         quote! {
             #[inline(always)]
-            pub fn CMD_NO_OP_STRING(&self, arg1: &str) -> super::Defs::Fw::CmdResponse {
+            pub fn CMD_NO_OP_STRING(&self, arg1: &str) -> super::Dict::Fw::CmdResponse {
                 let __encoded = unsafe {
-                    let ptr = (&raw mut __SCRATCH) as *mut u8;
-                    let len = __SCRATCH_SIZE;
+                    let ptr = (&raw mut super::__SCRATCH) as *mut u8;
+                    let len = super::__SCRATCH_SIZE;
 
                     core::slice::from_raw_parts_mut(ptr, len)
                 };
@@ -117,21 +117,21 @@ fn command_truncates_string_arguments() {
     )
 }
 
-/// A modeled `String` type keeps its `crate::Defs::` path, not mistaken for `fprime_core::String<N>`.
+/// A modeled `String` type keeps its `crate::Dict::` path, not mistaken for `fprime_core::String<N>`.
 #[test]
 fn command_passes_modeled_string_by_value() {
     assert_expands(
         command::command(
             quote! { opcode = 0x1 },
             quote! {
-                pub fn CMD(&self, arg1: crate::Defs::Fw::String) -> super::Defs::Fw::CmdResponse {}
+                pub fn CMD(&self, arg1: crate::Dict::Fw::String) -> super::Dict::Fw::CmdResponse {}
             },
         ),
         quote! {
-            pub fn CMD(&self, arg1: crate::Defs::Fw::String) -> super::Defs::Fw::CmdResponse {
+            pub fn CMD(&self, arg1: crate::Dict::Fw::String) -> super::Dict::Fw::CmdResponse {
                 let __encoded = unsafe {
-                    let ptr = (&raw mut __SCRATCH) as *mut u8;
-                    let len = __SCRATCH_SIZE;
+                    let ptr = (&raw mut super::__SCRATCH) as *mut u8;
+                    let len = super::__SCRATCH_SIZE;
 
                     core::slice::from_raw_parts_mut(ptr, len)
                 };
@@ -154,26 +154,26 @@ fn telemetry_channel() {
             quote! { id = 0x1000000 },
             quote! {
                 /// Number of commands dispatched
-                pub fn CommandsDispatched(&self) -> (u32, super::Defs::Fw::TimeValue) {}
+                pub fn CommandsDispatched(&self) -> (u32, super::Dict::Fw::TimeValue) {}
             },
         ),
         quote! {
             /// Number of commands dispatched
-            pub fn CommandsDispatched(&self) -> (u32, super::Defs::Fw::TimeValue) {
-                const { assert!(<u32 as Serializable>::SIZE <= __SCRATCH_SIZE) };
+            pub fn CommandsDispatched(&self) -> (u32, super::Dict::Fw::TimeValue) {
+                const { assert!(<u32 as Serializable>::SIZE <= super::__SCRATCH_SIZE) };
                 const {
-                    assert!(<super::Defs::Fw::TimeValue as Serializable>::SIZE <= __TIME_SIZE)
+                    assert!(<super::Dict::Fw::TimeValue as Serializable>::SIZE <= super::__TIME_SIZE)
                 };
 
                 let __time = unsafe {
-                    let ptr = (&raw mut __TIME) as *mut u8;
-                    let len = <super::Defs::Fw::TimeValue as Serializable>::SIZE;
+                    let ptr = (&raw mut super::__TIME) as *mut u8;
+                    let len = <super::Dict::Fw::TimeValue as Serializable>::SIZE;
 
                     core::slice::from_raw_parts_mut(ptr, len)
                 };
 
                 let __value = unsafe {
-                    let ptr = (&raw mut __SCRATCH) as *mut u8;
+                    let ptr = (&raw mut super::__SCRATCH) as *mut u8;
                     let len = <u32 as Serializable>::SIZE;
 
                     core::slice::from_raw_parts_mut(ptr, len)
@@ -185,7 +185,7 @@ fn telemetry_channel() {
 
                 (
                     <u32 as Serializable>::deserialize(__value),
-                    <super::Defs::Fw::TimeValue as Serializable>::deserialize(__time)
+                    <super::Dict::Fw::TimeValue as Serializable>::deserialize(__time)
                 )
             }
         },
@@ -199,13 +199,13 @@ fn parameter() {
             quote! { id = 0x10022000 },
             quote! {
                 /// A choice
-                pub fn CHOICE_PRM(&self) -> crate::Defs::Ref::Choice {}
+                pub fn CHOICE_PRM(&self) -> crate::Dict::Ref::Choice {}
             },
         ),
         quote! {
             /// A choice
-            pub fn CHOICE_PRM(&self) -> crate::Defs::Ref::Choice {
-                let mut __value: [u8; <crate::Defs::Ref::Choice as Serializable>::SIZE] = unsafe {
+            pub fn CHOICE_PRM(&self) -> crate::Dict::Ref::Choice {
+                let mut __value: [u8; <crate::Dict::Ref::Choice as Serializable>::SIZE] = unsafe {
                     #[allow(invalid_value)]
                     core::mem::MaybeUninit::uninit().assume_init()
                 };
@@ -214,7 +214,7 @@ fn parameter() {
                     parameter(0x10022000, &mut __value)
                 };
 
-                <crate::Defs::Ref::Choice as Serializable>::deserialize(&__value)
+                <crate::Dict::Ref::Choice as Serializable>::deserialize(&__value)
             }
         },
     )
@@ -259,7 +259,7 @@ fn rejects_missing_identifier() {
         "expected `opcode = <value>`",
         error(command::command(
             quote! {},
-            quote! { pub fn CMD(&self) -> super::Defs::Fw::CmdResponse {} },
+            quote! { pub fn CMD(&self) -> super::Dict::Fw::CmdResponse {} },
         ))
     );
 
@@ -288,9 +288,9 @@ fn qualifies_by_formal_parameter_type() {
         rewrite("Ref.dpDemo.Dp(IMMEDIATE, 0, PROC_TYPE_NONE);"),
         expect(
             "Ref.dpDemo.Dp(
-                 crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                 crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE,
                  0,
-                 crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
+                 crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE
              );"
         )
     )
@@ -302,7 +302,7 @@ fn qualifies_by_formal_parameter_type() {
 fn same_constant_resolves_per_receiver() {
     assert_eq!(
         rewrite("Ref.SG1.Dp(IMMEDIATE, 0, 1);"),
-        expect("Ref.SG1.Dp(crate::Defs::Ref::SignalGen::DpReqType::IMMEDIATE, 0, 1);")
+        expect("Ref.SG1.Dp(crate::Dict::Ref::SignalGen::DpReqType::IMMEDIATE, 0, 1);")
     )
 }
 
@@ -314,8 +314,8 @@ fn qualifies_ambiguous_constants() {
         rewrite("CdhCore.events.SET_EVENT_FILTER(ACTIVITY_HI, DISABLED);"),
         expect(
             "CdhCore.events.SET_EVENT_FILTER(
-                 crate::Defs::Svc::EventManager::FilterSeverity::ACTIVITY_HI,
-                 crate::Defs::Svc::EventManager::Enabled::DISABLED
+                 crate::Dict::Svc::EventManager::FilterSeverity::ACTIVITY_HI,
+                 crate::Dict::Svc::EventManager::Enabled::DISABLED
              );"
         )
     )
@@ -327,7 +327,7 @@ fn qualifies_array_elements() {
     assert_eq!(
         rewrite("Ref.typeDemo.CHOICES([RED, BLUE]);"),
         expect(
-            "Ref.typeDemo.CHOICES([crate::Defs::Ref::Choice::RED, crate::Defs::Ref::Choice::BLUE]);"
+            "Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::RED, crate::Dict::Ref::Choice::BLUE]);"
         )
     )
 }
@@ -337,9 +337,9 @@ fn qualifies_struct_literal_and_members() {
     assert_eq!(
         rewrite("Ref.typeDemo.CHOICE_PAIR(ChoicePair { firstChoice: RED, secondChoice: TWO });"),
         expect(
-            "Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {
-                 firstChoice: crate::Defs::Ref::Choice::RED,
-                 secondChoice: crate::Defs::Ref::Choice::TWO
+            "Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {
+                 firstChoice: crate::Dict::Ref::Choice::RED,
+                 secondChoice: crate::Dict::Ref::Choice::TWO
              });"
         )
     )
@@ -355,12 +355,12 @@ fn qualifies_chained_and_nested_commands() {
         expect(
             "Ref.dpDemo
                  .Dp(
-                     crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                     crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE,
                      0,
-                     crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
+                     crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE
                  )
                  .check();
-             if ready { Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::BLUE); }"
+             if ready { Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::BLUE); }"
         )
     )
 }
@@ -371,7 +371,7 @@ fn keeps_argument_attributes() {
     assert_eq!(
         rewrite("Ref.dpDemo.SelectColor(#[cfg(feature = \"red\")] RED);"),
         expect(
-            "Ref.dpDemo.SelectColor(#[cfg(feature = \"red\")] crate::Defs::Ref::DpDemo::ColorEnum::RED);"
+            "Ref.dpDemo.SelectColor(#[cfg(feature = \"red\")] crate::Dict::Ref::DpDemo::ColorEnum::RED);"
         )
     )
 }
@@ -384,7 +384,7 @@ fn completion_marker_resolves() {
     assert_eq!(
         rewrite("Ref.dpDemo.SelectColor(REraCompletionMarkerD);"),
         expect(
-            "Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::REraCompletionMarkerD);"
+            "Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::REraCompletionMarkerD);"
         )
     );
 
@@ -394,9 +394,9 @@ fn completion_marker_resolves() {
     assert_eq!(
         rewrite(half_typed),
         expect(
-            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, {
+            "Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 2, {
                  #[allow(unused_imports)]
-                 use crate::Defs::Fw::DpCfg::ProcType:: * ;
+                 use crate::Dict::Fw::DpCfg::ProcType:: * ;
                  PROC_raCompletionMarker
              });"
         )
@@ -406,7 +406,7 @@ fn completion_marker_resolves() {
     assert_eq!(
         rewrite("Ref.dpDemo.Dp(IMMEDIATE, 2, raCompletionMarker);"),
         expect(
-            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2, raCompletionMarker);"
+            "Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 2, raCompletionMarker);"
         )
     )
 }
@@ -416,7 +416,7 @@ fn completion_marker_resolves() {
 fn short_call_qualifies_partially() {
     assert_eq!(
         rewrite("Ref.dpDemo.Dp(IMMEDIATE, 2);"),
-        expect("Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 2);")
+        expect("Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 2);")
     )
 }
 
@@ -431,10 +431,10 @@ fn qualifies_across_syntax_error() {
         ),
         expect(
             "CdhCore.events.SET_EVENT_FILTER(
-                 crate::Defs::Svc::EventManager::FilterSeverity::ACTIVITY_HI,
-                 crate::Defs::Svc::EventManager::Enabled::DISABLED
+                 crate::Dict::Svc::EventManager::FilterSeverity::ACTIVITY_HI,
+                 crate::Dict::Svc::EventManager::Enabled::DISABLED
              )
-             Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::GREEN);"
+             Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::GREEN);"
         )
     )
 }
@@ -445,7 +445,7 @@ fn qualifies_across_syntax_error() {
 fn gap_keeps_argument_positions() {
     assert_eq!(
         rewrite("Ref.dpDemo.Dp(, 0, PROC_TYPE_NONE);"),
-        expect("Ref.dpDemo.Dp(, 0, crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE);")
+        expect("Ref.dpDemo.Dp(, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);")
     )
 }
 
@@ -460,7 +460,7 @@ fn non_expression_argument_untouched() {
         ),
         expect(
             "Ref.dpDemo.Dp(IMMEDIATE 0, PROC_TYPE_NONE);
-             Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::GREEN);"
+             Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::GREEN);"
         )
     )
 }
@@ -470,7 +470,7 @@ fn non_expression_argument_untouched() {
 fn qualifies_nested_command() {
     assert_eq!(
         rewrite("record(Ref.dpDemo.SelectColor(BLUE));"),
-        expect("record(Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::BLUE));")
+        expect("record(Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::BLUE));")
     )
 }
 
@@ -492,7 +492,7 @@ fn chain_ending_in_command_untouched() {
 fn qualifies_through_qualified_instance() {
     assert_eq!(
         rewrite("crate::Ref.dpDemo.SelectColor(BLUE);"),
-        expect("crate::Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::BLUE);")
+        expect("crate::Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::BLUE);")
     )
 }
 
@@ -511,7 +511,7 @@ fn leaves_non_argument_tokens_alone() {
         expect(
             "#[inline]
              pub fn sequence(retries: u32) -> u32 {
-                 Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::BLUE);
+                 Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::BLUE);
                  retries
              }"
         )
@@ -527,11 +527,11 @@ fn completion_marker_resolves_in_broken_body() {
              Ref.dpDemo.Dp(IMMEDIATE, 0, PROC_TYPE_NONE);"
         ),
         expect(
-            "Ref.dpDemo.SelectColor(crate::Defs::Ref::DpDemo::ColorEnum::BLraCompletionMarkerUE)
+            "Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::BLraCompletionMarkerUE)
              Ref.dpDemo.Dp(
-                 crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                 crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE,
                  0,
-                 crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
+                 crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE
              );"
         )
     )
@@ -544,15 +544,15 @@ fn passes_through_unknown_names() {
     let untouched = "Ref.dpDemo.Dp(
          IMMEDIATE,
          priority,
-         crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
+         crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE
      );";
     assert_eq!(
         rewrite(untouched),
         expect(
             "Ref.dpDemo.Dp(
-                 crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                 crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE,
                  priority,
-                 crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
+                 crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE
              );"
         )
     );
@@ -562,7 +562,7 @@ fn passes_through_unknown_names() {
         rewrite("Ref.dpDemo.Dp(IMMEDIATE, 0, Other::ProcType::PROC_TYPE_NONE);"),
         expect(
             "Ref.dpDemo.Dp(
-                 crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                 crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE,
                  0,
                  Other::ProcType::PROC_TYPE_NONE
              );"
@@ -594,13 +594,13 @@ fn scopes_an_unknown_name_to_its_enum() {
             "Ref.dpDemo.Dp(
                  {
                      #[allow(unused_imports)]
-                     use crate::Defs::Ref::DpDemo::DpReqType:: * ;
+                     use crate::Dict::Ref::DpDemo::DpReqType:: * ;
                      MY_REQ_TYPE
                  },
                  0,
                  #[cfg(all())] {
                      #[allow(unused_imports)]
-                     use crate::Defs::Fw::DpCfg::ProcType:: * ;
+                     use crate::Dict::Fw::DpCfg::ProcType:: * ;
                      PROC_TYPE_N
                  }
              );"
@@ -611,7 +611,7 @@ fn scopes_an_unknown_name_to_its_enum() {
     assert_eq!(
         rewrite(qualified),
         expect(
-            "Ref.dpDemo.Dp(crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE, 0, ProcType::PROC_TYPE_N);"
+            "Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, ProcType::PROC_TYPE_N);"
         )
     );
 }
@@ -667,9 +667,9 @@ fn const_encodes_literals_and_enumerated_constants() {
             "{} ;",
             encoded(
                 "Ref.dpDemo.Dp",
-                "crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                "crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE,
                  0,
-                 crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE"
+                 crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE"
             )
         )
     )
@@ -711,7 +711,7 @@ fn runtime_argument_left_for_accessor() {
         expect(
             "Ref.dpDemo.SelectColor({
                  #[allow(unused_imports)]
-                 use crate::Defs::Ref::DpDemo::ColorEnum:: * ;
+                 use crate::Dict::Ref::DpDemo::ColorEnum:: * ;
                  chosen
              });"
         )
@@ -726,9 +726,9 @@ fn computed_argument_left_for_accessor() {
         const_encode(body),
         expect(
             "Ref.dpDemo.Dp(
-                 crate::Defs::Ref::DpDemo::DpReqType::IMMEDIATE,
+                 crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE,
                  count + 1,
-                 crate::Defs::Fw::DpCfg::ProcType::PROC_TYPE_NONE
+                 crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE
              );"
         )
     )
@@ -752,9 +752,9 @@ fn non_command_left_alone() {
 /// itself.
 #[test]
 fn const_encodes_struct_argument() {
-    let arg = "crate::Defs::Ref::ChoicePair {
-         firstChoice: crate::Defs::Ref::Choice::RED,
-         secondChoice: crate::Defs::Ref::Choice::BLUE
+    let arg = "crate::Dict::Ref::ChoicePair {
+         firstChoice: crate::Dict::Ref::Choice::RED,
+         secondChoice: crate::Dict::Ref::Choice::BLUE
      }";
 
     assert_eq!(
@@ -767,7 +767,7 @@ fn const_encodes_struct_argument() {
 
 #[test]
 fn const_encodes_array_argument() {
-    let arg = "[crate::Defs::Ref::Choice::ONE, crate::Defs::Ref::Choice::TWO]";
+    let arg = "[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]";
 
     assert_eq!(
         const_encode("Ref.typeDemo.CHOICES([ONE, TWO]);"),
@@ -796,7 +796,7 @@ fn const_encodes_deeply_nested_struct() {
 /// repeat count matches the dictionary's array size.
 #[test]
 fn const_encodes_repeated_array() {
-    let arg = "[crate::Defs::Ref::Choice::ONE ; 2]";
+    let arg = "[crate::Dict::Ref::Choice::ONE ; 2]";
 
     assert_eq!(
         const_encode("Ref.typeDemo.CHOICES([ONE; 2]);"),
@@ -865,9 +865,9 @@ fn keeps_the_written_call_for_navigation() {
 #[test]
 fn qualifier_may_be_written_out_in_part() {
     let qualified = expect(
-        "Ref.typeDemo.CHOICE_PAIR(crate::Defs::Ref::ChoicePair {
-             firstChoice: crate::Defs::Ref::Choice::RED,
-             secondChoice: crate::Defs::Ref::Choice::TWO
+        "Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {
+             firstChoice: crate::Dict::Ref::Choice::RED,
+             secondChoice: crate::Dict::Ref::Choice::TWO
          });",
     );
 
@@ -887,9 +887,9 @@ fn qualifier_may_be_written_out_in_part() {
 /// And each of those spellings const-encodes, which is what a test needs to match bytes.
 #[test]
 fn const_encodes_a_partly_qualified_struct() {
-    let arg = "crate::Defs::Ref::ChoicePair {
-         firstChoice: crate::Defs::Ref::Choice::RED,
-         secondChoice: crate::Defs::Ref::Choice::BLUE
+    let arg = "crate::Dict::Ref::ChoicePair {
+         firstChoice: crate::Dict::Ref::Choice::RED,
+         secondChoice: crate::Dict::Ref::Choice::BLUE
      }";
 
     assert_eq!(
@@ -1154,7 +1154,7 @@ fn restrict_rejects(body: TokenStream, message: &str) {
 #[test]
 fn restrict_accepts_values() {
     restrict_accepts(quote! { const LIMIT: f32 = 21.5; });
-    restrict_accepts(quote! { let voltage = Ref.power.BatteryVoltage().0; });
+    restrict_accepts(quote! { let voltage = Tlm::Ref.power.BatteryVoltage().0; });
     restrict_accepts(quote! { let mut tries = 0; });
     restrict_accepts(quote! { tries += 1; });
     restrict_accepts(quote! { let x = !(tries > 3) && -voltage < LIMIT; });

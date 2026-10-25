@@ -16,7 +16,7 @@ It writes `$OUT_DIR/dictionary.rs`, which the crate's `lib.rs` includes:
 ```rust
 #![no_std]
 include!(concat!(env!("OUT_DIR"), "/dictionary.rs"));
-pub use Defs::*;
+pub use Cmd::*;
 pub use fprime_core::*;
 ```
 

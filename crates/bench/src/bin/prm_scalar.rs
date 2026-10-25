@@ -6,7 +6,7 @@ use bench::*;
 
 #[fprime_main]
 pub fn main() {
-    if Ref.recvBuffComp.parameter1() > 0 {
+    if Prm::Ref.recvBuffComp.parameter1() > 0 {
         CdhCore.cmdDisp.CMD_NO_OP();
     }
 }

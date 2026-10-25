@@ -5,5 +5,5 @@
 #![allow(unused_imports)]
 
 include!(concat!(env!("OUT_DIR"), "/dictionary.rs"));
-pub use Defs::*;
+pub use Cmd::*;
 pub use fprime_core::*;
