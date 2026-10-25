@@ -3,7 +3,7 @@
 use crate::infer_path::name::unraw;
 use crate::infer_path::scan::{Chain, Lower, Rewrite, arguments, scan};
 use crate::infer_path::symbols::{Point, Symbols};
-use fprime_dictionary::konst::{ENCODE_SUFFIX, MAX_DEPTH, SIZE_SUFFIX};
+use fprime_dictionary::konst::{ENCODE_SUFFIX, SIZE_SUFFIX};
 use fprime_dictionary::naming::{konst_path, split_qualified_name, type_label};
 use fprime_dictionary::{Command, TypeDefinition, TypeName};
 use proc_macro2::{Group, Span, TokenStream};
@@ -97,10 +97,8 @@ impl Lower for Encode<'_> {
                 &chain.written_call(),
                 quote! { unsafe { fprime_core::command(&__FPRIME_CMD) } },
             )),
-            // A call this cannot fold is left alone, which puts it on the run-time accessor —
-            // that encodes the same command into `__SCRATCH`, so the reason is not worth
-            // reporting. Skipping rather than consuming also means a command nested inside
-            // these arguments is still folded.
+            // Left to the run-time accessor, which encodes the same command, so the reason is
+            // not worth reporting. Skipping still walks the arguments for a nested command.
             Err(_) => Rewrite::Skip,
         }
     }
@@ -116,10 +114,8 @@ pub(super) struct Buffer {
 impl Buffer {
     /// The whole block, with `tail` as its value — the one thing the two pipelines differ in.
     ///
-    /// `original` is kept for type checking and for goto/hover on the command name, not for
-    /// behaviour: a `Konst` path gives an editor nothing to resolve the receiver to. The
-    /// arguments are emitted three times over, so each one has to be copyable and free of side
-    /// effects — which is exactly what the eligibility rule buys.
+    /// `original` is kept only for type checking and goto/hover on the command name. The
+    /// arguments are emitted three times, which is safe because only constants get here.
     pub(super) fn block(&self, original: &TokenStream, tail: TokenStream) -> TokenStream {
         let Buffer { size, encode, args } = self;
 
@@ -141,19 +137,12 @@ impl Buffer {
 impl Symbols {
     /// The `const` items for `command` applied to `args`, or why they cannot be built.
     ///
-    /// `#[fprime]` discards the reason and falls back on the run-time accessor, which encodes
-    /// the same command into `__SCRATCH`. `#[fprime_test]` reports it, because a test that
-    /// wrote arguments asked to match the exact bytes they encode to and has no fallback.
-    ///
-    /// One function rather than two, so the answer and the reason cannot disagree. They used
-    /// to be a hand-maintained mirror, with a comment asking the reader to keep the checks in
-    /// the same order and an arm that was unreachable only as long as they did.
+    /// `#[fprime]` discards the reason and falls back on the run-time accessor.
+    /// `#[fprime_test]` reports it, since a test that wrote arguments has no fallback.
     pub(super) fn buffer(&self, command: &Command, args: &Group) -> Result<Buffer, syn::Error> {
         let help = matching_alternatives(command);
         let at = |span: Span, reason: &str| syn::Error::new(span, format!("{reason}\n\n{help}"));
 
-        // Asking which parameter has no encoding, rather than whether they all do, gets the
-        // offending one for free — and builds one `ConstArg` tree instead of two.
         let unencodable = command
             .formal_params
             .iter()
@@ -202,31 +191,14 @@ impl Symbols {
             args: args.stream(),
         })
     }
-    /// The same question, answered with the reason when the answer is no. `#[fprime_main]`
-    /// only needs the yes or no — a call it cannot fold goes to the run-time accessor — but
-    /// `#[fprime_test]` has to say why, since for a test there is no fallback.
+
+    /// Whether `expr` is a constant of type `expected`, and why not if it is not.
     ///
-    /// `at` is what to call the value in that reason: the formal parameter's name, extended a
-    /// member or an index at a time on the way down, so a reason about a nested value says
-    /// `choices.choicePair.firstChoice` rather than `choices`.
+    /// `at` names the value in that reason — the parameter's name, extended a member or an
+    /// index at a time, so it reads `choices.choicePair.firstChoice` rather than `choices`.
+    ///
+    /// Recursion follows `expr`, which is finite, so it needs no depth limit of its own.
     fn check_const_argument(&self, expr: &Expr, expected: &TypeName, at: &str) -> syn::Result<()> {
-        self.check_const_argument_at(expr, expected, at, 0)
-    }
-
-    fn check_const_argument_at(
-        &self,
-        expr: &Expr,
-        expected: &TypeName,
-        at: &str,
-        depth: usize,
-    ) -> syn::Result<()> {
-        if depth > MAX_DEPTH {
-            return Err(syn::Error::new_spanned(
-                expr,
-                format!("`{at}` nests too deeply to work out its bytes"),
-            ));
-        }
-
         match self.dictionary.resolved_type(expected) {
             Some(TypeName::String { .. }) => require(
                 matches!(expr, Expr::Lit(lit) if matches!(lit.lit, Lit::Str(_))),
@@ -257,11 +229,9 @@ impl Symbols {
                         ),
                     ),
                     Some(TypeDefinition::Array(ty)) => {
-                        self.check_const_elements(expr, &ty.element_type, ty.size, at, depth)
+                        self.check_const_elements(expr, &ty.element_type, ty.size, at)
                     }
-                    Some(TypeDefinition::Struct(ty)) => {
-                        self.check_const_struct(expr, ty, at, depth)
-                    }
+                    Some(TypeDefinition::Struct(ty)) => self.check_const_struct(expr, ty, at),
                     _ => Err(syn::Error::new_spanned(
                         expr,
                         format!("the dictionary does not define {name}, which is what `{at}` is"),
@@ -281,7 +251,6 @@ impl Symbols {
         expr: &Expr,
         ty: &fprime_dictionary::StructType,
         at: &str,
-        depth: usize,
     ) -> syn::Result<()> {
         let (_, short_name) = split_qualified_name(&ty.qualified_name);
 
@@ -340,11 +309,9 @@ impl Symbols {
 
             let at = format!("{at}.{}", member.name);
             match member.size {
-                None => {
-                    self.check_const_argument_at(&field.expr, &member.type_name, &at, depth + 1)?
-                }
+                None => self.check_const_argument(&field.expr, &member.type_name, &at)?,
                 Some(size) => {
-                    self.check_const_elements(&field.expr, &member.type_name, size, &at, depth)?
+                    self.check_const_elements(&field.expr, &member.type_name, size, &at)?
                 }
             }
         }
@@ -359,7 +326,6 @@ impl Symbols {
         element: &TypeName,
         size: u32,
         at: &str,
-        depth: usize,
     ) -> syn::Result<()> {
         match expr {
             Expr::Array(array) => {
@@ -376,7 +342,7 @@ impl Symbols {
 
                 for (index, elem) in array.elems.iter().enumerate() {
                     let at = format!("{at}[{index}]");
-                    self.check_const_argument_at(elem, element, &at, depth + 1)?;
+                    self.check_const_argument(elem, element, &at)?;
                 }
                 Ok(())
             }
@@ -397,7 +363,7 @@ impl Symbols {
                     ));
                 }
 
-                self.check_const_argument_at(&repeat.expr, element, at, depth + 1)
+                self.check_const_argument(&repeat.expr, element, at)
             }
             _ => Err(syn::Error::new_spanned(
                 expr,

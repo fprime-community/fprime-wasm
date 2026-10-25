@@ -12,11 +12,7 @@ pub const SIZE_SUFFIX: &str = "__size";
 pub const ENCODE_SUFFIX: &str = "__encode";
 
 /// Nesting descended before concluding a type is cyclic.
-///
-/// Public because a caller walking the *values* of a type has to stop where this stopped when
-/// it declared the type encodable. Two independent caps that happened to agree would be a
-/// coincidence waiting to break.
-pub const MAX_DEPTH: usize = 32;
+const MAX_DEPTH: usize = 32;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConstArg {

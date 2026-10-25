@@ -19,10 +19,8 @@
 //! all that same constant, and a struct argument may be `SeqArgs { .. }` or
 //! `Svc::SeqArgs { .. }`. A qualifier that is not the type's own names nothing.
 //!
-//! Two pipelines run over one dictionary index, and both are two passes in a fixed order —
-//! qualification has to come first, because a constant is only recognisable as one once
-//! qualified and a rewritten call is no longer in a command position for qualification to
-//! find. See `.notes/const-command-encoding.md`.
+//! Two pipelines run over one dictionary index, each two passes, qualification first. See
+//! `.notes/const-command-encoding.md`.
 //!
 //! * [`scan`] finds the dictionary names in a token stream, and is the only place raw tokens
 //!   are read.
@@ -60,33 +58,28 @@ const MISSING_DICTIONARY: &str = concat!(
 
 /// Rewrite the bare enumerated constants in `item` into fully qualified paths.
 pub(crate) fn rewrite(item: TokenStream) -> syn::Result<TokenStream> {
-    let span = signature_span(&item);
-
-    let Ok(dictionary) = std::env::var(fprime_dictionary::DICTIONARY_ENV) else {
-        return Err(syn::Error::new(span, MISSING_DICTIONARY));
-    };
-
-    let symbols = symbols(Path::new(&dictionary)).map_err(|err| syn::Error::new(span, err))?;
+    let symbols = crate_symbols(signature_span(&item))?;
 
     Ok(encode(symbols, qualify(symbols, item)))
 }
 
-/// Qualifies, then descriptor-rewrites — in that order, since qualifying needs the call
-/// still in command position.
+/// The `#[fprime_test]` pipeline: qualify, then descriptor-rewrite.
 pub(crate) fn rewrite_test_body(body: TokenStream, span: Span) -> syn::Result<TokenStream> {
+    let symbols = crate_symbols(span)?;
+
+    // A half-written argument while an editor is typing is not a mistake to report.
+    let completing = has_completion_marker(&body);
+
+    Ok(describe(symbols, qualify(symbols, body), completing))
+}
+
+/// The symbols for the dictionary this crate's `build.rs` named, or an error at `span`.
+fn crate_symbols(span: Span) -> syn::Result<&'static Symbols> {
     let Ok(dictionary) = std::env::var(fprime_dictionary::DICTIONARY_ENV) else {
         return Err(syn::Error::new(span, MISSING_DICTIONARY));
     };
 
-    let symbols = symbols(Path::new(&dictionary)).map_err(|err| syn::Error::new(span, err))?;
-
-    // An editor expands this on every keystroke, with a marker where the cursor is. A
-    // half-written argument is not a mistake to report, and a `compile_error!` put ahead of
-    // the cursor would move the tokens the editor maps its position through — see
-    // `spanned_desc_path` for the invariant that rests on.
-    let completing = has_completion_marker(&body);
-
-    Ok(describe(symbols, qualify(symbols, body), completing))
+    symbols(Path::new(&dictionary)).map_err(|err| syn::Error::new(span, err))
 }
 
 /// Whether an editor is partway through typing somewhere in `tokens`.
@@ -143,19 +136,18 @@ pub(crate) mod test_support {
         "/../fprime_dictionary/src/test/RefTopologyDictionary.json"
     );
 
+    fn test_symbols() -> syn::Result<&'static Symbols> {
+        symbols(Path::new(DICTIONARY)).map_err(|err| syn::Error::new(Span::call_site(), err))
+    }
+
     /// Apply the DSL to a sequence body and render the result as tokens.
     pub(crate) fn rewrite_block(body: &str) -> syn::Result<String> {
-        let symbols = symbols(Path::new(DICTIONARY))
-            .map_err(|err| syn::Error::new(Span::call_site(), err))?;
-
-        Ok(qualify(symbols, syn::parse_str(body)?).to_string())
+        Ok(qualify(test_symbols()?, syn::parse_str(body)?).to_string())
     }
 
     /// Both passes, in the order `rewrite` runs them: qualify, then const-encode.
     pub(crate) fn const_encode_block(body: &str) -> syn::Result<String> {
-        let symbols = symbols(Path::new(DICTIONARY))
-            .map_err(|err| syn::Error::new(Span::call_site(), err))?;
-
+        let symbols = test_symbols()?;
         let qualified = qualify(symbols, syn::parse_str(body)?);
 
         Ok(encode(symbols, qualified).to_string())
@@ -169,9 +161,7 @@ pub(crate) mod test_support {
     /// The `#[fprime_test]` pipeline exactly as the macro runs it, marker detection
     /// included — which is what [`descriptor_block`] takes as a parameter instead.
     pub(crate) fn test_body(body: &str) -> syn::Result<String> {
-        let symbols = symbols(Path::new(DICTIONARY))
-            .map_err(|err| syn::Error::new(Span::call_site(), err))?;
-
+        let symbols = test_symbols()?;
         let tokens: TokenStream = syn::parse_str(body)?;
         let completing = has_completion_marker(&tokens);
         let qualified = qualify(symbols, tokens);
@@ -184,9 +174,7 @@ pub(crate) mod test_support {
     /// `completing` stands in for an editor mid-keystroke, which the marker itself signals in
     /// the real thing — see [`rewrite_test_body`].
     pub(crate) fn descriptor_block(body: &str, completing: bool) -> syn::Result<String> {
-        let symbols = symbols(Path::new(DICTIONARY))
-            .map_err(|err| syn::Error::new(Span::call_site(), err))?;
-
+        let symbols = test_symbols()?;
         let qualified = qualify(symbols, syn::parse_str(body)?);
 
         Ok(describe(symbols, qualified, completing).to_string())
