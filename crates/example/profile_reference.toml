@@ -1,0 +1,292 @@
+# The reference profile: every setting a profile has, all of them "Allow", with notes on
+# what each one governs and how to tighten it. Copy it to start a profile of your own.
+#
+# A sequence names its profile in its attribute, and the profile is the crate-root file
+# `profile_<name>.toml`:
+#
+#     #[fprime_main(reference)]    // reads profile_reference.toml
+#     pub fn main() { ... }
+#
+# `#[fprime(reference)]` does the same for a helper function that isn't the entry point.
+# A sequence with no profile, `#[fprime_main]`, is not checked at all.
+#
+# ─── Rules ──────────────────────────────────────────────────────────────────────────────
+#
+# Every setting below is a rule, one of:
+#
+#     "Allow"                                      accepted, silently
+#     { Warn = { message = "..." } }               accepted, with a compiler warning
+#     { Error = { message = "..." } }              rejected: the build fails with this message
+#
+# The message is shown to the sequence author at the offending code, so write it for them:
+# say what to do instead, not just what was wrong.
+#
+#     loop = { Error = { message = "loops are not allowed; schedule the sequence instead" } }
+#
+# Rejecting a node rejects everything inside it, and reports it once: a `loop` that is an
+# error is not looked into, so the `match` inside it isn't reported too. An allowed or
+# warned-about node is looked into, so an allowed `if` still has its body checked.
+#
+# Every setting is required, and a misspelled one is an error. A profile therefore always
+# says what it does about every kind of syntax, and a typo can't silently allow something.
+#
+# ─── Selections ─────────────────────────────────────────────────────────────────────────
+#
+# A few settings choose a rule by name rather than having one rule: macros, function calls,
+# and commands, telemetry and parameters. Those are a selection:
+#
+#     { default = <rule>, patterns = [ { name = "<glob>", rule = <rule> }, ... ] }
+#
+# Each pattern is tried in order and the first whose `name` matches decides. `default`
+# decides when none does. In a glob, `*` matches any run of characters, `.` and `::`
+# included, so `Ref.*` is every point under `Ref`, and `*.PWR_*` is every `PWR_` command of
+# every component. A name with no `*` matches only itself.
+#
+# Because the first match wins, put the exception before the glob it carves out of:
+#
+#     patterns = [
+#         { name = "Ref.power.PWR_OFF", rule = { Error = { message = "use SAFE_MODE" } } },
+#         { name = "Ref.power.*", rule = "Allow" },
+#     ]
+#
+# The other order would allow `PWR_OFF` through the glob before the exception is reached.
+# `patterns` may be left out, which is the same as an empty list.
+
+# ─── Macros ─────────────────────────────────────────────────────────────────────────────
+#
+# Every macro invocation, wherever it appears (a statement, an expression, a pattern, a
+# type, an item), selected by its path as written: `messagef!(..)` is "messagef", and
+# `fprime_core::messagef!(..)` is "fprime_core::messagef". A pattern of "*messagef" accepts
+# both.
+#
+# An allowed macro's arguments are still held to this profile, as comma-separated
+# expressions, which is how most macros, `messagef!` included, are written. So with loops
+# rejected, `messagef!(ActivityHi, "{}", loop {})` is still an error. A macro whose
+# arguments aren't a list of expressions (`macro_rules!`, `vec![0; 4]`) can't be checked,
+# and is rejected even when allowed, so allowing a macro can't let unchecked code through.
+#
+# To allow only event reporting:
+#
+#     macros = { default = { Error = { message = "macros are not allowed" } }, patterns = [
+#         { name = "messagef", rule = "Allow" },
+#     ] }
+macros = { default = "Allow" }
+
+# ─── Waivers ────────────────────────────────────────────────────────────────────────────
+#
+# `#[rule_waive("why")]` accepts one statement or expression this profile would reject,
+# along with everything inside it, case by case:
+#
+#     #[rule_waive("bounded: the sequencer's fuel limit ends it")]
+#     loop {
+#         Ref.dpDemo.Dp(IMMEDIATE, 0, PROC_TYPE_NONE);
+#     }
+#
+# It can go wherever Rust takes an attribute: on a `let`, on an expression statement, or on
+# an expression inside one, like `f(#[rule_waive("why")] &x)`. The reason is required, and
+# a waiver on code that breaks nothing is an error, so stale waivers don't pile up and
+# quietly cover the next real problem.
+#
+# This rule says what a waiver costs in this profile:
+#
+#     "Allow"                                 waived silently
+#     { Warn = { message = "waived" } }       waived, and listed in the build output as
+#                                             "waived: <the reason>", for review
+#     { Error = { message = "..." } }         waivers aren't accepted in this profile at all
+waivers = "Allow"
+
+# ─── Statements ─────────────────────────────────────────────────────────────────────────
+#
+# What a sequence body is a list of. These sit above the expression rules: rejecting
+# `expr` rejects every expression statement, whatever its kind. A statement that is a
+# macro (`messagef!(..);`) is governed by `macros`, above.
+[statements]
+# `let x = ...;`. The binding's pattern is checked under [patterns], its type under [types].
+local = "Allow"
+# An expression used as a statement: `Ref.dpDemo.Dp(..);`, `if .. { .. }`, `x += 1;`. The
+# expression itself is checked under [expressions].
+expr = "Allow"
+
+# Items declared inside the body, by kind. A sequence usually needs only `const`.
+# A macro item (`macro_rules! m { .. }`) is governed by `macros`.
+[statements.item]
+const = "Allow"         # const LIMIT: u32 = 3;
+enum = "Allow"          # enum Mode { A, B }
+extern_crate = "Allow"  # extern crate foo;
+fn = "Allow"            # fn helper() { .. }. Its body is checked too.
+foreign_mod = "Allow"   # extern "C" { .. }
+impl = "Allow"          # impl Mode { .. }
+mod = "Allow"           # mod inner { .. }
+static = "Allow"        # static COUNT: u32 = 0;
+struct = "Allow"        # struct Pair { a: u32, b: u32 }
+trait = "Allow"         # trait Step { .. }
+trait_alias = "Allow"   # trait Alias = Step;
+type = "Allow"          # type Volts = f32;
+union = "Allow"         # union Bits { .. }
+use = "Allow"           # use Ref::Choice::*;
+
+# ─── Expressions ────────────────────────────────────────────────────────────────────────
+[expressions]
+array = "Allow"         # [a, b, c]
+assign = "Allow"        # a = compute(). Compound forms like `a += 1` are under `binary`.
+async = "Allow"         # async { .. }
+await = "Allow"         # fut.await
+block = "Allow"         # { .. } as an expression, including a labelled `'a: { .. }`
+break = "Allow"         # break, including out of a labelled block: no loop is needed
+cast = "Allow"          # x as u32. Needed to pass telemetry of one type to a command of another.
+closure = "Allow"       # |a| a + 1
+const = "Allow"         # const { .. }
+continue = "Allow"      # continue
+field = "Allow"         # pair.a, tuple.0, and the `CdhCore.events` part of a chain
+for_loop = "Allow"      # for i in 0..3 { .. }
+group = "Allow"         # Invisible grouping a macro leaves behind; never written by hand
+if = "Allow"            # if .. { .. } else { .. }
+index = "Allow"         # values[0]
+infer = "Allow"         # `_` as a value, e.g. a const generic argument
+let = "Allow"           # The `let` in `if let Some(x) = opt { .. }`
+lit = "Allow"           # 1, 2.5, "text", true
+loop = "Allow"          # loop { .. }
+match = "Allow"         # match x { .. }. Its arms' patterns are under [patterns].
+paren = "Allow"         # (a + b)
+path = "Allow"          # x, LIMIT, Ref::Choice::RED
+range = "Allow"         # 0..3, ..=n
+raw_addr = "Allow"      # &raw const x
+reference = "Allow"     # &x, &mut x
+repeat = "Allow"        # [0u8; 4]
+return = "Allow"        # return, to end the sequence early
+struct = "Allow"        # Pair { a: 1, b: 2 }
+try = "Allow"           # value?
+try_block = "Allow"     # try { .. }
+tuple = "Allow"         # (a, b)
+unsafe = "Allow"        # unsafe { .. }
+while = "Allow"         # while cond { .. }
+yield = "Allow"         # yield x
+
+# Binary operators, one rule each. To allow comparisons and arithmetic but not
+# bit-twiddling, set the `bit_*` and `sh*` operators to errors.
+[expressions.binary]
+add = "Allow"           # a + b
+sub = "Allow"           # a - b
+mul = "Allow"           # a * b
+div = "Allow"           # a / b
+rem = "Allow"           # a % b
+and = "Allow"           # a && b
+or = "Allow"            # a || b
+bit_xor = "Allow"       # a ^ b
+bit_and = "Allow"       # a & b
+bit_or = "Allow"        # a | b
+shl = "Allow"           # a << b
+shr = "Allow"           # a >> b
+eq = "Allow"            # a == b
+lt = "Allow"            # a < b
+le = "Allow"            # a <= b
+ne = "Allow"            # a != b
+ge = "Allow"            # a >= b
+gt = "Allow"            # a > b
+add_assign = "Allow"    # a += b
+sub_assign = "Allow"    # a -= b
+mul_assign = "Allow"    # a *= b
+div_assign = "Allow"    # a /= b
+rem_assign = "Allow"    # a %= b
+bit_xor_assign = "Allow" # a ^= b
+bit_and_assign = "Allow" # a &= b
+bit_or_assign = "Allow" # a |= b
+shl_assign = "Allow"    # a <<= b
+shr_assign = "Allow"    # a >>= b
+
+[expressions.unary]
+deref = "Allow"         # *x
+not = "Allow"           # !x
+neg = "Allow"           # -x
+
+# A call to a plain function, a selection by its path as written: `set_fail_mode(..)` is
+# "set_fail_mode", `fprime_core::now()` is "fprime_core::now". A call through anything other
+# than a path, like `(get())()`, can only be matched by `default`.
+#
+# To allow only a fixed set of runtime helpers:
+#
+#     [expressions.call]
+#     default = { Error = { message = "only set_fail_mode and now may be called" } }
+#     patterns = [
+#         { name = "set_fail_mode", rule = "Allow" },
+#         { name = "now", rule = "Allow" },
+#     ]
+[expressions.call]
+default = "Allow"
+
+# A method call: `receiver.name(..)`. Calls on a dictionary chain are told apart by the
+# namespace the chain starts in. Each is a selection by the point's dictionary name, which
+# is the chain with the namespace dropped:
+#
+#     Ref.power.PWR_OFF()           a command       "Ref.power.PWR_OFF"
+#     Cmd::Ref.power.PWR_OFF()      a command       "Ref.power.PWR_OFF"
+#     Tlm::Ref.power.Voltage()      telemetry       "Ref.power.Voltage"
+#     Prm::Ref.power.LIMIT()        a parameter     "Ref.power.LIMIT"
+#     values.len()                  `other`
+#
+# A command's arguments are expressions like any other and are checked as usual, so an
+# allowed command given `Tlm::Ref.power.Voltage().0` must also have that read allowed.
+[expressions.method_call]
+other = "Allow"
+
+# Which commands a sequence may send. For example, a profile for a payload team:
+#
+#     default = { Error = { message = "this sequence may only command the payload" } }
+#     patterns = [
+#         { name = "Payload.*", rule = "Allow" },
+#         { name = "CdhCore.cmdDisp.CMD_NO_OP*", rule = "Allow" },
+#     ]
+#
+# A Warn here makes a list of every use of a sensitive command in the build output:
+#
+#     patterns = [{ name = "*.PWR_*", rule = { Warn = { message = "power command" } } }]
+[expressions.method_call.commands]
+default = "Allow"
+
+# Which channels a sequence may read.
+[expressions.method_call.telemetry]
+default = "Allow"
+
+# Which parameters a sequence may read.
+[expressions.method_call.parameters]
+default = "Allow"
+
+# ─── Patterns ───────────────────────────────────────────────────────────────────────────
+#
+# What may appear on the left of a `let`, in an `if let`, or in a `match` arm.
+[patterns]
+const = "Allow"         # const { .. }
+ident = "Allow"         # x, mut x
+by_ref = "Allow"        # ref x, ref mut x. Checked on top of `ident`, so this can reject
+                        # a borrowing binding while plain bindings stay allowed.
+lit = "Allow"           # 0, "text"
+or = "Allow"            # A | B
+paren = "Allow"         # (A | B)
+path = "Allow"          # Choice::RED, None
+range = "Allow"         # 1..=5
+reference = "Allow"     # &x
+rest = "Allow"          # the `..` in (a, ..) or [a, ..]
+slice = "Allow"         # [a, b, ..]
+struct = "Allow"        # Pair { a, b }
+tuple = "Allow"         # (a, b)
+tuple_struct = "Allow"  # Some(x)
+type = "Allow"          # x: u32, as in `let x: u32 = ..`
+wild = "Allow"          # _
+
+# ─── Types ──────────────────────────────────────────────────────────────────────────────
+#
+# What may be written as a type: on a `let`, a `const`, a cast, or a nested item.
+[types]
+array = "Allow"         # [u8; 4]
+bare_fn = "Allow"       # fn(u32) -> u32
+group = "Allow"         # Invisible grouping a macro leaves behind; never written by hand
+impl_trait = "Allow"    # impl Trait
+infer = "Allow"         # _, as in `let v: [_; 4] = ..`
+never = "Allow"         # !
+paren = "Allow"         # (u32)
+path = "Allow"          # u32, Ref::Choice
+ptr = "Allow"           # *const u8
+reference = "Allow"     # &u32
+slice = "Allow"         # [u8]
+trait_object = "Allow"  # dyn Trait
+tuple = "Allow"         # (u32, f32)

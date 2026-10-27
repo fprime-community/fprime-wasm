@@ -1,0 +1,151 @@
+# `#[fprime_main(restrict)]`: a sequence that reads as a list of steps — commands,
+# telemetry and parameters, `let` and `const` values, arithmetic, and `if`.
+#
+# See profile_reference.toml for what each setting means.
+
+# Event reporting is the one macro a step list needs.
+macros = { default = { Error = { message = "macros are not allowed in restrict mode" } }, patterns = [
+    { name = "messagef", rule = "Allow" },
+] }
+# waivers = { Warn = { message = "restrict mode waived" } }
+waivers = "Allow"
+
+[statements]
+local = "Allow"
+expr = "Allow"
+
+[statements.item]
+const = "Allow"
+enum = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+extern_crate = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+fn = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+foreign_mod = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+impl = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+mod = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+static = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+struct = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+trait = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+trait_alias = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+type = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+union = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+use = { Error = { message = "only `const` may be declared inside a sequence in restrict mode" } }
+
+[expressions]
+array = "Allow"
+assign = "Allow"
+async = { Error = { message = "this expression is not allowed in restrict mode" } }
+await = { Error = { message = "this expression is not allowed in restrict mode" } }
+block = "Allow"
+break = { Error = { message = "`break` and `continue` are not allowed in restrict mode" } }
+cast = "Allow"
+closure = { Error = { message = "closures are not allowed in restrict mode" } }
+const = "Allow"
+continue = { Error = { message = "`break` and `continue` are not allowed in restrict mode" } }
+field = "Allow"
+for_loop = { Error = { message = "loops are not allowed in restrict mode" } }
+group = "Allow"
+if = "Allow"
+index = "Allow"
+infer = { Error = { message = "this expression is not allowed in restrict mode" } }
+let = "Allow"
+lit = "Allow"
+loop = { Error = { message = "loops are not allowed in restrict mode" } }
+match = { Error = { message = "`match` is not allowed, use `if` instead in restrict mode" } }
+paren = "Allow"
+path = "Allow"
+range = { Error = { message = "this expression is not allowed in restrict mode" } }
+raw_addr = { Error = { message = "references (`&`) are not allowed in restrict mode" } }
+reference = { Error = { message = "references (`&`) are not allowed in restrict mode" } }
+repeat = "Allow"
+return = "Allow"
+struct = "Allow"
+try = { Error = { message = "`?` is not allowed in restrict mode" } }
+try_block = { Error = { message = "`?` is not allowed in restrict mode" } }
+tuple = "Allow"
+unsafe = { Error = { message = "`unsafe` is not allowed in restrict mode" } }
+while = { Error = { message = "loops are not allowed in restrict mode" } }
+yield = { Error = { message = "this expression is not allowed in restrict mode" } }
+
+[expressions.binary]
+add = "Allow"
+sub = "Allow"
+mul = "Allow"
+div = "Allow"
+rem = "Allow"
+and = "Allow"
+or = "Allow"
+bit_xor = "Allow"
+bit_and = "Allow"
+bit_or = "Allow"
+shl = "Allow"
+shr = "Allow"
+eq = "Allow"
+lt = "Allow"
+le = "Allow"
+ne = "Allow"
+ge = "Allow"
+gt = "Allow"
+add_assign = "Allow"
+sub_assign = "Allow"
+mul_assign = "Allow"
+div_assign = "Allow"
+rem_assign = "Allow"
+bit_xor_assign = "Allow"
+bit_and_assign = "Allow"
+bit_or_assign = "Allow"
+shl_assign = "Allow"
+shr_assign = "Allow"
+
+[expressions.unary]
+deref = { Error = { message = "dereferencing with `*` is not allowed in restrict mode" } }
+not = "Allow"
+neg = "Allow"
+
+# `set_fail_mode(..)` and the like, selected by path.
+[expressions.call]
+default = "Allow"
+
+[expressions.method_call]
+other = "Allow"
+
+[expressions.method_call.commands]
+default = "Allow"
+
+[expressions.method_call.telemetry]
+default = "Allow"
+
+[expressions.method_call.parameters]
+default = "Allow"
+
+[patterns]
+const = "Allow"
+ident = "Allow"
+by_ref = { Error = { message = "references (`ref`) are not allowed in restrict mode" } }
+lit = "Allow"
+or = "Allow"
+paren = "Allow"
+path = "Allow"
+range = "Allow"
+reference = { Error = { message = "references (`&`) are not allowed in restrict mode" } }
+rest = "Allow"
+slice = "Allow"
+struct = "Allow"
+tuple = "Allow"
+tuple_struct = "Allow"
+type = "Allow"
+wild = "Allow"
+
+[types]
+array = "Allow"
+bare_fn = "Allow"
+group = "Allow"
+impl_trait = "Allow"
+infer = "Allow"
+never = "Allow"
+paren = "Allow"
+path = "Allow"
+ptr = { Error = { message = "reference types are not allowed in restrict mode" } }
+reference = { Error = { message = "reference types are not allowed in restrict mode" } }
+slice = "Allow"
+trait_object = "Allow"
+tuple = "Allow"

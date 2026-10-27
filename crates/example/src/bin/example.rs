@@ -3,7 +3,7 @@
 
 use example::*;
 
-#[fprime_main]
+#[fprime_main(restrict)]
 pub fn main() {
     set_fail_mode(FailMode::Permissive);
 

@@ -2,7 +2,7 @@ use crate::infer_path::test_support::{
     const_encode_block, descriptor_block, render_block, rewrite_block,
     test_body as expand_test_body,
 };
-use crate::{command, parameter, restrict, telemetry};
+use crate::{command, parameter, profile, telemetry};
 use pretty_assertions::assert_eq;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -1127,12 +1127,19 @@ fn expansions_agree_up_to_the_cursor() {
     }
 }
 
+/// The example crate's `restrict` profile, which is what these tests hold to.
+const RESTRICT_PROFILE: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/../crates/example/profile_restrict.toml"
+);
+
 /// The restrict-mode errors for a sequence body, one per rejected construct.
 fn restrict_errors(body: TokenStream) -> Vec<String> {
-    match restrict::check(&quote! { fn main() { #body } }) {
-        Ok(()) => Vec::new(),
-        Err(err) => err.into_iter().map(|err| err.to_string()).collect(),
-    }
+    let profile = profile::load(std::path::Path::new(RESTRICT_PROFILE)).unwrap();
+    let findings = profile::check(&profile, &quote! { fn main() { #body } });
+    assert!(findings.warnings.is_empty(), "restrict never warns");
+
+    findings.errors.iter().map(|err| err.to_string()).collect()
 }
 
 /// Assert restrict mode accepts `body`.

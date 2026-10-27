@@ -7,7 +7,7 @@ mod command;
 mod fprime_test;
 mod infer_path;
 mod parameter;
-mod restrict;
+mod profile;
 mod serializable;
 mod signature;
 mod telemetry;
@@ -73,22 +73,6 @@ pub fn fprime_parameter(attr: TokenStream, item: TokenStream) -> TokenStream {
     expand(parameter::parameter(attr.into(), item.into()))
 }
 
-/// Parse the `#[fprime]` / `#[fprime_main]` arguments: whether `restrict` was given.
-fn is_restrict(attr: proc_macro2::TokenStream) -> syn::Result<bool> {
-    let mut restrict = false;
-    let parser = syn::meta::parser(|meta| {
-        if meta.path.is_ident("restrict") {
-            restrict = true;
-            Ok(())
-        } else {
-            Err(meta.error("unsupported attribute argument, expected `restrict`"))
-        }
-    });
-
-    syn::parse::Parser::parse2(parser, attr)?;
-    Ok(restrict)
-}
-
 /// Enable the F Prime sequencing DSL in a function body.
 ///
 /// Command arguments may name an enumerated constant on its own, and the
@@ -106,12 +90,13 @@ fn is_restrict(attr: proc_macro2::TokenStream) -> syn::Result<bool> {
 /// `build.rs`, which publishes it through the `FPRIME_DICTIONARY` environment
 /// variable.
 ///
-/// `#[fprime(restrict)]` also limits the body to plain steps: no loops, `match`,
-/// references, closures or macros.
+/// `#[fprime(restrict)]` also holds the body to the rules in the crate's
+/// `profile_restrict.toml`, as `#[fprime_main(restrict)]` does.
 #[proc_macro_attribute]
 pub fn fprime(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let error = restrict_errors(attr.into(), &item.clone().into());
-    let resolved = infer_enum_paths(item.into());
+    let item = item.into();
+    let error = profile_errors(attr.into(), &item);
+    let resolved = infer_enum_paths(profile::strip_waivers(item));
 
     quote! {
         #error
@@ -138,8 +123,9 @@ pub fn fprime_test(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// Wires up the Wasm entry point, and enables the sequencing DSL (see [`fprime`]).
 #[proc_macro_attribute]
 pub fn fprime_main(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let error = restrict_errors(attr.into(), &item.clone().into());
-    let entry = export(infer_enum_paths(item.into()));
+    let item = item.into();
+    let error = profile_errors(attr.into(), &item);
+    let entry = export(infer_enum_paths(profile::strip_waivers(item)));
 
     quote! {
         #error
@@ -155,26 +141,12 @@ pub fn fprime_main(attr: TokenStream, item: TokenStream) -> TokenStream {
     .into()
 }
 
-/// The errors for `item`, if `attr` is malformed or asks for restrict mode and
-/// `item` breaks it.
-///
-/// Restrict mode checks the body as written: the resolved body uses constructs
-/// restrict mode rejects. The errors are emitted beside the item rather than in
-/// it, so the item keeps its attributes.
-fn restrict_errors(
+/// The profile's findings for `item`, or why the profile could not be applied.
+fn profile_errors(
     attr: proc_macro2::TokenStream,
     item: &proc_macro2::TokenStream,
-) -> Option<proc_macro2::TokenStream> {
-    is_restrict(attr)
-        .and_then(|restrict| {
-            if restrict {
-                restrict::check(item)
-            } else {
-                Ok(())
-            }
-        })
-        .err()
-        .map(syn::Error::into_compile_error)
+) -> proc_macro2::TokenStream {
+    profile::errors(attr, item).unwrap_or_else(syn::Error::into_compile_error)
 }
 
 /// Resolve the sequencing DSL in `item`, keeping the item whatever happens.

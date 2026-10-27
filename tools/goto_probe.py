@@ -217,6 +217,7 @@ SEQUENCE = "crates/example/src/bin/example.rs"
 TESTS = "crates/example/tests/behavior.rs"
 LONG = "crates/example/tests/long_running.rs"
 LIMITS = "crates/example/tests/limits.rs"
+RESTRICT = "crates/example/src/bin/restrict.rs"
 
 PROBES = [
     # --- the control. Plain Rust, no macro involved. If this does not resolve, the server is
@@ -257,6 +258,9 @@ PROBES = [
         "test: limits file",
         "sequencer-short-events.toml",
     ),
+    # --- the profile link: `#[fprime_main(restrict)]` opens `profile_restrict.toml`. An ident
+    # this time, not a string, but the same `include_str!` carries its span.
+    Probe(RESTRICT, "#[fprime_main(restrict)]", "restrict", "sequence: profile", "profile_restrict.toml"),
 ]
 
 
