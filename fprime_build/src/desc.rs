@@ -3,17 +3,26 @@
 use crate::tree::Qualifier;
 use crate::types::type_name;
 use crate::util::{annotate, hex_literal, split_identifier, str_to_ident};
+use fprime_dictionary::naming::Namespace;
 use fprime_dictionary::naming::type_label as label;
 use fprime_dictionary::{
     Command, Dictionary, Parameter, TelemetryChannel, TypeDefinition, TypeName,
 };
-use proc_macro2::{Literal, TokenStream};
+use proc_macro2::{Ident, Literal, TokenStream};
 use quote::quote;
-use std::collections::HashMap;
+
+/// `name`'s qualifier under its namespace, so a command, channel and parameter may share a
+/// name as they do in the flight API's `Cmd`, `Tlm` and `Prm`.
+fn split_in(namespace: Namespace, name: &str) -> (Qualifier, Ident) {
+    let (mut q, name) = split_identifier(name);
+    q.insert(0, namespace.module().to_string());
+
+    (q, name)
+}
 
 /// A command descriptor that matches on opcode alone (the no-parentheses form).
 pub fn command(cmd: &Command) -> (Qualifier, TokenStream) {
-    let (q, name) = split_identifier(&cmd.name);
+    let (q, name) = split_in(Namespace::Cmd, &cmd.name);
     let opcode = hex_literal(cmd.opcode);
     let path = Literal::string(&cmd.name);
 
@@ -28,7 +37,7 @@ pub fn command(cmd: &Command) -> (Qualifier, TokenStream) {
 }
 
 pub fn telemetry_channel(dict: &Dictionary, tlm: &TelemetryChannel) -> (Qualifier, TokenStream) {
-    let (q, name) = split_identifier(&tlm.name);
+    let (q, name) = split_in(Namespace::Tlm, &tlm.name);
     let wire = wire_type(dict, &tlm.type_name);
     let id = hex_literal(tlm.id);
     let path = Literal::string(&tlm.name);
@@ -43,7 +52,7 @@ pub fn telemetry_channel(dict: &Dictionary, tlm: &TelemetryChannel) -> (Qualifie
 }
 
 pub fn parameter(dict: &Dictionary, prm: &Parameter) -> (Qualifier, TokenStream) {
-    let (q, name) = split_identifier(&prm.name);
+    let (q, name) = split_in(Namespace::Prm, &prm.name);
     let wire = wire_type(dict, &prm.type_name);
     let id = hex_literal(prm.id);
     let path = Literal::string(&prm.name);
@@ -99,43 +108,6 @@ fn wire_type(dict: &Dictionary, ty: &TypeName) -> TokenStream {
     }
 
     type_name(ty)
-}
-
-/// Panics if two points in one component would collide in the flat `Desc` namespace.
-pub fn check_for_collisions(dict: &Dictionary) {
-    let mut seen: HashMap<&str, &'static str> = HashMap::new();
-    let mut collisions: Vec<String> = Vec::new();
-
-    let points = dict
-        .commands
-        .iter()
-        .map(|cmd| (cmd.name.as_str(), "command"))
-        .chain(
-            dict.telemetry_channels
-                .iter()
-                .map(|tlm| (tlm.name.as_str(), "telemetry channel")),
-        )
-        .chain(
-            dict.parameters
-                .iter()
-                .map(|prm| (prm.name.as_str(), "parameter")),
-        );
-
-    for (name, kind) in points {
-        if let Some(first) = seen.insert(name, kind) {
-            collisions.push(format!("  {name} is both a {first} and a {kind}"));
-        }
-    }
-
-    if !collisions.is_empty() {
-        panic!(
-            "this dictionary has points that a test could not name unambiguously:\n{}\n\
-             A command, telemetry channel and parameter share one namespace per component \
-             in the generated `Desc` tree, so that a test can complete every point a \
-             component offers in one list. Rename one of each pair in the FPP model.",
-            collisions.join("\n")
-        );
-    }
 }
 
 #[cfg(test)]
@@ -220,8 +192,22 @@ mod tests {
         assert_eq!(wire.to_string(), "f32");
     }
 
+    /// A command, channel and parameter of one name are three descriptors, not a collision.
     #[test]
-    fn reference_dictionary_has_no_collisions() {
-        check_for_collisions(&dictionary());
+    fn namespaces_keep_shared_names_apart() {
+        let dict = dictionary();
+        let command = &dict.commands[0];
+        let (cmd, _) = super::command(command);
+        let channel = TelemetryChannel {
+            name: command.name.clone(),
+            type_name: TypeName::Bool,
+            id: 0,
+            annotation: None,
+        };
+        let (tlm, _) = telemetry_channel(&dict, &channel);
+
+        assert_eq!(cmd[0], "Cmd");
+        assert_eq!(tlm[0], "Tlm");
+        assert_eq!(cmd[1..], tlm[1..]);
     }
 }

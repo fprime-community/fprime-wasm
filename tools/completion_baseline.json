@@ -6,9 +6,9 @@
     "qualified_rank": null
   },
   "control: plain Rust, no macro": {
-    "bare_rank": 25,
+    "bare_rank": 5,
     "import": false,
-    "items": 34,
+    "items": 14,
     "qualified_rank": null
   },
   "control: plain Rust, nothing typed, enum argument": {

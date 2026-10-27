@@ -990,7 +990,7 @@ fn a_constant_call_is_a_descriptor() {
         "expected a descriptor, got: {expansion}"
     );
     assert!(
-        expansion.contains("crate :: Desc :: Ref :: wasmSeq :: LOAD"),
+        expansion.contains("crate :: Desc :: Cmd :: Ref :: wasmSeq :: LOAD"),
         "expected a descriptor, got: {expansion}"
     );
 }

@@ -2,19 +2,20 @@
 
 use crate::infer_path::scan::{Chain, Lower, Rewrite, scan};
 use crate::infer_path::symbols::{Point, Symbols};
-use fprime_dictionary::naming::desc_path;
+use fprime_dictionary::naming::{Namespace, desc_path};
 use proc_macro2::{Ident, Literal, Span, TokenStream};
 use quote::{quote, quote_spanned};
 
-/// `crate::Desc::<segments>`, built from the author's own ident tokens so goto/hover still
-/// resolve them.
+/// `crate::Desc::<namespace>::<segments>`, built from the author's own ident tokens so
+/// goto/hover still resolve them.
 ///
-/// The invented tokens (`crate`, `Desc`, `::`) are spanned on `scaffold`, the chain's first
-/// `.`. On the call site, rustc would report every type error about the descriptor on the
-/// `#[fprime_test]` attribute. On one of the author's idents, goto-definition on that ident
-/// would also answer with the invented tokens' definitions. A punct has none.
-fn spanned_desc_path(segments: &[Ident], scaffold: Span) -> TokenStream {
-    quote_spanned! { scaffold => crate::Desc #(:: #segments)* }
+/// The invented tokens (`crate`, `Desc`, the namespace, `::`) are spanned on `scaffold`, the
+/// chain's first `.`. On the call site, rustc would report every type error about the
+/// descriptor on the `#[fprime_test]` attribute. On one of the author's idents, goto-definition
+/// on that ident would also answer with the invented tokens' definitions. A punct has none.
+fn spanned_desc_path(namespace: Namespace, segments: &[Ident], scaffold: Span) -> TokenStream {
+    let namespace = Ident::new(namespace.module(), scaffold);
+    quote_spanned! { scaffold => crate::Desc::#namespace #(:: #segments)* }
 }
 
 /// Pass two of `#[fprime_test]`: every dictionary point in a test body becomes a `Desc`
@@ -43,7 +44,11 @@ impl Lower for Describe<'_> {
         // Anything but a command call is a bare descriptor. A channel written with parentheses
         // keeps them, for rustc to reject at the right token.
         let (Point::Command(command), Some(args)) = (&chain.point, &chain.args) else {
-            return Rewrite::Chain(spanned_desc_path(&chain.segments, chain.scaffold));
+            return Rewrite::Chain(spanned_desc_path(
+                chain.point.namespace(),
+                &chain.segments,
+                chain.scaffold,
+            ));
         };
 
         let original = chain.written_call();
@@ -53,7 +58,7 @@ impl Lower for Describe<'_> {
                 return Rewrite::Call(buffer.block(&original, {
                     // Unspanned: the author's tokens are already in `if false { .. }`, and a
                     // second copy of their spans would give goto two definitions.
-                    let path = desc_path(&chain.name);
+                    let path = desc_path(chain.point.namespace(), &chain.name);
                     quote! {
                         {
                             // A const of reference type gives `&'static [u8]` without static

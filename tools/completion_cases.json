@@ -2,7 +2,7 @@
   {
     "why": "control: plain Rust, no macro",
     "path": "crates/example/tests/descriptors.rs",
-    "anchor": "Desc::Ref::typeDemo::ScalarF32Ch;",
+    "anchor": "Desc::Tlm::Ref::typeDemo::ScalarF32Ch;",
     "name": "ScalarF32Ch",
     "keep": "Scal",
     "expect": "ScalarF32Ch"
