@@ -698,7 +698,11 @@ mod tests {
 
     #[test]
     fn a_waiver_covers_its_node_and_everything_in_it() {
-        let profile = profile();
+        let mut profile = profile();
+        // Warn, so the waiver shows that it was applied; `restrict` itself may waive silently.
+        profile.waivers = Rule::Warn {
+            message: "restrict mode waived".into(),
+        };
 
         let (errors, warnings) = findings(
             &profile,
