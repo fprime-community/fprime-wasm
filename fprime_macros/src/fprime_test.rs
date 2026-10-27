@@ -128,9 +128,9 @@ fn parse(attr: TokenStream) -> syn::Result<Attribute> {
 ///
 /// `.len()` in a `const` keeps the file's text out of the test binary: it is read at compile
 /// time and folded to a number. `const _` is anonymous, so one link per argument is fine.
-fn file_link(literal: &Literal, file: &str) -> TokenStream {
+pub(crate) fn file_link(span: Span, file: &str) -> TokenStream {
     let mut path = Literal::string(file);
-    path.set_span(literal.span());
+    path.set_span(span);
 
     quote! {
         const _: usize = include_str!(#path).len();
@@ -139,7 +139,7 @@ fn file_link(literal: &Literal, file: &str) -> TokenStream {
 
 /// The crate being compiled: the sequence crate. Both rustc and rust-analyzer's proc-macro
 /// server set it.
-fn manifest_dir() -> Option<std::path::PathBuf> {
+pub(crate) fn manifest_dir() -> Option<std::path::PathBuf> {
     std::env::var_os("CARGO_MANIFEST_DIR").map(std::path::PathBuf::from)
 }
 
@@ -153,7 +153,7 @@ fn source_link(sequence: &Arg) -> TokenStream {
         // `fprime_test::locate`, which reports it at run time alongside the names that exist.
         return TokenStream::new();
     };
-    file_link(&sequence.literal, &source)
+    file_link(sequence.literal.span(), &source)
 }
 
 /// Links `limits = "sequencer-b.toml"` to that file, resolved against the crate root — the
@@ -179,7 +179,7 @@ fn limits_link(limits: &Arg) -> syn::Result<TokenStream> {
             ),
         ));
     }
-    Ok(file_link(&limits.literal, &path.to_string_lossy()))
+    Ok(file_link(limits.literal.span(), &path.to_string_lossy()))
 }
 
 /// Where `fprime-wasm add` puts a sequence's source, if there is a file there.

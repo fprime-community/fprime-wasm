@@ -16,6 +16,8 @@ name = "fprime_macros"
 path = "src/lib.rs"
 
 [dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+toml = "0.8"
 fprime_dictionary = { path = "../fprime_dictionary", version = "=0.0.0" }
 proc-macro2 = "1.0.103"
 quote = "1.0.41"
