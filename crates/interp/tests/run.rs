@@ -59,7 +59,7 @@ fn dispatched_command_records_opcode() {
     // once rather than twice.
     const LEN: usize = interp::Konst::Ref::wasmSeq::LOAD__size("helloworld");
     const BUFFER: [u8; LEN] = interp::Konst::Ref::wasmSeq::LOAD__encode::<LEN>("helloworld");
-    let expected = interp::Desc::Ref::wasmSeq::LOAD.with(&BUFFER);
+    let expected = interp::Desc::Cmd::Ref::wasmSeq::LOAD.with(&BUFFER);
 
     let commands: Vec<(u32, Vec<u8>)> = report
         .recording
@@ -108,7 +108,7 @@ fn operand_stack_peak_measured_by_running() {
 #[test]
 fn unset_channel_reads_zero_and_informs() {
     let report = fixture::run("reader");
-    let channel = interp::Desc::CdhCore::events::EventsDropped;
+    let channel = interp::Desc::Tlm::CdhCore::events::EventsDropped;
 
     assert_eq!(
         report.recording.telemetry_read(),

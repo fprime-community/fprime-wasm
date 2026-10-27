@@ -64,14 +64,45 @@ pub fn definition_path_with_name(qualified_name: &str, name: Ident) -> TokenStre
     quote! { crate::Dict::#(#modules::)*#name }
 }
 
-/// The Rust path of a generated descriptor, e.g. `Ref.power.BatteryVoltage` becomes
-/// `crate::Desc::Ref::power::BatteryVoltage`.
-pub fn desc_path(qualified_name: &str) -> TokenStream {
+/// Which of the flight API's `Cmd`, `Tlm` and `Prm` trees a dictionary point is in. The
+/// `Desc` tree mirrors them, so a command, channel and parameter may share a name.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Namespace {
+    Cmd,
+    Tlm,
+    Prm,
+}
+
+impl Namespace {
+    /// The module the namespace is generated as.
+    pub fn module(self) -> &'static str {
+        match self {
+            Namespace::Cmd => "Cmd",
+            Namespace::Tlm => "Tlm",
+            Namespace::Prm => "Prm",
+        }
+    }
+
+    /// The namespace a module of that name is, if any.
+    pub fn from_module(module: &str) -> Option<Self> {
+        match module {
+            "Cmd" => Some(Namespace::Cmd),
+            "Tlm" => Some(Namespace::Tlm),
+            "Prm" => Some(Namespace::Prm),
+            _ => None,
+        }
+    }
+}
+
+/// The Rust path of a generated descriptor, e.g. telemetry `Ref.power.BatteryVoltage` becomes
+/// `crate::Desc::Tlm::Ref::power::BatteryVoltage`.
+pub fn desc_path(namespace: Namespace, qualified_name: &str) -> TokenStream {
     let (qualifier, name) = split_qualified_name(qualified_name);
     let modules = qualifier.into_iter().map(str_to_ident);
+    let namespace = str_to_ident(namespace.module());
     let name = str_to_ident(name);
 
-    quote! { crate::Desc::#(#modules::)*#name }
+    quote! { crate::Desc::#namespace::#(#modules::)*#name }
 }
 
 /// The Rust path of a generated const encoder, e.g. `CdhCore.cmdDisp.CMD_NO_OP`

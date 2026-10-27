@@ -6,6 +6,7 @@
 
 use crate::infer_path::name::dictionary_name;
 use crate::infer_path::symbols::{Point, Symbols};
+use fprime_dictionary::naming::Namespace;
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 
 /// A dotted chain the author wrote, resolved to a dictionary point.
@@ -123,14 +124,18 @@ fn resolve<'a>(
 ) -> Option<(Chain<'a>, usize)> {
     let mut at = index;
     let mut root = ident_at(trees, at)?;
+    let mut qualifier = None;
 
     // A `::`-qualified receiver is skipped past, so `crate::Ref.dpDemo.CMD` resolves as
-    // `Ref.dpDemo.CMD` does.
+    // `Ref.dpDemo.CMD` does — except a `Cmd::`, `Tlm::` or `Prm::` just before the root,
+    // which says which of a shared name's points is meant.
     at += 1;
     while let Some(segment) = path_separator_at(trees, at) {
+        qualifier = Some(root);
         root = ident_at(trees, segment)?;
         at = segment + 1;
     }
+    let namespace = qualifier.and_then(|ident| Namespace::from_module(&dictionary_name(ident)));
 
     let mut parts = vec![dictionary_name(root)];
     let mut segments = vec![root.clone()];
@@ -145,7 +150,7 @@ fn resolve<'a>(
     }
 
     let name = parts.join(".");
-    let point = symbols.point(&name)?;
+    let point = symbols.point(namespace, &name)?;
 
     Some((
         Chain {

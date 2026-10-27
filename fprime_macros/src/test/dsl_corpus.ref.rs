@@ -32,7 +32,7 @@ pub fn main() {
             Ref.typeDemo.SEND_ALIAS(42);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_ALIAS.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_ALIAS.with(__FPRIME_BUF)
         }
     };
 }
@@ -60,7 +60,7 @@ pub fn main() {
             Ref.typeDemo.SEND_2D([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_2D.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_2D.with(__FPRIME_BUF)
         }
     };
 }
@@ -88,7 +88,7 @@ pub fn main() {
             Ref.typeDemo.SEND_BOOL_ARRAY([true, false]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_BOOL_ARRAY.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_BOOL_ARRAY.with(__FPRIME_BUF)
         }
     };
 }
@@ -116,7 +116,7 @@ pub fn main() {
             Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::CHOICES.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::CHOICES.with(__FPRIME_BUF)
         }
     };
 }
@@ -144,7 +144,7 @@ pub fn main() {
             Ref.typeDemo.SEND_FLOAT_ARRAY([1.0, 2.5, - 3.5]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_FLOAT_ARRAY.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_FLOAT_ARRAY.with(__FPRIME_BUF)
         }
     };
 }
@@ -172,7 +172,7 @@ pub fn main() {
             Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE; 2]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::CHOICES.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::CHOICES.with(__FPRIME_BUF)
         }
     };
 }
@@ -200,7 +200,7 @@ pub fn main() {
             Ref.typeDemo.SEND_U32_ARRAY([1, 2, 3, 4, 5]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_U32_ARRAY.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_U32_ARRAY.with(__FPRIME_BUF)
         }
     };
 }
@@ -228,7 +228,7 @@ pub fn main() {
             Ref.typeDemo.SEND_BOOL(true);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_BOOL.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_BOOL.with(__FPRIME_BUF)
         }
     };
 }
@@ -256,7 +256,7 @@ pub fn main() {
             Ref.typeDemo.CHOICE(crate::Dict::Ref::Choice::TWO);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::CHOICE.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::CHOICE.with(__FPRIME_BUF)
         }
     };
 }
@@ -284,7 +284,7 @@ pub fn main() {
             Ref.typeDemo.SEND_WIDE_CHOICE(crate::Dict::Ref::WideChoice::WIDE_HIGH);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_WIDE_CHOICE.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_WIDE_CHOICE.with(__FPRIME_BUF)
         }
     };
 }
@@ -312,7 +312,7 @@ pub fn main() {
             Ref.typeDemo.SEND_FLOATS(1.5, - 2.5);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_FLOATS.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_FLOATS.with(__FPRIME_BUF)
         }
     };
 }
@@ -340,7 +340,7 @@ pub fn main() {
             Ref.typeDemo.SEND_INTS(1, - 2, 3, - 4, 5, - 6, 7, - 8);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_INTS.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_INTS.with(__FPRIME_BUF)
         }
     };
 }
@@ -368,7 +368,7 @@ pub fn main() {
             CdhCore.cmdDisp.CMD_TEST_CMD_1(- 1, - 2.5, 3);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::CdhCore::cmdDisp::CMD_TEST_CMD_1.with(__FPRIME_BUF)
+            crate::Desc::Cmd::CdhCore::cmdDisp::CMD_TEST_CMD_1.with(__FPRIME_BUF)
         }
     };
 }
@@ -396,7 +396,7 @@ pub fn main() {
             CdhCore.cmdDisp.CMD_NO_OP();
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+            crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
         }
     };
 }
@@ -424,7 +424,7 @@ pub fn main() {
             Ref.wasmSeq.LOAD("a large string argument");
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::wasmSeq::LOAD.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::wasmSeq::LOAD.with(__FPRIME_BUF)
         }
     };
 }
@@ -452,7 +452,7 @@ pub fn main() {
             CdhCore.cmdDisp.CMD_NO_OP_STRING("a small string argument");
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::CdhCore::cmdDisp::CMD_NO_OP_STRING.with(__FPRIME_BUF)
+            crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP_STRING.with(__FPRIME_BUF)
         }
     };
 }
@@ -480,7 +480,7 @@ pub fn main() {
             Ref.typeDemo.SEND_TINY_STRING("tiny");
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_TINY_STRING.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_TINY_STRING.with(__FPRIME_BUF)
         }
     };
 }
@@ -508,7 +508,7 @@ pub fn main() {
             Ref.typeDemo.SEND_TINY_STRING("far longer than eight bytes");
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_TINY_STRING.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_TINY_STRING.with(__FPRIME_BUF)
         }
     };
 }
@@ -536,7 +536,7 @@ pub fn main() {
             Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,});
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::CHOICE_PAIR.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::CHOICE_PAIR.with(__FPRIME_BUF)
         }
     };
 }
@@ -564,7 +564,7 @@ pub fn main() {
             Ref.typeDemo.GLUTTON_OF_CHOICE(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::GLUTTON_OF_CHOICE.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::GLUTTON_OF_CHOICE.with(__FPRIME_BUF)
         }
     };
 }
@@ -592,7 +592,7 @@ pub fn main() {
             Ref.typeDemo.SEND_SCALARS(crate::Dict::Ref::ScalarStruct {i8:- 1, i16:- 2, i32:- 3, i64:- 4, u8:5, u16:6, u32:7, u64:8, f32:9.5, f64:10.5,});
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_SCALARS.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_SCALARS.with(__FPRIME_BUF)
         }
     };
 }
@@ -620,7 +620,7 @@ pub fn main() {
             Ref.typeDemo.CHOICE_PAIR_WITH_FRIENDS(1, crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, 2,);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::CHOICE_PAIR_WITH_FRIENDS.with(__FPRIME_BUF)
         }
     };
 }
@@ -711,7 +711,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -721,7 +721,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 1, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -731,7 +731,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 2, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -741,7 +741,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 3, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -751,7 +751,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 4, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -761,7 +761,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 5, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -771,7 +771,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 6, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -781,7 +781,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 7, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
 }
@@ -872,7 +872,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -882,7 +882,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -892,7 +892,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -902,7 +902,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -912,7 +912,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -922,7 +922,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -932,7 +932,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
     {
@@ -942,7 +942,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
 }
@@ -973,7 +973,7 @@ pub fn main() {
 
 // ===== descriptor: fallback_scalar
 pub fn main() {
-    let priority = crate::Desc::CdhCore::cmdDisp::CommandsDispatched().0;
+    let priority = crate::Desc::Tlm::CdhCore::cmdDisp::CommandsDispatched().0;
     {
         if false {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, priority, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
@@ -992,7 +992,7 @@ pub fn main() {
 
 // ===== descriptor: fallback_string
 pub fn main() {
-    let busy = crate::Desc::CdhCore::events::EventsDropped().0> 0;
+    let busy = crate::Desc::Tlm::CdhCore::events::EventsDropped().0> 0;
     {
         if false {
             CdhCore.cmdDisp.CMD_NO_OP_STRING(if busy {"busy"} else {"idle"});
@@ -1011,7 +1011,7 @@ pub fn main() {
 
 // ===== descriptor: fallback_struct
 pub fn main() {
-    let color = crate::Desc::Ref::typeDemo::ChoiceCh().0;
+    let color = crate::Desc::Tlm::Ref::typeDemo::ChoiceCh().0;
     {
         if false {
             Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:{#[allow(unused_imports)] use crate::Dict::Ref::Choice::*; color}, secondChoice:crate::Dict::Ref::Choice::BLUE,});
@@ -1182,7 +1182,7 @@ pub fn main() {
             CdhCore.cmdDisp.CMD_NO_OP();
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+            crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
         }
     };
     {
@@ -1192,7 +1192,7 @@ pub fn main() {
             CdhCore.cmdDisp.CMD_NO_OP_STRING("mixed maximum");
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::CdhCore::cmdDisp::CMD_NO_OP_STRING.with(__FPRIME_BUF)
+            crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP_STRING.with(__FPRIME_BUF)
         }
     };
     {
@@ -1202,7 +1202,7 @@ pub fn main() {
             CdhCore.events.SET_EVENT_FILTER(crate::Dict::Svc::EventManager::FilterSeverity::ACTIVITY_HI, crate::Dict::Svc::EventManager::Enabled::DISABLED);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::CdhCore::events::SET_EVENT_FILTER.with(__FPRIME_BUF)
+            crate::Desc::Cmd::CdhCore::events::SET_EVENT_FILTER.with(__FPRIME_BUF)
         }
     };
     {
@@ -1212,7 +1212,7 @@ pub fn main() {
             CdhCore.health.HLTH_PING_ENABLE("pinger", crate::Dict::Fw::Enabled::ENABLED);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::CdhCore::health::HLTH_PING_ENABLE.with(__FPRIME_BUF)
+            crate::Desc::Cmd::CdhCore::health::HLTH_PING_ENABLE.with(__FPRIME_BUF)
         }
     };
     {
@@ -1222,7 +1222,7 @@ pub fn main() {
             Ref.typeDemo.SEND_INTS(1, - 2, 3, - 4, 5, - 6, 7, - 8);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_INTS.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_INTS.with(__FPRIME_BUF)
         }
     };
     {
@@ -1232,7 +1232,7 @@ pub fn main() {
             Ref.typeDemo.SEND_FLOATS(1.5, - 2.5);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_FLOATS.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_FLOATS.with(__FPRIME_BUF)
         }
     };
     {
@@ -1242,7 +1242,7 @@ pub fn main() {
             Ref.typeDemo.SEND_BOOL(true);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_BOOL.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_BOOL.with(__FPRIME_BUF)
         }
     };
     {
@@ -1252,7 +1252,7 @@ pub fn main() {
             Ref.typeDemo.SEND_WIDE_CHOICE(crate::Dict::Ref::WideChoice::WIDE_HIGH);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_WIDE_CHOICE.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_WIDE_CHOICE.with(__FPRIME_BUF)
         }
     };
     {
@@ -1262,7 +1262,7 @@ pub fn main() {
             Ref.typeDemo.CHOICES([crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::CHOICES.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::CHOICES.with(__FPRIME_BUF)
         }
     };
     {
@@ -1272,7 +1272,7 @@ pub fn main() {
             Ref.typeDemo.SEND_2D([[crate::Dict::Ref::Choice::ONE, crate::Dict::Ref::Choice::TWO],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::ONE]]);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::SEND_2D.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::SEND_2D.with(__FPRIME_BUF)
         }
     };
     {
@@ -1282,11 +1282,11 @@ pub fn main() {
             Ref.typeDemo.GLUTTON_OF_CHOICE(crate::Dict::Ref::ChoiceSlurry {tooManyChoices:[[crate::Dict::Ref::Choice::BLUE, crate::Dict::Ref::Choice::RED],[crate::Dict::Ref::Choice::TWO, crate::Dict::Ref::Choice::TWO]], choiceAsMemberArray:[2, 3], choicePair:crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::BLUE,}, separateChoice:crate::Dict::Ref::Choice::ONE,});
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::typeDemo::GLUTTON_OF_CHOICE.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::typeDemo::GLUTTON_OF_CHOICE.with(__FPRIME_BUF)
         }
     };
-    let(dropped, _) = crate::Desc::CdhCore::events::EventsDropped();
-    if dropped> 2 &&crate::Desc::Ref::recvBuffComp::parameter1()> 0 {
+    let(dropped, _) = crate::Desc::Tlm::CdhCore::events::EventsDropped();
+    if dropped> 2 &&crate::Desc::Prm::Ref::recvBuffComp::parameter1()> 0 {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP_STRING__size("dropped");
             const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP_STRING__encode::<__FPRIME_LEN>("dropped");
@@ -1294,7 +1294,7 @@ pub fn main() {
                 CdhCore.cmdDisp.CMD_NO_OP_STRING("dropped");
             } {
                 const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-                crate::Desc::CdhCore::cmdDisp::CMD_NO_OP_STRING.with(__FPRIME_BUF)
+                crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP_STRING.with(__FPRIME_BUF)
             }
         };
     } {
@@ -1318,7 +1318,7 @@ pub fn main() {
             Ref.wasmSeq.LOAD("finished");
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::wasmSeq::LOAD.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::wasmSeq::LOAD.with(__FPRIME_BUF)
         }
     };
     {
@@ -1328,7 +1328,7 @@ pub fn main() {
             Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::GREEN);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::SelectColor.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::SelectColor.with(__FPRIME_BUF)
         }
     };
 }
@@ -1383,7 +1383,7 @@ pub fn main() {
             CdhCore.cmdDisp.CMD_NO_OP();
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+            crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
         }
     };
     {
@@ -1393,7 +1393,7 @@ pub fn main() {
             CdhCore.cmdDisp.CMD_NO_OP_STRING("starting");
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::CdhCore::cmdDisp::CMD_NO_OP_STRING.with(__FPRIME_BUF)
+            crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP_STRING.with(__FPRIME_BUF)
         }
     };
     {
@@ -1403,7 +1403,7 @@ pub fn main() {
             Ref.dpDemo.SelectColor(crate::Dict::Ref::DpDemo::ColorEnum::BLUE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::SelectColor.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::SelectColor.with(__FPRIME_BUF)
         }
     };
     {
@@ -1413,7 +1413,7 @@ pub fn main() {
             Ref.dpDemo.Dp(crate::Dict::Ref::DpDemo::DpReqType::IMMEDIATE, 0, crate::Dict::Fw::DpCfg::ProcType::PROC_TYPE_NONE);
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::Ref::dpDemo::Dp.with(__FPRIME_BUF)
+            crate::Desc::Cmd::Ref::dpDemo::Dp.with(__FPRIME_BUF)
         }
     };
 }
@@ -1436,7 +1436,7 @@ pub fn main() {
 
 // ===== descriptor: prm_scalar
 pub fn main() {
-    if crate::Desc::Ref::recvBuffComp::parameter1()> 0 {
+    if crate::Desc::Prm::Ref::recvBuffComp::parameter1()> 0 {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size();
             const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__encode::<__FPRIME_LEN>();
@@ -1444,7 +1444,7 @@ pub fn main() {
                 CdhCore.cmdDisp.CMD_NO_OP();
             } {
                 const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-                crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+                crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
             }
         };
     }
@@ -1480,7 +1480,7 @@ pub fn main() {
             CdhCore.cmdDisp.CMD_NO_OP();
         } {
             const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-            crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+            crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
         }
     };
     outbox.send(request + 1);
@@ -1520,7 +1520,7 @@ pub fn main() {
                 CdhCore.cmdDisp.CMD_NO_OP();
             } {
                 const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-                crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+                crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
             }
         };
     }
@@ -1554,7 +1554,7 @@ pub fn main() {
                 CdhCore.cmdDisp.CMD_NO_OP();
             } {
                 const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-                crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+                crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
             }
         };
     }
@@ -1591,7 +1591,7 @@ pub fn main() {
                     CdhCore.cmdDisp.CMD_NO_OP();
                 } {
                     const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-                    crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+                    crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
                 }
             };
         } _ => rsleep(100_000),
@@ -1670,7 +1670,7 @@ pub fn main() {
 
 // ===== descriptor: tlm_scalar
 pub fn main() {
-    let(value, time) = crate::Desc::Ref::typeDemo::ScalarU32Ch();
+    let(value, time) = crate::Desc::Tlm::Ref::typeDemo::ScalarU32Ch();
     if value> 2 &&time.seconds> 1 {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size();
@@ -1679,7 +1679,7 @@ pub fn main() {
                 CdhCore.cmdDisp.CMD_NO_OP();
             } {
                 const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-                crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+                crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
             }
         };
     }
@@ -1704,7 +1704,7 @@ pub fn main() {
 
 // ===== descriptor: tlm_scalar_x8
 pub fn main() {
-    let total = crate::Desc::Ref::typeDemo::ScalarU8Ch().0 as u64 + crate::Desc::Ref::typeDemo::ScalarU16Ch().0 as u64 + crate::Desc::Ref::typeDemo::ScalarU32Ch().0 as u64 + crate::Desc::Ref::typeDemo::ScalarU64Ch().0 + crate::Desc::Ref::typeDemo::ScalarI8Ch().0 as u64 + crate::Desc::Ref::typeDemo::ScalarI16Ch().0 as u64 + crate::Desc::Ref::typeDemo::ScalarI32Ch().0 as u64 + crate::Desc::Ref::typeDemo::ScalarI64Ch().0 as u64;
+    let total = crate::Desc::Tlm::Ref::typeDemo::ScalarU8Ch().0 as u64 + crate::Desc::Tlm::Ref::typeDemo::ScalarU16Ch().0 as u64 + crate::Desc::Tlm::Ref::typeDemo::ScalarU32Ch().0 as u64 + crate::Desc::Tlm::Ref::typeDemo::ScalarU64Ch().0 + crate::Desc::Tlm::Ref::typeDemo::ScalarI8Ch().0 as u64 + crate::Desc::Tlm::Ref::typeDemo::ScalarI16Ch().0 as u64 + crate::Desc::Tlm::Ref::typeDemo::ScalarI32Ch().0 as u64 + crate::Desc::Tlm::Ref::typeDemo::ScalarI64Ch().0 as u64;
     if total> 0 {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size();
@@ -1713,7 +1713,7 @@ pub fn main() {
                 CdhCore.cmdDisp.CMD_NO_OP();
             } {
                 const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-                crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+                crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
             }
         };
     }
@@ -1738,7 +1738,7 @@ pub fn main() {
 
 // ===== descriptor: tlm_string
 pub fn main() {
-    let(name, _) = crate::Desc::Ref::typeDemo::NameCh();
+    let(name, _) = crate::Desc::Tlm::Ref::typeDemo::NameCh();
     if!name.is_empty() {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size();
@@ -1747,7 +1747,7 @@ pub fn main() {
                 CdhCore.cmdDisp.CMD_NO_OP();
             } {
                 const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-                crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+                crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
             }
         };
     }
@@ -1772,7 +1772,7 @@ pub fn main() {
 
 // ===== descriptor: tlm_struct
 pub fn main() {
-    let(scalars, _) = crate::Desc::Ref::typeDemo::ScalarStructCh();
+    let(scalars, _) = crate::Desc::Tlm::Ref::typeDemo::ScalarStructCh();
     if scalars.u32> 0 {
         {
             const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size();
@@ -1781,7 +1781,7 @@ pub fn main() {
                 CdhCore.cmdDisp.CMD_NO_OP();
             } {
                 const __FPRIME_BUF:&[u8] = &__FPRIME_CMD;
-                crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
+                crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)
             }
         };
     }
@@ -1789,35 +1789,35 @@ pub fn main() {
 
 
 // ===== test body: const call
-t.expect_command({const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size(); const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__encode::<__FPRIME_LEN>(); if false {CdhCore.cmdDisp.CMD_NO_OP();} {const __FPRIME_BUF:&[u8] = &__FPRIME_CMD; crate::Desc::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)}});
+t.expect_command({const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__size(); const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP__encode::<__FPRIME_LEN>(); if false {CdhCore.cmdDisp.CMD_NO_OP();} {const __FPRIME_BUF:&[u8] = &__FPRIME_CMD; crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP.with(__FPRIME_BUF)}});
 
 
 // ===== test body: const call with a string
-t.expect_command({const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP_STRING__size("hello"); const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP_STRING__encode::<__FPRIME_LEN>("hello"); if false {CdhCore.cmdDisp.CMD_NO_OP_STRING("hello");} {const __FPRIME_BUF:&[u8] = &__FPRIME_CMD; crate::Desc::CdhCore::cmdDisp::CMD_NO_OP_STRING.with(__FPRIME_BUF)}});
+t.expect_command({const __FPRIME_LEN:usize = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP_STRING__size("hello"); const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::CdhCore::cmdDisp::CMD_NO_OP_STRING__encode::<__FPRIME_LEN>("hello"); if false {CdhCore.cmdDisp.CMD_NO_OP_STRING("hello");} {const __FPRIME_BUF:&[u8] = &__FPRIME_CMD; crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP_STRING.with(__FPRIME_BUF)}});
 
 
 // ===== test body: bare command
-t.expect_command(crate::Desc::CdhCore::cmdDisp::CMD_NO_OP);
+t.expect_command(crate::Desc::Cmd::CdhCore::cmdDisp::CMD_NO_OP);
 
 
 // ===== test body: bare command, never
-t.never_command(crate::Desc::Ref::wasmSeq::LOAD);
+t.never_command(crate::Desc::Cmd::Ref::wasmSeq::LOAD);
 
 
 // ===== test body: bare channel
-t.expect_telemetry_read(crate::Desc::CdhCore::events::EventsDropped);
+t.expect_telemetry_read(crate::Desc::Tlm::CdhCore::events::EventsDropped);
 
 
 // ===== test body: channel with a value
-t.initial_telemetry(crate::Desc::CdhCore::events::EventsDropped, 5);
+t.initial_telemetry(crate::Desc::Tlm::CdhCore::events::EventsDropped, 5);
 
 
 // ===== test body: bare parameter
-t.initial_parameter(crate::Desc::Ref::wasmSeq::INSTRUCTION_FUEL, 20);
+t.initial_parameter(crate::Desc::Prm::Ref::wasmSeq::INSTRUCTION_FUEL, 20);
 
 
 // ===== test body: struct argument, partly qualified
-t.never_command({const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR__size(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::TWO,}); const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR__encode::<__FPRIME_LEN>(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::TWO,}); if false {Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::TWO,});} {const __FPRIME_BUF:&[u8] = &__FPRIME_CMD; crate::Desc::Ref::typeDemo::CHOICE_PAIR.with(__FPRIME_BUF)}});
+t.never_command({const __FPRIME_LEN:usize = crate::Konst::Ref::typeDemo::CHOICE_PAIR__size(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::TWO,}); const __FPRIME_CMD:[u8; __FPRIME_LEN] = crate::Konst::Ref::typeDemo::CHOICE_PAIR__encode::<__FPRIME_LEN>(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::TWO,}); if false {Ref.typeDemo.CHOICE_PAIR(crate::Dict::Ref::ChoicePair {firstChoice:crate::Dict::Ref::Choice::RED, secondChoice:crate::Dict::Ref::Choice::TWO,});} {const __FPRIME_BUF:&[u8] = &__FPRIME_CMD; crate::Desc::Cmd::Ref::typeDemo::CHOICE_PAIR.with(__FPRIME_BUF)}});
 
 
 // ===== test body: runtime argument

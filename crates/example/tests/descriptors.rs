@@ -24,7 +24,7 @@ fn serialize<I: Serializable>(value: I) -> Vec<u8> {
 
 #[test]
 fn scalar_channel_encodes_big_endian() {
-    let chan = Desc::Ref::typeDemo::ScalarF32Ch;
+    let chan = Desc::Tlm::Ref::typeDemo::ScalarF32Ch;
     assert_eq!(chan.id, 0x10005012);
     assert_eq!(chan.path, "Ref.typeDemo.ScalarF32Ch");
     assert_eq!(chan.ty, "F32");
@@ -35,7 +35,7 @@ fn scalar_channel_encodes_big_endian() {
 /// Enum channels take the generated enum, not a bare number.
 #[test]
 fn enum_channel_takes_generated_enum() {
-    let chan = Desc::Ref::typeDemo::ChoiceCh;
+    let chan = Desc::Tlm::Ref::typeDemo::ChoiceCh;
     assert_eq!(chan.ty, "Ref.Choice");
     assert_eq!(
         wire(chan, example::Dict::Ref::Choice::BLUE),
@@ -46,7 +46,7 @@ fn enum_channel_takes_generated_enum() {
 /// `string size N` still takes a bare `&str`; wire form is `u16` length then bytes.
 #[test]
 fn string_channel_takes_str() {
-    let chan = Desc::Ref::typeDemo::NameCh;
+    let chan = Desc::Tlm::Ref::typeDemo::NameCh;
     assert_eq!(chan.ty, "string size 40");
     assert_eq!(wire(chan, "safe"), vec![0x00, 0x04, b's', b'a', b'f', b'e']);
     // The buffer is sized for the cap, but only what was written is served.
@@ -57,7 +57,7 @@ fn string_channel_takes_str() {
 /// never a panic in the middle of a test run.
 #[test]
 fn string_channel_truncates_to_the_dictionary_cap() {
-    let chan = Desc::Ref::typeDemo::NameCh; // string size 40
+    let chan = Desc::Tlm::Ref::typeDemo::NameCh; // string size 40
     let bytes = wire(chan, "x".repeat(50).as_str());
     assert_eq!(&bytes[..2], &[0x00, 40]);
     assert_eq!(bytes.len(), 2 + 40);
@@ -67,7 +67,7 @@ fn string_channel_truncates_to_the_dictionary_cap() {
 /// mid-character, so 39 are sent.
 #[test]
 fn string_channel_truncates_whole_characters() {
-    let chan = Desc::Ref::typeDemo::NameCh;
+    let chan = Desc::Tlm::Ref::typeDemo::NameCh;
     let bytes = wire(chan, "€".repeat(14).as_str());
     assert_eq!(&bytes[..2], &[0x00, 39]);
     assert_eq!(bytes.len(), 2 + 39);
@@ -76,7 +76,7 @@ fn string_channel_truncates_whole_characters() {
 /// An alias behaves as its underlying type (`FwSizeType` is `u64`).
 #[test]
 fn aliased_channel_resolves_underlying_type() {
-    let chan = Desc::CdhCore::events::EventsDropped;
+    let chan = Desc::Tlm::CdhCore::events::EventsDropped;
     assert_eq!(chan.ty, "FwSizeType");
     assert_eq!(wire(chan, 3), vec![0, 0, 0, 0, 0, 0, 0, 3]);
 }
@@ -84,7 +84,7 @@ fn aliased_channel_resolves_underlying_type() {
 /// Parameters are a distinct descriptor type from channels.
 #[test]
 fn parameter_is_its_own_descriptor_type() {
-    let prm = Desc::Ref::recvBuffComp::parameter1;
+    let prm = Desc::Prm::Ref::recvBuffComp::parameter1;
     assert_eq!(prm.id, 0x10022000);
     assert_eq!(prm.path, "Ref.recvBuffComp.parameter1");
     assert_eq!(wire_prm(prm, 7), vec![0, 0, 0, 7]);
@@ -93,7 +93,7 @@ fn parameter_is_its_own_descriptor_type() {
 /// A bare command descriptor matches on opcode alone.
 #[test]
 fn command_descriptor_carries_opcode_and_name() {
-    let cmd = Desc::Ref::wasmSeq::LOAD;
+    let cmd = Desc::Cmd::Ref::wasmSeq::LOAD;
     assert_eq!(cmd.opcode, 0x10007002);
     assert_eq!(cmd.path, "Ref.wasmSeq.LOAD");
 }
@@ -107,7 +107,7 @@ fn command_with_arguments_carries_exact_combuffer() {
     // rvalue static promotion, and stays deduplicable across call sites.
     const BYTES: &[u8] = &BUFFER;
 
-    let cmd = Desc::Ref::wasmSeq::LOAD.with(BYTES);
+    let cmd = Desc::Cmd::Ref::wasmSeq::LOAD.with(BYTES);
     assert_eq!(cmd.opcode(), 0x10007002);
     assert_eq!(cmd.path, "Ref.wasmSeq.LOAD");
     // `args()` is what a recorded `Call::Command` payload holds: the harness splits the
@@ -133,7 +133,7 @@ fn responses_carry_name_and_code() {
 #[test]
 fn descriptor_is_copy_regardless_of_value_type() {
     // `Ref.ScalarStruct` derives Clone, Debug, PartialEq and Serializable — not Copy.
-    let chan = Desc::Ref::typeDemo::ScalarStructCh;
+    let chan = Desc::Tlm::Ref::typeDemo::ScalarStructCh;
     let copied = chan;
     assert_eq!(chan.path, copied.path);
 }
@@ -141,7 +141,7 @@ fn descriptor_is_copy_regardless_of_value_type() {
 /// Members are written in dictionary `index` order, not literal order.
 #[test]
 fn struct_channel_encodes_members_in_dictionary_order() {
-    let chan = Desc::Ref::typeDemo::ScalarStructCh;
+    let chan = Desc::Tlm::Ref::typeDemo::ScalarStructCh;
     let bytes = wire(
         chan,
         example::Dict::Ref::ScalarStruct {
@@ -171,7 +171,7 @@ fn struct_channel_encodes_members_in_dictionary_order() {
 #[test]
 fn array_channel_takes_generated_array() {
     use example::Dict::Ref::Choice;
-    let chan = Desc::Ref::typeDemo::ChoicesCh;
+    let chan = Desc::Tlm::Ref::typeDemo::ChoicesCh;
     assert_eq!(chan.ty, "Ref.ManyChoices");
     assert_eq!(
         wire(chan, [Choice::RED, Choice::BLUE]),

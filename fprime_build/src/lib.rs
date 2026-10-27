@@ -98,13 +98,12 @@ pub(crate) fn generate_to_file<W: ?Sized + Write>(
     writer.flush().expect("failed to flush file")
 }
 
-/// The `Desc` tree: one `const` per dictionary point, for `#[fprime_test]` to resolve against.
+/// The `Desc` tree: one `const` per dictionary point, for `#[fprime_test]` to resolve against,
+/// under `Desc::Cmd`, `Desc::Tlm` and `Desc::Prm` as the flight API's `Cmd`, `Tlm` and `Prm`.
 pub(crate) fn generate_descriptors_to_file<W: ?Sized + Write>(
     dict: &fprime_dictionary::Dictionary,
     writer: &mut BufWriter<W>,
 ) {
-    desc::check_for_collisions(dict);
-
     let mut descs = vec![];
 
     for cmd in &dict.commands {
