@@ -30,4 +30,3 @@ pub use tlm::*;
 
 pub use core::fmt::Write;
 pub use fprime_macros::*;
-pub use heapless;

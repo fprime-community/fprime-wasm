@@ -37,7 +37,6 @@ fn const_string_prefix_is_sized_by_the_dictionary() {
 fn string_round_trips_through_a_wide_prefix() {
     use example::StrTruncate;
 
-    // heapless has no `u64` length, so this is a `heapless::String<8, usize>` in memory.
     type Wide = fprime_core::String<8, u64>;
     assert_eq!(Wide::SIZE, 8 + 8);
 

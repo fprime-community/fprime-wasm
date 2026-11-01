@@ -29,7 +29,7 @@ pub(crate) fn command(attr: TokenStream, item: TokenStream) -> syn::Result<Token
                 let name = &arg.pat;
                 let wire = &arg.ty;
                 serialize.push(quote_spanned! { span =>
-                    serialize_str::<#wire>(#name, __encoded, &mut __offset);
+                    <#wire>::serialize_str(#name, __encoded, &mut __offset);
                 });
 
                 let ty_span = arg.ty.span();

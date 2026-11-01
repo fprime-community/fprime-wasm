@@ -109,7 +109,7 @@ fn command_truncates_string_arguments() {
                 let mut __offset: usize = 0;
                 let __opcode: FwOpcodeType = 0x1000001;
                 __opcode.serialize_to(__encoded, &mut __offset);
-                serialize_str::<crate::String<40> >(arg1, __encoded, &mut __offset);
+                <crate::String<40> >::serialize_str(arg1, __encoded, &mut __offset);
 
                 unsafe { command(__encoded.get_unchecked(0..__offset)) }
             }
