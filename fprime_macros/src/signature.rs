@@ -66,12 +66,14 @@ pub(crate) fn return_type(stub: &ItemFn) -> syn::Result<&Type> {
     }
 }
 
-/// `Some(N)` when `ty` is a [`fprime_core::String<N>`](fprime_core::String).
+/// `Some((N, P))` when `ty` is a
+/// [`fprime_core::SerialString<N, P>`](fprime_core::SerialString): its capacity and
+/// the type its length prefix is serialized as.
 ///
 /// Modeled types always carry their full `crate::Dict::` path, so an
-/// unqualified `String<N>` is unambiguously the `fprime_core` re-export that a
-/// string-typed dictionary member renders as.
-pub(crate) fn string_capacity(ty: &Type) -> Option<&Expr> {
+/// unqualified `SerialString<N, P>` is unambiguously the `fprime_core` re-export
+/// that a string-typed dictionary member renders as.
+pub(crate) fn string_capacity(ty: &Type) -> Option<(&Expr, &Type)> {
     let Type::Path(path) = ty else {
         return None;
     };
@@ -81,7 +83,7 @@ pub(crate) fn string_capacity(ty: &Type) -> Option<&Expr> {
     }
 
     let segment = &path.path.segments[0];
-    if segment.ident != "String" {
+    if segment.ident != "SerialString" {
         return None;
     }
 
@@ -89,8 +91,11 @@ pub(crate) fn string_capacity(ty: &Type) -> Option<&Expr> {
         return None;
     };
 
-    match (arguments.args.len(), arguments.args.first()) {
-        (1, Some(GenericArgument::Const(size))) => Some(size),
+    let mut arguments = arguments.args.iter();
+    match (arguments.next(), arguments.next(), arguments.next()) {
+        (Some(GenericArgument::Const(size)), Some(GenericArgument::Type(prefix)), None) => {
+            Some((size, prefix))
+        }
         _ => None,
     }
 }

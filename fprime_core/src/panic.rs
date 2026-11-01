@@ -23,6 +23,8 @@ pub enum PanicCode {
     TimeBaseIncomparable = 8,
     /// Attempted to compare times with different contexts
     TimeContextIncomparable = 9,
+    /// A buffer was too long to fit into the size prefix
+    TooLargeForPrefix = 10,
 }
 
 /// Exit the runtime due to a system/response failure

@@ -43,7 +43,8 @@ fn enum_channel_takes_generated_enum() {
     );
 }
 
-/// `string size N` still takes a bare `&str`; wire form is `u16` length then bytes.
+/// `string size N` still takes a bare `&str`; wire form is an `FwSizeStoreType` length (the
+/// fixture's `u16` fallback) then bytes.
 #[test]
 fn string_channel_takes_str() {
     let chan = Desc::Tlm::Ref::typeDemo::NameCh;

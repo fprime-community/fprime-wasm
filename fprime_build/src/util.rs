@@ -21,13 +21,8 @@ pub(crate) fn type_name_size(dictionary: &Dictionary, ty: &TypeName) -> usize {
         },
         TypeName::Bool => 1,
         TypeName::String { size } => {
-            // Size prefix
-            type_name_size(
-                &dictionary,
-                &TypeName::QualifiedIdentifier {
-                    name: "FwSizeType".to_string(),
-                },
-            ) + (*size as usize)
+            // `FwSizeStoreType` length prefix
+            (dictionary.size_store_bytes() + *size) as usize
         }
         TypeName::QualifiedIdentifier { name } => type_definition_size(
             &dictionary,

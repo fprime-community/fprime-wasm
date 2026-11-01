@@ -2,7 +2,8 @@
 
 use example::Serializable;
 
-/// Wire form: big-endian opcode, then a `u16` length and the string bytes.
+/// Wire form: big-endian opcode, then an `FwSizeStoreType` length (a `u16`, which is what
+/// the fixture falls back to) and the string bytes.
 #[test]
 fn const_encoders_on_host() {
     const N: usize = example::Konst::Ref::wasmSeq::LOAD__size("helloworld");
@@ -16,6 +17,35 @@ fn const_encoders_on_host() {
             b'h', b'e', b'l', b'l', b'o', b'w', b'o', b'r', b'l', b'd',
         ]
     );
+}
+
+/// The const encoder writes whatever width `FwSizeStoreType` is, big-endian.
+#[test]
+fn const_string_prefix_is_sized_by_the_dictionary() {
+    let mut buffer = [0u8; 16];
+
+    let end = example::put_str(&mut buffer, 0, "hey", 40, 8);
+    assert_eq!(end, example::str_len("hey", 40, 8));
+    assert_eq!(&buffer[..end], &[0, 0, 0, 0, 0, 0, 0, 3, b'h', b'e', b'y']);
+
+    let end = example::put_str(&mut buffer, 0, "hey", 2, 1);
+    assert_eq!(&buffer[..end], &[2, b'h', b'e']);
+}
+
+/// A string round-trips through any prefix width, and its size counts that prefix.
+#[test]
+fn serial_string_round_trips_through_a_wide_prefix() {
+    use example::{SerialString, StrTruncate};
+
+    type Wide = SerialString<8, u64>;
+    assert_eq!(Wide::SIZE, 8 + 8);
+
+    let mut buffer = [0u8; Wide::SIZE];
+    let mut offset = 0usize;
+    Wide::truncate("hi").serialize_to(&mut buffer, &mut offset);
+    assert_eq!(&buffer[..offset], &[0, 0, 0, 0, 0, 0, 0, 2, b'h', b'i']);
+
+    assert_eq!(Wide::deserialize(&buffer).as_str(), "hi");
 }
 
 /// Every generated shape (enum, struct) must round-trip off-target.

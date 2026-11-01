@@ -31,11 +31,15 @@ pub fn derive_serializable(input: TokenStream) -> TokenStream {
 ///
 /// ```ignore
 /// #[fprime_command(opcode = 0x1000001)]
-/// pub fn CMD_NO_OP_STRING(&self, arg1: String<40>) -> super::Dict::Fw::CmdResponse {}
+/// pub fn CMD_NO_OP_STRING(
+///     &self,
+///     arg1: SerialString<40, crate::Dict::FwSizeStoreType>,
+/// ) -> super::Dict::Fw::CmdResponse {}
 /// ```
 ///
-/// A `String<N>` parameter is the wire type, not the calling convention: the
-/// caller passes a `&str` that is truncated to `N` bytes on the way out.
+/// A `SerialString<N, P>` parameter is the wire type, not the calling convention:
+/// the caller passes a `&str` that is truncated to `N` bytes on the way out, behind
+/// a `P` length.
 ///
 /// The expansion encodes the command into the enclosing module's `__SCRATCH`
 /// buffer, so it requires `__SCRATCH`, `__SCRATCH_SIZE` and the dictionary's

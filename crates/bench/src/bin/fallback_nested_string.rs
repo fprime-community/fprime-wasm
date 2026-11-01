@@ -1,4 +1,4 @@
-//! An array of strings. A string nested in an aggregate is a `String<N>` rather
+//! An array of strings. A string nested in an aggregate is a `SerialString` rather
 //! than a `&str`, so this shape can never be const encoded and always pays for
 //! the runtime accessor.
 #![no_std]

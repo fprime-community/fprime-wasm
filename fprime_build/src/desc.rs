@@ -99,12 +99,12 @@ pub fn responses(dict: &Dictionary) -> Option<(Qualifier, TokenStream)> {
 /// The wire type of a dictionary point: the `Serializable` a descriptor is generic over,
 /// which is what writes the point's bytes and states their size.
 ///
-/// A `string size N` point is a `String<N>`; a test still writes a bare `&str` for one,
-/// which `fprime_core::desc::IntoWire` converts.
+/// A `string size N` point is a `SerialString<N, _>`; a test still writes a bare `&str` for
+/// one, which `fprime_core::desc::IntoWire` converts.
 fn wire_type(dict: &Dictionary, ty: &TypeName) -> TokenStream {
     if let TypeName::String { size } = dict.underlying_type(ty) {
         let cap = Literal::u32_unsuffixed(*size);
-        return quote! { fprime_core::String<#cap> };
+        return quote! { fprime_core::SerialString<#cap, crate::Dict::FwSizeStoreType> };
     }
 
     type_name(ty)
@@ -175,7 +175,7 @@ mod tests {
         let wire = wire_type(&dict, &ty).to_string();
         assert!(
             wire.contains("String") && wire.contains("40"),
-            "a string point is a String<40>, got {wire}"
+            "a string point is a SerialString<40, _>, got {wire}"
         );
     }
 

@@ -9,6 +9,7 @@ mod prm;
 mod serial;
 mod serializable;
 mod sleep;
+mod string;
 pub mod time;
 mod tlm;
 
@@ -24,6 +25,7 @@ pub use prm::*;
 pub use serial::*;
 pub use serializable::*;
 pub use sleep::*;
+pub use string::*;
 pub use tlm::*;
 
 pub use core::fmt::Write;

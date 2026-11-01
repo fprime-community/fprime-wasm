@@ -1,5 +1,3 @@
-use crate::String;
-
 pub trait Serializable: Sized {
     const SIZE: usize;
 
@@ -51,68 +49,6 @@ primitive!(u64);
 primitive!(i64);
 primitive!(f32);
 primitive!(f64);
-
-impl<const N: usize> Serializable for String<N> {
-    const SIZE: usize = 2 + N;
-
-    #[inline(always)]
-    fn serialize_to(&self, to: &mut [u8], offset: &mut usize) {
-        let bytes = self.as_bytes();
-        let n = bytes.len();
-        (n as u16).serialize_to(to, offset);
-        let Some(dst) = to.get_mut(*offset..*offset + n) else {
-            crate::panic(crate::PanicCode::Truncated)
-        };
-
-        dst.copy_from_slice(bytes);
-        *offset += n;
-    }
-
-    fn deserialize_from(from: &[u8], offset: &mut usize) -> Self {
-        let n = u16::deserialize_from(from, offset) as usize;
-
-        if n > N {
-            crate::panic(crate::PanicCode::Truncated);
-        }
-
-        let Some(src) = from.get(*offset..*offset + n) else {
-            crate::panic(crate::PanicCode::Truncated)
-        };
-
-        let mut out: heapless::Vec<u8, N, u16> = heapless::Vec::new();
-        unsafe {
-            core::ptr::copy_nonoverlapping(src.as_ptr(), out.as_mut_ptr(), n);
-            out.set_len(n);
-        }
-
-        *offset += n;
-
-        // The host serializes an Fw::String, so these bytes are already valid UTF-8.
-        // Validating pulls in `core::str` validation machinery, so only pay for it
-        // in debug builds.
-        if cfg!(debug_assertions) && core::str::from_utf8(&out).is_err() {
-            crate::panic(crate::PanicCode::InvalidStatus);
-        }
-
-        unsafe { String::from_utf8_unchecked(out) }
-    }
-}
-
-/// Serialize a `&str` into a `String<N>` wire field, truncated to `N` bytes.
-#[inline(always)]
-pub fn serialize_str<const N: usize>(s: &str, to: &mut [u8], offset: &mut usize) {
-    let bytes = s.as_bytes();
-    let n = core::cmp::min(bytes.len(), N);
-
-    (n as u16).serialize_to(to, offset);
-
-    let Some(dst) = to.get_mut(*offset..*offset + n) else {
-        crate::panic(crate::PanicCode::Truncated)
-    };
-
-    dst.copy_from_slice(&bytes[..n]);
-    *offset += n;
-}
 
 impl<T: Serializable, const N: usize> Serializable for [T; N] {
     const SIZE: usize = T::SIZE * N;

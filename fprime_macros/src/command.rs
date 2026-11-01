@@ -23,14 +23,12 @@ pub(crate) fn command(attr: TokenStream, item: TokenStream) -> syn::Result<Token
 
         // Attribute the generated statement to the argument it serializes
         let span = arg.span();
-        match string_capacity(&arg.ty).cloned() {
-            // TODO(tumbar) Make string commanding configurable
-            // Currently we accept &str and truncate size to fit
-            Some(size) => {
+        match string_capacity(&arg.ty).map(|(size, prefix)| (size.clone(), prefix.clone())) {
+            Some((size, prefix)) => {
                 has_str_arg = true;
                 let name = &arg.pat;
                 serialize.push(quote_spanned! { span =>
-                    serialize_str::<#size>(#name, __encoded, &mut __offset);
+                    serialize_str::<#size, #prefix>(#name, __encoded, &mut __offset);
                 });
 
                 let ty_span = arg.ty.span();

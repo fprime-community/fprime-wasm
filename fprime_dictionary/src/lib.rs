@@ -300,7 +300,40 @@ pub struct Dictionary {
     pub telemetry_channels: Vec<TelemetryChannel>,
 }
 
+/// The dictionary type F Prime serializes a string's length as.
+pub const SIZE_STORE_TYPE: &str = "FwSizeStoreType";
+
 impl Dictionary {
+    /// The integer a string's length prefix is serialized as: [`SIZE_STORE_TYPE`], or `U16`
+    /// for a dictionary from before F Prime exported it, since that is what it was then.
+    pub fn size_store_kind(&self) -> IntegerKind {
+        use IntegerKind::*;
+
+        let Some(definition) = self.type_definitions.get(SIZE_STORE_TYPE) else {
+            return U16;
+        };
+
+        match definition {
+            TypeDefinition::Alias(AliasType {
+                underlying_type: TypeName::Integer { name },
+                ..
+            }) if matches!(name, U8 | U16 | U32 | U64) => *name,
+            _ => panic!("{SIZE_STORE_TYPE} must be an alias of an unsigned integer"),
+        }
+    }
+
+    /// Width in bytes of a string's length prefix; see [`Dictionary::size_store_kind`].
+    pub fn size_store_bytes(&self) -> u32 {
+        use IntegerKind::*;
+
+        match self.size_store_kind() {
+            U8 | I8 => 1,
+            U16 | I16 => 2,
+            U32 | I32 => 4,
+            U64 | I64 => 8,
+        }
+    }
+
     pub fn underlying_type<'a>(&'a self, type_name: &'a TypeName) -> &'a TypeName {
         match type_name {
             TypeName::QualifiedIdentifier { name } => match self.type_definitions.get(name) {
