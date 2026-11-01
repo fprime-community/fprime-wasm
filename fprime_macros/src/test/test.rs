@@ -86,14 +86,14 @@ fn command_serializes_arguments_in_order() {
     )
 }
 
-/// A `SerialString<N, P>` argument is the wire type, callers pass a truncated `&str`
+/// A `String<N>` argument is the wire type, callers pass a truncated `&str`
 #[test]
 fn command_truncates_string_arguments() {
     assert_expands(
         command::command(
             quote! { opcode = 0x1000001 },
             quote! {
-                pub fn CMD_NO_OP_STRING(&self, arg1: SerialString<40, crate::Dict::FwSizeStoreType>) -> super::Dict::Fw::CmdResponse {}
+                pub fn CMD_NO_OP_STRING(&self, arg1: crate::String<40>) -> super::Dict::Fw::CmdResponse {}
             },
         ),
         quote! {
@@ -109,7 +109,7 @@ fn command_truncates_string_arguments() {
                 let mut __offset: usize = 0;
                 let __opcode: FwOpcodeType = 0x1000001;
                 __opcode.serialize_to(__encoded, &mut __offset);
-                serialize_str::<40, crate::Dict::FwSizeStoreType>(arg1, __encoded, &mut __offset);
+                serialize_str::<crate::String<40> >(arg1, __encoded, &mut __offset);
 
                 unsafe { command(__encoded.get_unchecked(0..__offset)) }
             }
@@ -117,7 +117,7 @@ fn command_truncates_string_arguments() {
     )
 }
 
-/// A modeled `String` type keeps its `crate::Dict::` path, not mistaken for `fprime_core::SerialString`.
+/// A modeled `String` type keeps its `crate::Dict::` path, not mistaken for `crate::String<N>`.
 #[test]
 fn command_passes_modeled_string_by_value() {
     assert_expands(

@@ -1,4 +1,4 @@
-//! A string telemetry read, which deserializes into a `SerialString<N, _>`.
+//! A string telemetry read, which deserializes into a `String<N>`.
 #![no_std]
 #![no_main]
 

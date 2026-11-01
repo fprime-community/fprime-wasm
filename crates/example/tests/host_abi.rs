@@ -34,18 +34,29 @@ fn const_string_prefix_is_sized_by_the_dictionary() {
 
 /// A string round-trips through any prefix width, and its size counts that prefix.
 #[test]
-fn serial_string_round_trips_through_a_wide_prefix() {
-    use example::{SerialString, StrTruncate};
+fn string_round_trips_through_a_wide_prefix() {
+    use example::StrTruncate;
 
-    type Wide = SerialString<8, u64>;
+    // heapless has no `u64` length, so this is a `heapless::String<8, usize>` in memory.
+    type Wide = fprime_core::String<8, u64>;
     assert_eq!(Wide::SIZE, 8 + 8);
 
     let mut buffer = [0u8; Wide::SIZE];
     let mut offset = 0usize;
-    Wide::truncate("hi").serialize_to(&mut buffer, &mut offset);
+    let hi: Wide = StrTruncate::truncate("hi");
+    hi.serialize_to(&mut buffer, &mut offset);
     assert_eq!(&buffer[..offset], &[0, 0, 0, 0, 0, 0, 0, 2, b'h', b'i']);
 
     assert_eq!(Wide::deserialize(&buffer).as_str(), "hi");
+}
+
+/// The dictionary's `String` takes its prefix from `FwSizeStoreType`.
+#[test]
+fn dictionary_string_uses_the_size_store_type() {
+    assert_eq!(
+        <example::String<40> as Serializable>::SIZE,
+        size_of::<example::Dict::FwSizeStoreType>() + 40
+    );
 }
 
 /// Every generated shape (enum, struct) must round-trip off-target.

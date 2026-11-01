@@ -1,19 +1,21 @@
-use core::marker::PhantomData;
-use core::ops::{Deref, DerefMut};
-
 use crate::Serializable;
 
-/// Stack-backed String type
-/// The capacity specifies the
-pub type String<const N: usize> = heapless::String<N, u32>;
+/// Stack-backed string of capacity `N` whose length goes on the wire as a `P`.
+///
+/// `P` is the dictionary's `FwSizeStoreType`; generated code names this through its own
+/// `crate::String<N>`, which fills `P` in. In memory it is a plain [`heapless::String`].
+///
+/// `P` has no default so that reaching this alias instead of the dictionary's is a
+/// compile error, not a string with the wrong prefix.
+pub type String<const N: usize, P> = heapless::String<N, <P as StringPrefixType>::Len>;
 
 pub trait StrTruncate<const N: usize> {
     fn truncate(s: &str) -> Self;
 }
 
-impl<const N: usize> StrTruncate<N> for String<N> {
-    fn truncate(s: &str) -> String<N> {
-        let mut out: heapless::Vec<u8, N, u32> = heapless::Vec::new();
+impl<const N: usize, L: StringLen> StrTruncate<N> for heapless::String<N, L> {
+    fn truncate(s: &str) -> Self {
+        let mut out: heapless::Vec<u8, N, L> = heapless::Vec::new();
         let n = core::cmp::min(s.len(), N);
         unsafe {
             // Avoid `copy_nonoverlapping` since that induces a memcpy and without
@@ -28,108 +30,57 @@ impl<const N: usize> StrTruncate<N> for String<N> {
 }
 
 mod private {
-    use core::{
-        fmt::{Debug, Display},
-        ops::{Add, AddAssign, Sub, SubAssign},
-    };
-
-    use crate::Serializable;
-
-    pub trait Sealed:
-        Send
-        + Sync
-        + Copy
-        + Display
-        + Debug
-        + PartialEq
-        + Add<Output = Self>
-        + AddAssign
-        + Sub<Output = Self>
-        + SubAssign
-        + PartialOrd
-        + TryFrom<usize, Error: Debug>
-        + TryInto<usize, Error: Debug>
-        + Serializable
-    {
-    }
+    pub trait Sealed {}
 
     impl Sealed for u8 {}
     impl Sealed for u16 {}
     impl Sealed for u32 {}
     impl Sealed for u64 {}
+    impl Sealed for usize {}
 }
 
-pub trait StringPrefixType: private::Sealed {}
+/// A type a string's length can be serialized as, and the length type a
+/// [`heapless::String`] keeps it in.
+pub trait StringPrefixType:
+    private::Sealed + Copy + TryFrom<usize> + TryInto<usize> + Serializable
+{
+    type Len: StringLen<Prefix = Self>;
+}
 
-impl StringPrefixType for u8 {}
-impl StringPrefixType for u16 {}
-impl StringPrefixType for u32 {}
-impl StringPrefixType for u64 {}
-
-/// A `string size N` as it goes on the wire: a `PrefixTy` length, then the bytes.
+/// The other direction: which prefix a [`heapless::String`]'s length type serializes as.
 ///
-/// F Prime serializes a string's length as `FwSizeStoreType`, so generated code names
-/// this with the dictionary's alias for `PrefixTy`. It reads as the [`String`] it holds.
-#[derive(Clone, Debug, PartialEq)]
-pub struct SerialString<const N: usize, PrefixTy: StringPrefixType>(
-    String<N>,
-    PhantomData<PrefixTy>,
-);
-
-impl<const N: usize, PrefixTy: StringPrefixType> SerialString<N, PrefixTy> {
-    pub const fn new() -> Self {
-        SerialString(String::new(), PhantomData)
-    }
+/// heapless has no `u64` length, so a `u64` prefix is kept in a `usize`.
+pub trait StringLen: private::Sealed + heapless::LenType {
+    type Prefix: StringPrefixType<Len = Self>;
 }
 
-impl<const N: usize, PrefixTy: StringPrefixType> From<String<N>> for SerialString<N, PrefixTy> {
-    fn from(s: String<N>) -> Self {
-        SerialString(s, PhantomData)
-    }
+macro_rules! prefix {
+    ($prefix:ty, $len:ty) => {
+        impl StringPrefixType for $prefix {
+            type Len = $len;
+        }
+
+        impl StringLen for $len {
+            type Prefix = $prefix;
+        }
+    };
 }
 
-impl<const N: usize, PrefixTy: StringPrefixType> Deref for SerialString<N, PrefixTy> {
-    type Target = String<N>;
+prefix!(u8, u8);
+prefix!(u16, u16);
+prefix!(u32, u32);
+prefix!(u64, usize);
 
-    fn deref(&self) -> &String<N> {
-        &self.0
-    }
-}
-
-impl<const N: usize, PrefixTy: StringPrefixType> DerefMut for SerialString<N, PrefixTy> {
-    fn deref_mut(&mut self) -> &mut String<N> {
-        &mut self.0
-    }
-}
-
-impl<const N: usize, PrefixTy: StringPrefixType> StrTruncate<N> for SerialString<N, PrefixTy> {
-    fn truncate(s: &str) -> Self {
-        SerialString(<String<N> as StrTruncate<N>>::truncate(s), PhantomData)
-    }
-}
-
-impl<const N: usize, PrefixTy: StringPrefixType> Serializable for SerialString<N, PrefixTy> {
-    const SIZE: usize = PrefixTy::SIZE + N;
+impl<const N: usize, L: StringLen> Serializable for heapless::String<N, L> {
+    const SIZE: usize = <L::Prefix as Serializable>::SIZE + N;
 
     #[inline(always)]
     fn serialize_to(&self, to: &mut [u8], offset: &mut usize) {
-        let bytes = self.0.as_bytes();
-        let n = bytes.len();
-        if let Ok(n) = PrefixTy::try_from(n) {
-            n.serialize_to(to, offset);
-        } else {
-            crate::panic(crate::PanicCode::TooLargeForPrefix)
-        }
-        let Some(dst) = to.get_mut(*offset..*offset + n) else {
-            crate::panic(crate::PanicCode::Truncated)
-        };
-
-        dst.copy_from_slice(bytes);
-        *offset += n;
+        serialize_str::<Self>(self, to, offset)
     }
 
     fn deserialize_from(from: &[u8], offset: &mut usize) -> Self {
-        let Ok(n) = PrefixTy::deserialize_from(from, offset).try_into() else {
+        let Ok(n) = L::Prefix::deserialize_from(from, offset).try_into() else {
             crate::panic(crate::PanicCode::TooLargeForPrefix);
         };
 
@@ -141,7 +92,7 @@ impl<const N: usize, PrefixTy: StringPrefixType> Serializable for SerialString<N
             crate::panic(crate::PanicCode::Truncated)
         };
 
-        let mut out: heapless::Vec<u8, N, u32> = heapless::Vec::new();
+        let mut out: heapless::Vec<u8, N, L> = heapless::Vec::new();
         unsafe {
             core::ptr::copy_nonoverlapping(src.as_ptr(), out.as_mut_ptr(), n);
             out.set_len(n);
@@ -156,24 +107,30 @@ impl<const N: usize, PrefixTy: StringPrefixType> Serializable for SerialString<N
             crate::panic(crate::PanicCode::InvalidStatus);
         }
 
-        unsafe { SerialString(String::from_utf8_unchecked(out), PhantomData) }
+        unsafe { heapless::String::from_utf8_unchecked(out) }
     }
 }
 
-/// Serialize a `&str` into a `SerialString<N, PREFIX>` wire field, truncated to `N` bytes.
+/// A string type's wire shape: what [`serialize_str`] needs to write a `&str` as one.
+pub trait WireString {
+    const CAPACITY: usize;
+    type Prefix: StringPrefixType;
+}
+
+impl<const N: usize, L: StringLen> WireString for heapless::String<N, L> {
+    const CAPACITY: usize = N;
+    type Prefix = L::Prefix;
+}
+
+/// Serialize a `&str` as an `S` wire field, truncated to its capacity.
 #[inline(always)]
-pub fn serialize_str<const N: usize, PREFIX: StringPrefixType>(
-    s: &str,
-    to: &mut [u8],
-    offset: &mut usize,
-) {
+pub fn serialize_str<S: WireString>(s: &str, to: &mut [u8], offset: &mut usize) {
     let bytes = s.as_bytes();
-    let n = core::cmp::min(bytes.len(), N);
-    if let Ok(n) = PREFIX::try_from(n) {
-        n.serialize_to(to, offset);
-    } else {
+    let n = core::cmp::min(bytes.len(), S::CAPACITY);
+    let Ok(prefix) = S::Prefix::try_from(n) else {
         crate::panic(crate::PanicCode::TooLargeForPrefix);
     };
+    prefix.serialize_to(to, offset);
 
     let Some(dst) = to.get_mut(*offset..*offset + n) else {
         crate::panic(crate::PanicCode::Truncated)

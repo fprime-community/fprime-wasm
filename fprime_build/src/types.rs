@@ -27,7 +27,7 @@ pub(crate) fn type_name(tn: &TypeName) -> TokenStream {
         TypeName::Bool => quote! { bool },
         TypeName::String { size } => {
             let size_u = Literal::u32_unsuffixed(*size);
-            quote! { SerialString<#size_u, crate::Dict::FwSizeStoreType> }
+            quote! { crate::String<#size_u> }
         }
         TypeName::QualifiedIdentifier { name } => definition_path(name),
     }

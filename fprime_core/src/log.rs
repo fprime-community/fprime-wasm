@@ -1,10 +1,10 @@
-use crate::{String, abi};
+use crate::abi;
 use core::fmt::Arguments;
 
 #[macro_export]
 macro_rules! format {
     ($size:expr, $($arg:tt)+) => {
-        fprime_core::heapless::string::format::<$size, u32>(format_args!($($arg)+)).unwrap()
+        fprime_core::heapless::string::format::<$size, u16>(format_args!($($arg)+)).unwrap()
     };
 }
 
@@ -40,6 +40,6 @@ macro_rules! messagef {
 
 #[inline]
 pub fn messagef_impl(severity: EventSeverity, args: Arguments<'_>) {
-    let s: String<120> = heapless::string::format(args).unwrap();
+    let s: heapless::String<120> = heapless::string::format(args).unwrap();
     message(severity, &s)
 }

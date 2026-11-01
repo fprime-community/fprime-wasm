@@ -1614,8 +1614,8 @@ pub fn main() {
 
 // ===== sequence: serial_string
 pub fn main() {
-    let inbox = serial_in!(SerialString <40, Dict::FwSizeStoreType>, 0);
-    let outbox = serial_out!(SerialString <40, Dict::FwSizeStoreType>, 0);
+    let inbox = serial_in!(String <40>, 0);
+    let outbox = serial_out!(String <40>, 0);
     let request = inbox.recv_block();
     if!request.is_empty() {
         outbox.send(request);
@@ -1624,8 +1624,8 @@ pub fn main() {
 
 // ===== descriptor: serial_string
 pub fn main() {
-    let inbox = serial_in!(SerialString <40, Dict::FwSizeStoreType>, 0);
-    let outbox = serial_out!(SerialString <40, Dict::FwSizeStoreType>, 0);
+    let inbox = serial_in!(String <40>, 0);
+    let outbox = serial_out!(String <40>, 0);
     let request = inbox.recv_block();
     if!request.is_empty() {
         outbox.send(request);

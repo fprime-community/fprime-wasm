@@ -4,6 +4,7 @@ const __SCRATCH_SIZE: usize = 246usize;
 static mut __SCRATCH: [u8; __SCRATCH_SIZE] = [0x0; __SCRATCH_SIZE];
 const __TIME_SIZE: usize = crate::Dict::Fw::TimeValue::SIZE;
 static mut __TIME: [u8; __TIME_SIZE] = [0; __TIME_SIZE];
+pub type String<const N: usize> = fprime_core::String<N, crate::Dict::FwSizeStoreType>;
 pub fn now() -> crate::Dict::Fw::TimeValue {
     use fprime_core::Serializable;
     let mut buf: [u8; crate::Dict::Fw::TimeValue::SIZE] = [0; crate::Dict::Fw::TimeValue::SIZE];
@@ -166,7 +167,7 @@ pub mod Dict {
             #[derive(Clone, Debug, PartialEq, Serializable)]
             pub struct ColorInfoStruct {
                 pub color: crate::Dict::Ref::DpDemo::ColorEnum,
-                pub name: SerialString<40, crate::Dict::FwSizeStoreType>,
+                pub name: crate::String<40>,
             }
             /// How a data product is requested
             #[derive(Clone, Copy, Debug, Eq, PartialEq, Serializable)]
@@ -180,7 +181,7 @@ pub mod Dict {
             /// An array of floats
             pub type F32Array = [f32; 3];
             /// An array of strings
-            pub type StringArray = [SerialString<80, crate::Dict::FwSizeStoreType>; 2];
+            pub type StringArray = [crate::String<80>; 2];
             /// An array of scalars
             pub type U32Array = [u32; 5];
             /// Another integer constant
@@ -248,7 +249,7 @@ pub mod Cmd {
         #[fprime_command(opcode = 0x1000001)]
         pub fn CMD_NO_OP_STRING(
             &self,
-            arg1: SerialString<40, crate::Dict::FwSizeStoreType>,
+            arg1: crate::String<40>,
         ) -> fprime_core::CmdResponse {}
         /// A command with a signed, a float and an unsigned argument
         ///
@@ -287,7 +288,7 @@ pub mod Cmd {
         #[fprime_command(opcode = 0x1002001)]
         pub fn HLTH_PING_ENABLE(
             &self,
-            entry: SerialString<40, crate::Dict::FwSizeStoreType>,
+            entry: crate::String<40>,
             enable: crate::Dict::Fw::Enabled,
         ) -> fprime_core::CmdResponse {}
     }
@@ -453,7 +454,7 @@ pub mod Cmd {
         #[fprime_command(opcode = 0x1000501B)]
         pub fn SEND_TINY_STRING(
             &self,
-            tiny: SerialString<8, crate::Dict::FwSizeStoreType>,
+            tiny: crate::String<8>,
         ) -> fprime_core::CmdResponse {}
         /// An array of arrays
         ///
@@ -519,10 +520,7 @@ pub mod Cmd {
         ///
         ///  * `fileName`
         #[fprime_command(opcode = 0x10007002)]
-        pub fn LOAD(
-            &self,
-            fileName: SerialString<240, crate::Dict::FwSizeStoreType>,
-        ) -> fprime_core::CmdResponse {}
+        pub fn LOAD(&self, fileName: crate::String<240>) -> fprime_core::CmdResponse {}
     }
     pub struct Ref {
         pub SG1: RefSg1,
@@ -587,12 +585,7 @@ pub mod Tlm {
         ) -> (crate::Dict::Ref::ManyChoices, super::Dict::Fw::TimeValue) {}
         /// A string channel
         #[fprime_telemetry(id = 0x10005002)]
-        pub fn NameCh(
-            &self,
-        ) -> (
-            SerialString<40, crate::Dict::FwSizeStoreType>,
-            super::Dict::Fw::TimeValue,
-        ) {}
+        pub fn NameCh(&self) -> (crate::String<40>, super::Dict::Fw::TimeValue) {}
         /// A structure channel
         #[fprime_telemetry(id = 0x10005009)]
         pub fn ScalarStructCh(
