@@ -53,15 +53,16 @@ pub fn command(dict: &Dictionary, cmd: &Command) -> Option<(Qualifier, TokenStre
     let opcode_size = type_name_size(dict, &opcode_type());
 
     // The size of everything that is not a string is fixed by the dictionary; a
-    // string contributes its `u16` prefix plus however much of it survives
-    // truncation, which only `str_len` can say.
+    // string contributes its `FwSizeStoreType` prefix plus however much of it
+    // survives truncation, which only `str_len` can say.
     let mut fixed = opcode_size;
     let mut variable = vec![];
     for (name, _, arg) in &args {
         match arg {
-            ConstArg::Str { capacity } => {
+            ConstArg::Str { capacity, prefix } => {
                 let capacity = Literal::u32_unsuffixed(*capacity);
-                variable.push(quote! { + str_len(#name, #capacity) });
+                let prefix = Literal::u32_unsuffixed(*prefix);
+                variable.push(quote! { + str_len(#name, #capacity, #prefix) });
             }
             _ => {
                 fixed += param_size(dict, cmd, name);
@@ -152,9 +153,10 @@ fn write_value(plan: &ConstArg, access: &TokenStream, depth: usize) -> TokenStre
             let cast = str_to_ident(cast);
             quote! { __offset = #put(&mut __buf, __offset, #access as #cast); }
         }
-        ConstArg::Str { capacity } => {
+        ConstArg::Str { capacity, prefix } => {
             let capacity = Literal::u32_unsuffixed(*capacity);
-            quote! { __offset = put_str(&mut __buf, __offset, #access, #capacity); }
+            let prefix = Literal::u32_unsuffixed(*prefix);
+            quote! { __offset = put_str(&mut __buf, __offset, #access, #capacity, #prefix); }
         }
         ConstArg::Array { element, size } => {
             // A `while` rather than an unrolled run of writes: both cost nothing

@@ -28,9 +28,11 @@ pub enum ConstArg {
         cast: &'static str,
     },
 
-    /// `put_str(&mut buf, offset, <access>, <capacity>)`.
+    /// `put_str(&mut buf, offset, <access>, <capacity>, <prefix>)`, `prefix` being the
+    /// width in bytes of the `FwSizeStoreType` length.
     Str {
         capacity: u32,
+        prefix: u32,
     },
 
     Array {
@@ -112,7 +114,10 @@ impl Dictionary {
                 put: "put_u8",
                 cast: "u8",
             }),
-            TypeName::String { size } => strings.then_some(ConstArg::Str { capacity: *size }),
+            TypeName::String { size } => strings.then(|| ConstArg::Str {
+                capacity: *size,
+                prefix: self.size_store_bytes(),
+            }),
             TypeName::QualifiedIdentifier { name } => {
                 // `resolved_type` stops at the first non-alias, so this names a
                 // struct, array or enum definition.

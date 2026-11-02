@@ -297,7 +297,7 @@ pub mod Desc {
                     "Ref.ManyChoices",
                 );
                 /// A string channel
-                pub const NameCh: fprime_core::desc::Chan<fprime_core::String<40>> = fprime_core::desc::Chan::new(
+                pub const NameCh: fprime_core::desc::Chan<crate::String<40>> = fprime_core::desc::Chan::new(
                     0x10005002 as i64,
                     "Ref.typeDemo.NameCh",
                     "string size 40",

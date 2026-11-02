@@ -1,34 +1,10 @@
-use crate::abi;
+use crate::{String, abi};
 use core::fmt::Arguments;
-
-/// Stack-backed String type
-/// The capacity specifies the
-pub type String<const N: usize> = heapless::String<N, u16>;
-
-pub trait StrTruncate<const N: usize> {
-    fn truncate(s: &str) -> Self;
-}
-
-impl<const N: usize> StrTruncate<N> for String<N> {
-    fn truncate(s: &str) -> String<N> {
-        let mut out: heapless::Vec<u8, N, u16> = heapless::Vec::new();
-        let n = core::cmp::min(s.len(), N);
-        unsafe {
-            // Avoid `copy_nonoverlapping` since that induces a memcpy and without
-            // bulk-memory operations in spacewasm it would cost a large amout of `.wasm` size.
-            out.set_len(n);
-            for (i, c) in s.get_unchecked(..n).as_bytes().iter().enumerate() {
-                *out.get_unchecked_mut(i) = *c;
-            }
-            heapless::String::from_utf8_unchecked(out)
-        }
-    }
-}
 
 #[macro_export]
 macro_rules! format {
     ($size:expr, $($arg:tt)+) => {
-        fprime_core::heapless::string::format::<$size, u16>(format_args!($($arg)+)).unwrap()
+        $crate::String::<$size, _>::format(format_args!($($arg)+)).unwrap()
     };
 }
 
@@ -64,6 +40,6 @@ macro_rules! messagef {
 
 #[inline]
 pub fn messagef_impl(severity: EventSeverity, args: Arguments<'_>) {
-    let s: String<120> = heapless::string::format(args).unwrap();
+    let s = String::<120, u32>::format(args).unwrap();
     message(severity, &s)
 }

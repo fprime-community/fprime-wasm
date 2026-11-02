@@ -27,7 +27,7 @@ pub(crate) fn type_name(tn: &TypeName) -> TokenStream {
         TypeName::Bool => quote! { bool },
         TypeName::String { size } => {
             let size_u = Literal::u32_unsuffixed(*size);
-            quote! { String<#size_u> }
+            quote! { crate::String<#size_u> }
         }
         TypeName::QualifiedIdentifier { name } => definition_path(name),
     }
@@ -105,6 +105,20 @@ fn alias_type_definition(ty: &AliasType) -> (Qualifier, TokenStream) {
     };
 
     (q, annotate(alias_def, &ty.annotation))
+}
+
+/// `FwSizeStoreType` for a dictionary that does not export it, as the type F Prime
+/// serialized a string's length as before it did.
+pub(crate) fn size_store_fallback(dictionary: &Dictionary) -> TokenStream {
+    let name = str_to_ident(fprime_dictionary::SIZE_STORE_TYPE);
+    let tn = type_name(&TypeName::Integer {
+        name: dictionary.size_store_kind(),
+    });
+
+    quote! {
+        /// The type used to serialize a size value
+        pub type #name = #tn;
+    }
 }
 
 pub(crate) fn type_definition(ty: &TypeDefinition) -> (Qualifier, TokenStream) {

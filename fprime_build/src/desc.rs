@@ -104,7 +104,7 @@ pub fn responses(dict: &Dictionary) -> Option<(Qualifier, TokenStream)> {
 fn wire_type(dict: &Dictionary, ty: &TypeName) -> TokenStream {
     if let TypeName::String { size } = dict.underlying_type(ty) {
         let cap = Literal::u32_unsuffixed(*size);
-        return quote! { fprime_core::String<#cap> };
+        return quote! { crate::String<#cap> };
     }
 
     type_name(ty)

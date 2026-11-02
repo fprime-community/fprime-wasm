@@ -6,7 +6,7 @@
 
 use proc_macro2::TokenStream;
 use syn::parse::{ParseStream, Parser};
-use syn::{Expr, GenericArgument, Ident, ItemFn, LitInt, PathArguments, ReturnType, Token, Type};
+use syn::{GenericArgument, Ident, ItemFn, LitInt, PathArguments, ReturnType, Token, Type};
 
 /// Parse a `#[fprime_*(<key> = 0x...)]` argument list into its literal.
 pub(crate) fn id_argument(attr: TokenStream, key: &str) -> syn::Result<LitInt> {
@@ -66,31 +66,37 @@ pub(crate) fn return_type(stub: &ItemFn) -> syn::Result<&Type> {
     }
 }
 
-/// `Some(N)` when `ty` is a [`fprime_core::String<N>`](fprime_core::String).
+/// Whether `ty` is the dictionary's `crate::String<N>`, a `string size N` (or the
+/// bare `String<N>` it is in scope as).
 ///
-/// Modeled types always carry their full `crate::Dict::` path, so an
-/// unqualified `String<N>` is unambiguously the `fprime_core` re-export that a
-/// string-typed dictionary member renders as.
-pub(crate) fn string_capacity(ty: &Type) -> Option<&Expr> {
+/// Modeled types always carry their full `crate::Dict::` path, so neither is
+/// mistaken for a dictionary type that happens to be named `String`.
+pub(crate) fn is_string(ty: &Type) -> bool {
     let Type::Path(path) = ty else {
-        return None;
+        return false;
     };
 
-    if path.qself.is_some() || path.path.segments.len() != 1 {
-        return None;
+    if path.qself.is_some() || path.path.leading_colon.is_some() {
+        return false;
     }
 
-    let segment = &path.path.segments[0];
+    let segments: Vec<_> = path.path.segments.iter().collect();
+    let segment = match segments.as_slice() {
+        [segment] => segment,
+        [krate, segment] if krate.ident == "crate" && krate.arguments.is_none() => segment,
+        _ => return false,
+    };
+
     if segment.ident != "String" {
-        return None;
+        return false;
     }
 
     let PathArguments::AngleBracketed(arguments) = &segment.arguments else {
-        return None;
+        return false;
     };
 
-    match (arguments.args.len(), arguments.args.first()) {
-        (1, Some(GenericArgument::Const(size))) => Some(size),
-        _ => None,
-    }
+    matches!(
+        arguments.args.iter().collect::<Vec<_>>().as_slice(),
+        [GenericArgument::Const(_)]
+    )
 }

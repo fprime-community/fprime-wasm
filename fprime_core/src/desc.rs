@@ -2,7 +2,7 @@
 //!
 //! Unused consts cost nothing on board — they aren't codegen'd.
 
-use crate::{Serializable, String};
+use crate::{Serializable, StrTruncate, String, StringPrefixType};
 use core::marker::PhantomData;
 
 /// A telemetry channel; `I` is the point's wire type, the one [`Serializable`] writes.
@@ -83,20 +83,10 @@ impl<I: Serializable> IntoWire<I> for I {
     }
 }
 
-impl<const N: usize> IntoWire<String<N>> for &str {
+impl<const N: usize, P: StringPrefixType> IntoWire<String<N, P>> for &str {
     /// Truncated to what the point holds, as assigning to an `Fw::String` is on board.
-    ///
-    /// Pushed a character at a time rather than through `StrTruncate`: nothing here is
-    /// flight code, so this side can afford to stop on a character boundary and to do it
-    /// without `unsafe`.
-    fn into_wire(self) -> String<N> {
-        let mut out = String::new();
-        for c in self.chars() {
-            if out.push(c).is_err() {
-                break;
-            }
-        }
-        out
+    fn into_wire(self) -> String<N, P> {
+        StrTruncate::truncate(self)
     }
 }
 

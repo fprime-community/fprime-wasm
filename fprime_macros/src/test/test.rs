@@ -93,7 +93,7 @@ fn command_truncates_string_arguments() {
         command::command(
             quote! { opcode = 0x1000001 },
             quote! {
-                pub fn CMD_NO_OP_STRING(&self, arg1: String<40>) -> super::Dict::Fw::CmdResponse {}
+                pub fn CMD_NO_OP_STRING(&self, arg1: crate::String<40>) -> super::Dict::Fw::CmdResponse {}
             },
         ),
         quote! {
@@ -109,7 +109,7 @@ fn command_truncates_string_arguments() {
                 let mut __offset: usize = 0;
                 let __opcode: FwOpcodeType = 0x1000001;
                 __opcode.serialize_to(__encoded, &mut __offset);
-                serialize_str::<40>(arg1, __encoded, &mut __offset);
+                <crate::String<40> >::serialize_str(arg1, __encoded, &mut __offset);
 
                 unsafe { command(__encoded.get_unchecked(0..__offset)) }
             }
@@ -117,7 +117,7 @@ fn command_truncates_string_arguments() {
     )
 }
 
-/// A modeled `String` type keeps its `crate::Dict::` path, not mistaken for `fprime_core::String<N>`.
+/// A modeled `String` type keeps its `crate::Dict::` path, not mistaken for `crate::String<N>`.
 #[test]
 fn command_passes_modeled_string_by_value() {
     assert_expands(

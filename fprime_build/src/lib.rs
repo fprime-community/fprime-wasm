@@ -1,5 +1,5 @@
 use crate::tree::{CodeTree, Definition};
-use fprime_dictionary::TypeDefinition;
+use fprime_dictionary::{SIZE_STORE_TYPE, TypeDefinition};
 use proc_macro2::TokenStream;
 use std::io::{BufWriter, Write};
 use std::path::Path;
@@ -51,6 +51,14 @@ pub(crate) fn generate_to_file<W: ?Sized + Write>(
     for name in type_names {
         let (qualifier, tokens) = types::type_definition(&dict.type_definitions[name]);
         definitions.push(Definition { qualifier, tokens });
+    }
+
+    // Every string names its length prefix through this alias
+    if !dict.type_definitions.contains_key(SIZE_STORE_TYPE) {
+        definitions.push(Definition {
+            qualifier: vec![],
+            tokens: types::size_store_fallback(dict),
+        });
     }
 
     for c in &dict.constants {

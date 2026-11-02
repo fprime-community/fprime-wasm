@@ -21,13 +21,8 @@ pub(crate) fn type_name_size(dictionary: &Dictionary, ty: &TypeName) -> usize {
         },
         TypeName::Bool => 1,
         TypeName::String { size } => {
-            // Size prefix
-            type_name_size(
-                &dictionary,
-                &TypeName::QualifiedIdentifier {
-                    name: "FwSizeType".to_string(),
-                },
-            ) + (*size as usize)
+            // `FwSizeStoreType` length prefix
+            (dictionary.size_store_bytes() + *size) as usize
         }
         TypeName::QualifiedIdentifier { name } => type_definition_size(
             &dictionary,
@@ -62,8 +57,8 @@ fn cmd_size(dictionary: &Dictionary, cmd: &Command) -> usize {
         })
 }
 
-/// The crate-root items every accessor leans on: the scratch buffers, `now()` and
-/// `TimeValue`'s ordering.
+/// The crate-root items every accessor leans on: the scratch buffers, the dictionary's
+/// `String`, `now()` and `TimeValue`'s ordering.
 pub(crate) fn global_helpers(dictionary: &Dictionary) -> TokenStream {
     let memory = global_memory(dictionary);
     let now = time_now();
@@ -74,6 +69,9 @@ pub(crate) fn global_helpers(dictionary: &Dictionary) -> TokenStream {
         use fprime_core::*;
 
         #memory
+
+        pub type String<const N: usize> = fprime_core::String<N, crate::Dict::FwSizeStoreType>;
+
         #now
         #cmp
     }
