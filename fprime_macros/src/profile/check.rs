@@ -6,7 +6,7 @@
 use super::config::{Binary, MethodCall, Profile, Rule, Unary};
 use super::waive::{self, Waiver};
 use proc_macro2::{Ident, Span, TokenStream};
-use quote::quote;
+use quote::{ToTokens, quote};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::visit::{self, Visit};
@@ -85,6 +85,19 @@ struct Checker<'p> {
 impl Checker<'_> {
     /// Records what `rule` says about the node at `span`, answering whether to walk into it.
     fn apply(&mut self, rule: &Rule, span: Span) -> bool {
+        self.record(rule, span, |message| syn::Error::new(span, message))
+    }
+
+    /// [`apply`](Self::apply), with an error covering `tokens` from first to last — stable
+    /// Rust can't join spans, so a node's own span is only its first token.
+    fn apply_spanned(&mut self, rule: &Rule, tokens: impl ToTokens) -> bool {
+        let span = tokens.span();
+        self.record(rule, span, |message| {
+            syn::Error::new_spanned(tokens, message)
+        })
+    }
+
+    fn record(&mut self, rule: &Rule, span: Span, error: impl FnOnce(&str) -> syn::Error) -> bool {
         match rule {
             Rule::Allow => true,
             Rule::Warn { message } => {
@@ -92,7 +105,7 @@ impl Checker<'_> {
                 true
             }
             Rule::Error { message } => {
-                self.findings.errors.push(syn::Error::new(span, message));
+                self.findings.errors.push(error(message));
                 false
             }
         }
@@ -203,7 +216,15 @@ impl Checker<'_> {
             Expr::Loop(_) => &rules.r#loop,
             Expr::Macro(_) => return visit::visit_expr(self, i),
             Expr::Match(_) => &rules.r#match,
-            Expr::MethodCall(call) => method_call_rule(&rules.method_call, call),
+            // Over the whole `Component.command.MNEMONIC`, but not its arguments.
+            Expr::MethodCall(call) => {
+                let rule = method_call_rule(&rules.method_call, call);
+                let (receiver, method) = (&call.receiver, &call.method);
+                if self.apply_spanned(rule, quote! { #receiver.#method }) {
+                    visit::visit_expr(self, i);
+                }
+                return;
+            }
             Expr::Paren(_) => &rules.paren,
             Expr::Path(_) => &rules.path,
             Expr::Range(_) => &rules.range,
