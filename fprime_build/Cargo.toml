@@ -14,7 +14,6 @@ rust-version.workspace = true
 fprime_dictionary = { path = "../fprime_dictionary", version = "=0.0.0" }
 proc-macro2 = "1.0.103"
 quote = "1.0.42"
-convert_case = "0.10.0"
 quote-doctest = "0.3.2"
 prettyplease = "0.2.37"
 syn = "2.0.111"

@@ -237,8 +237,8 @@ pub mod Cmd {
     use fprime_core::*;
     #[allow(unused_imports)]
     use super::Dict::FwOpcodeType;
-    pub struct CdhCoreCmdDisp {}
-    impl CdhCoreCmdDisp {
+    pub struct CdhCore_cmdDisp {}
+    impl CdhCore_cmdDisp {
         pub const DEFAULT: Self = Self {};
         /// No-op command
         #[fprime_command(opcode = 0x1000000)]
@@ -264,8 +264,8 @@ pub mod Cmd {
             arg3: u8,
         ) -> fprime_core::CmdResponse {}
     }
-    pub struct CdhCoreEvents {}
-    impl CdhCoreEvents {
+    pub struct CdhCore_events {}
+    impl CdhCore_events {
         pub const DEFAULT: Self = Self {};
         /// Set the event filter
         ///
@@ -278,8 +278,8 @@ pub mod Cmd {
             filterEnabled: crate::Dict::Svc::EventManager::Enabled,
         ) -> fprime_core::CmdResponse {}
     }
-    pub struct CdhCoreHealth {}
-    impl CdhCoreHealth {
+    pub struct CdhCore_health {}
+    impl CdhCore_health {
         pub const DEFAULT: Self = Self {};
         /// Enable or disable pinging of one entry
         ///
@@ -293,19 +293,19 @@ pub mod Cmd {
         ) -> fprime_core::CmdResponse {}
     }
     pub struct CdhCore {
-        pub cmdDisp: CdhCoreCmdDisp,
-        pub events: CdhCoreEvents,
-        pub health: CdhCoreHealth,
+        pub cmdDisp: CdhCore_cmdDisp,
+        pub events: CdhCore_events,
+        pub health: CdhCore_health,
     }
     impl CdhCore {
         pub const DEFAULT: Self = Self {
-            cmdDisp: CdhCoreCmdDisp::DEFAULT,
-            events: CdhCoreEvents::DEFAULT,
-            health: CdhCoreHealth::DEFAULT,
+            cmdDisp: CdhCore_cmdDisp::DEFAULT,
+            events: CdhCore_events::DEFAULT,
+            health: CdhCore_health::DEFAULT,
         };
     }
-    pub struct RefSg1 {}
-    impl RefSg1 {
+    pub struct Ref_SG1 {}
+    impl Ref_SG1 {
         pub const DEFAULT: Self = Self {};
         /// Request a data product from the signal generator
         ///
@@ -320,8 +320,8 @@ pub mod Cmd {
             priority: u32,
         ) -> fprime_core::CmdResponse {}
     }
-    pub struct RefDpDemo {}
-    impl RefDpDemo {
+    pub struct Ref_dpDemo {}
+    impl Ref_dpDemo {
         pub const DEFAULT: Self = Self {};
         /// Select a colour
         ///
@@ -344,8 +344,8 @@ pub mod Cmd {
             proc: crate::Dict::Fw::DpCfg::ProcType,
         ) -> fprime_core::CmdResponse {}
     }
-    pub struct RefTypeDemo {}
-    impl RefTypeDemo {
+    pub struct Ref_typeDemo {}
+    impl Ref_typeDemo {
         pub const DEFAULT: Self = Self {};
         /// A single enumeration
         ///
@@ -513,8 +513,8 @@ pub mod Cmd {
             info: crate::Dict::Ref::DpDemo::ColorInfoStruct,
         ) -> fprime_core::CmdResponse {}
     }
-    pub struct RefWasmSeq {}
-    impl RefWasmSeq {
+    pub struct Ref_wasmSeq {}
+    impl Ref_wasmSeq {
         pub const DEFAULT: Self = Self {};
         /// Load a sequence
         ///
@@ -523,17 +523,17 @@ pub mod Cmd {
         pub fn LOAD(&self, fileName: crate::String<240>) -> fprime_core::CmdResponse {}
     }
     pub struct Ref {
-        pub SG1: RefSg1,
-        pub dpDemo: RefDpDemo,
-        pub typeDemo: RefTypeDemo,
-        pub wasmSeq: RefWasmSeq,
+        pub SG1: Ref_SG1,
+        pub dpDemo: Ref_dpDemo,
+        pub typeDemo: Ref_typeDemo,
+        pub wasmSeq: Ref_wasmSeq,
     }
     impl Ref {
         pub const DEFAULT: Self = Self {
-            SG1: RefSg1::DEFAULT,
-            dpDemo: RefDpDemo::DEFAULT,
-            typeDemo: RefTypeDemo::DEFAULT,
-            wasmSeq: RefWasmSeq::DEFAULT,
+            SG1: Ref_SG1::DEFAULT,
+            dpDemo: Ref_dpDemo::DEFAULT,
+            typeDemo: Ref_typeDemo::DEFAULT,
+            wasmSeq: Ref_wasmSeq::DEFAULT,
         };
     }
     pub const CdhCore: CdhCore = CdhCore::DEFAULT;
@@ -544,15 +544,15 @@ pub mod Tlm {
     use fprime_core::*;
     #[allow(unused_imports)]
     use super::Dict::FwOpcodeType;
-    pub struct CdhCoreCmdDisp {}
-    impl CdhCoreCmdDisp {
+    pub struct CdhCore_cmdDisp {}
+    impl CdhCore_cmdDisp {
         pub const DEFAULT: Self = Self {};
         /// Commands dispatched
         #[fprime_telemetry(id = 0x1000000)]
         pub fn CommandsDispatched(&self) -> (u32, super::Dict::Fw::TimeValue) {}
     }
-    pub struct CdhCoreEvents {}
-    impl CdhCoreEvents {
+    pub struct CdhCore_events {}
+    impl CdhCore_events {
         pub const DEFAULT: Self = Self {};
         /// Events dropped, typed through an alias chain
         #[fprime_telemetry(id = 0x1001000)]
@@ -561,17 +561,17 @@ pub mod Tlm {
         ) -> (crate::Dict::FwSizeType, super::Dict::Fw::TimeValue) {}
     }
     pub struct CdhCore {
-        pub cmdDisp: CdhCoreCmdDisp,
-        pub events: CdhCoreEvents,
+        pub cmdDisp: CdhCore_cmdDisp,
+        pub events: CdhCore_events,
     }
     impl CdhCore {
         pub const DEFAULT: Self = Self {
-            cmdDisp: CdhCoreCmdDisp::DEFAULT,
-            events: CdhCoreEvents::DEFAULT,
+            cmdDisp: CdhCore_cmdDisp::DEFAULT,
+            events: CdhCore_events::DEFAULT,
         };
     }
-    pub struct RefTypeDemo {}
-    impl RefTypeDemo {
+    pub struct Ref_typeDemo {}
+    impl Ref_typeDemo {
         pub const DEFAULT: Self = Self {};
         /// An enumeration channel
         #[fprime_telemetry(id = 0x10005000)]
@@ -623,11 +623,11 @@ pub mod Tlm {
         pub fn ScalarF64Ch(&self) -> (f64, super::Dict::Fw::TimeValue) {}
     }
     pub struct Ref {
-        pub typeDemo: RefTypeDemo,
+        pub typeDemo: Ref_typeDemo,
     }
     impl Ref {
         pub const DEFAULT: Self = Self {
-            typeDemo: RefTypeDemo::DEFAULT,
+            typeDemo: Ref_typeDemo::DEFAULT,
         };
     }
     pub const CdhCore: CdhCore = CdhCore::DEFAULT;
@@ -638,37 +638,37 @@ pub mod Prm {
     use fprime_core::*;
     #[allow(unused_imports)]
     use super::Dict::FwOpcodeType;
-    pub struct RefRecvBuffComp {}
-    impl RefRecvBuffComp {
+    pub struct Ref_recvBuffComp {}
+    impl Ref_recvBuffComp {
         pub const DEFAULT: Self = Self {};
         /// A u32 parameter
         #[fprime_parameter(id = 0x10022000)]
         pub fn parameter1(&self) -> u32 {}
     }
-    pub struct RefTypeDemo {}
-    impl RefTypeDemo {
+    pub struct Ref_typeDemo {}
+    impl Ref_typeDemo {
         pub const DEFAULT: Self = Self {};
         /// An enumeration parameter
         #[fprime_parameter(id = 0x10005000)]
         pub fn CHOICE_PRM(&self) -> crate::Dict::Ref::Choice {}
     }
-    pub struct RefWasmSeq {}
-    impl RefWasmSeq {
+    pub struct Ref_wasmSeq {}
+    impl Ref_wasmSeq {
         pub const DEFAULT: Self = Self {};
         /// A u64 parameter
         #[fprime_parameter(id = 0x10007001)]
         pub fn INSTRUCTION_FUEL(&self) -> u64 {}
     }
     pub struct Ref {
-        pub recvBuffComp: RefRecvBuffComp,
-        pub typeDemo: RefTypeDemo,
-        pub wasmSeq: RefWasmSeq,
+        pub recvBuffComp: Ref_recvBuffComp,
+        pub typeDemo: Ref_typeDemo,
+        pub wasmSeq: Ref_wasmSeq,
     }
     impl Ref {
         pub const DEFAULT: Self = Self {
-            recvBuffComp: RefRecvBuffComp::DEFAULT,
-            typeDemo: RefTypeDemo::DEFAULT,
-            wasmSeq: RefWasmSeq::DEFAULT,
+            recvBuffComp: Ref_recvBuffComp::DEFAULT,
+            typeDemo: Ref_typeDemo::DEFAULT,
+            wasmSeq: Ref_wasmSeq::DEFAULT,
         };
     }
     pub const Ref: Ref = Ref::DEFAULT;
