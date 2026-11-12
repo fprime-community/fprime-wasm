@@ -1,5 +1,4 @@
 use crate::util::str_to_ident;
-use convert_case::{Case, Casing};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::collections::BTreeMap;
@@ -51,6 +50,11 @@ impl From<Vec<Definition>> for CodeTree {
 
         root
     }
+}
+
+/// Name of the generated struct holding the definitions under `scope`
+fn scope_type_name(scope: &[String]) -> proc_macro2::Ident {
+    str_to_ident(&scope.join("_"))
 }
 
 impl CodeTree {
@@ -116,16 +120,15 @@ impl CodeTree {
             }
         } else {
             // Build a private struct with `_` concatenated naming for holding the impls
-            let name = str_to_ident(&scope.join("_").to_case(Case::Pascal));
+            let name = scope_type_name(&scope);
 
             let member_name_ty: Vec<_> = members
                 .iter()
                 .map(|member_name| {
+                    let mut member_scope = scope.clone();
+                    member_scope.push(member_name.clone());
+                    let ty_name = scope_type_name(&member_scope);
                     let member_name = str_to_ident(&member_name);
-                    let ty_name = str_to_ident(
-                        &format!("{}_{}", scope.join("_"), member_name.to_string())
-                            .to_case(Case::Pascal),
-                    );
 
                     (member_name, ty_name)
                 })
@@ -168,7 +171,7 @@ impl CodeTree {
             .modules
             .keys()
             .map(|top_level_mod| {
-                let type_name = str_to_ident(top_level_mod);
+                let type_name = scope_type_name(&[top_level_mod.clone()]);
                 let var_name = str_to_ident(top_level_mod);
 
                 quote! {
@@ -193,5 +196,29 @@ impl CodeTree {
                 #(#consts)*
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Struct names keep the dictionary's spelling, so the top-level const
+    /// names the same struct as its definition.
+    #[test]
+    fn struct_names_keep_dictionary_spelling() {
+        let tree: CodeTree = vec![Definition {
+            qualifier: vec!["Widget2x".into(), "mgr".into()],
+            tokens: quote! {},
+        }]
+        .into();
+
+        let out = tree.struct_nesting("Cmd").to_string();
+        assert!(out.contains("pub struct Widget2x "), "{out}");
+        assert!(out.contains("pub mgr : Widget2x_mgr"), "{out}");
+        assert!(
+            out.contains("pub const Widget2x : Widget2x = Widget2x :: DEFAULT"),
+            "{out}"
+        );
     }
 }
