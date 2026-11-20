@@ -128,7 +128,14 @@ jobs:
         id: base
         continue-on-error: true
         working-directory: base
-        run: cargo run -q -p wasm_size -- measure --target-dir ../base-target --json ../base.json
+        # The base checkout's own `.cargo/config.toml` names its linker relative to
+        # itself, `base/target/debug/fprime-wasm`, which nothing builds. Build the
+        # base revision's linker into the cached target directory and point cargo
+        # at it, so the base is measured with the toolchain it shipped with.
+        run: |
+          cargo build -q -p fprime-wasm --target-dir ../base-target
+          CARGO_TARGET_WASM32V1_NONE_LINKER="$PWD/../base-target/debug/fprime-wasm" \
+            cargo run -q -p wasm_size -- measure --target-dir ../base-target --json ../base.json
 
       - name: Build the report
         id: report
@@ -140,6 +147,7 @@ jobs:
         # moved on.
         env:
           BASE_LABEL: ${{ github.event.pull_request.base.ref || 'BASE' }}
+          BASE_OUTCOME: ${{ steps.base.outcome }}
           SOURCE_BASE: ${{ github.event.pull_request.head.repo.html_url || format('{0}/{1}', github.server_url, github.repository) }}/blob/${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           {
@@ -152,7 +160,12 @@ jobs:
               echo
               echo "Compared against \`${{ github.event.pull_request.base.sha || github.sha }}\`."
             else
-              echo 'No baseline to compare against, reporting absolute sizes.'
+              if [ "$BASE_OUTCOME" = failure ]; then
+                echo '> [!WARNING]'
+                echo '> Measuring the base revision failed (see the job log), reporting absolute sizes.'
+              else
+                echo 'No baseline to compare against, reporting absolute sizes.'
+              fi
               echo
               cargo run -q -p wasm_size -- measure
             fi
