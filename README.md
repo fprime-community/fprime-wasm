@@ -17,18 +17,19 @@ inside a Wasm interpreter.
 
 1. Install Rust: https://doc.rust-lang.org/cargo/getting-started/installation.html
 
-2. Get the Wasm Rust target:
+2. Get the Wasm Rust target, and optionally `wasm-opt` (from
+   [binaryen](https://github.com/WebAssembly/binaryen)) for smaller release builds:
 
 ```shell
 rustup target add wasm32v1-none
-cargo binstall wasm-opt # (optional) for optimizing --release builds
+cargo binstall wasm-opt
 ```
 
-3. Install the tool. With
+3. Install `fprime-wasm`, which is all a sequence project needs. With
    [`cargo binstall`](https://github.com/cargo-bins/cargo-binstall) this
    downloads a prebuilt binary from the
    [releases](https://github.com/fprime-community/fprime-wasm/releases); plain
-   `cargo install` always compiles from source, which takes a few minutes:
+   `cargo install` compiles from source, which takes a few minutes:
 
 ```shell
 cargo binstall fprime-wasm   # prebuilt
@@ -43,13 +44,13 @@ building from source on anything else.
 
 ```shell
 mkdir my-sequences && cd my-sequences
-fprime-wasm init          # asks for the deployment's JSON dictionary
+fprime-wasm init --fprime-version 4.4.0   # asks for the deployment's JSON dictionary
 fprime-wasm test
 fprime-wasm verify
 ```
 
 See [`fprime_wasm/README.md`](fprime_wasm/README.md) for what `init`, `add`,
-`build`, `test` and `verify` do.
+`build`, `test`, `verify` and `backtrace` do.
 
 [VS Code](https://code.visualstudio.com) is the recommended editor for
 a generated sequences project.
@@ -68,11 +69,12 @@ Besides the six published crates, `crates/` holds what exercises them:
 host build of the workspace skips their sequence bins:
 
 ```shell
+cargo build -p fprime-wasm   # the linker the sequences build through
 cargo test --workspace
 cd crates/example
 cargo build --release --features wasm
 ```
 
-`spacewasm`, the on-board interpreter, only implements WebAssembly 1.0 plus
-`mutable-globals` and `custom-page-sizes`. `.cargo/wasm-link` pins `wasm-opt` to
-that same set, and `fprime-wasm verify` checks the result loads.
+`.cargo/config.toml` builds the sequences with this checkout's own
+`fprime-wasm`, so build it first, and again after changing `fprime_wasm` or
+`fprime_test`. The workspace targets the newest on-board interpreter.

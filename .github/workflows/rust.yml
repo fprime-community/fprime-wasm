@@ -29,8 +29,8 @@ jobs:
           rustup default stable
           rustup target add wasm32v1-none
 
-      # The wasm build below is a release build, so the linker wrapper runs the
-      # optimiser and needs it present.
+      # The wasm build below is a release build, so the linker runs the optimiser
+      # and needs it present.
       - uses: ./.github/actions/binaryen
 
       - uses: actions/cache@v4
@@ -41,6 +41,11 @@ jobs:
             target
           key: test-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: test-${{ runner.os }}-
+
+      # The linker `.cargo/config.toml` names: this checkout's own, so a change to it
+      # is what builds the sequences below.
+      - name: Build the linker
+        run: cargo build -p fprime-wasm
 
       - name: Test the host crates
         run: cargo test -p fprime_dictionary -p fprime_build -p fprime_macros -p wasm_size -p fprime-wasm -p fprime_test
@@ -102,6 +107,11 @@ jobs:
             base-target
           key: size-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: size-${{ runner.os }}-
+
+      # The linker `.cargo/config.toml` names: this checkout's own, so a change to it
+      # is what builds the sequences below.
+      - name: Build the linker
+        run: cargo build -p fprime-wasm
 
       - name: Measure this revision
         run: cargo run -q -p wasm_size -- measure --json head.json

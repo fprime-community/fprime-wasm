@@ -1,7 +1,7 @@
 name: Install binaryen
 description: >-
   Put wasm-opt on the PATH. Every release build of a wasm crate needs it, because
-  the linker wrapper in .cargo/config.toml runs the module through it.
+  the `fprime-wasm` linker in .cargo/config.toml runs the module through it.
 
 inputs:
   version:

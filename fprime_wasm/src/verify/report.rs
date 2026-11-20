@@ -27,6 +27,8 @@ pub struct ModuleError {
 /// size, so a consumer can diff this against `sequencer.toml`.
 #[derive(Debug, Serialize)]
 pub struct Limits {
+    pub fprime_version: String,
+    pub spacewasm_version: String,
     pub page_size: usize,
     pub heap_pages: u32,
     pub guest_memory: u64,
@@ -127,6 +129,8 @@ impl Run {
         Run {
             schema: SCHEMA,
             limits: Limits {
+                fprime_version: limits.fprime.version.to_string(),
+                spacewasm_version: limits.fprime.spacewasm.to_string(),
                 page_size: limits.page_size,
                 heap_pages: limits.heap_pages,
                 guest_memory: limits.guest_memory,

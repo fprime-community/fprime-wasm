@@ -31,7 +31,7 @@ jobs:
         with:
           cache-bin: false
 
-      # The release profile links the Wasm crates through .cargo/wasm-link, which
+      # The release profile links the Wasm crates through `fprime-wasm`, which
       # runs the optimiser.
       - uses: ./.github/actions/binaryen
 
@@ -39,6 +39,11 @@ jobs:
         uses: ./.github/actions/inject-version
         with:
           version: ${{ github.ref_name }}
+
+      # The linker `.cargo/config.toml` names: this checkout's own, so a change to it
+      # is what builds the sequences below.
+      - name: Build the linker
+        run: cargo build -p fprime-wasm
 
       - name: Build the sequences
         # Cheap, and it is the only thing that proves the released fprime_core,
@@ -53,9 +58,9 @@ jobs:
 
       - name: Verify the sequences load on the on-board interpreter
         # A sequence can build and still fail to load: `spacewasm` implements
-        # WebAssembly 1.0 plus mutable-globals and custom-page-sizes only, and
-        # `wasm-opt` can introduce post-MVP instructions while optimising. This
-        # gate is why .cargo/wasm-link pins its feature set.
+        # WebAssembly 1.0 plus a few post-MVP proposals only, and `wasm-opt` can
+        # introduce others while optimising. This gate is why the linker pins its
+        # feature set.
         #
         # Run from the workspace root with explicit paths: `crates/example` has a
         # `.cargo/config.toml` that targets wasm32v1-none, so cargo invoked from

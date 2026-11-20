@@ -4,7 +4,7 @@
 //! interpreter will accept, sized against the same `Config`. [`super::run`] carries the
 //! same [`Loaded`] on into the entry point.
 
-use super::link::link_error;
+use super::link::{link_error, unsupported_error};
 use super::{Limits, alloc, host, tracker};
 use crate::abi;
 use crate::wasm;
@@ -13,9 +13,12 @@ use spacewasm::{
     CodeBuilder, CompilerOptions, Engine, ExportDesc, MemoryKind, ModuleRef, Ref, WasmRef,
 };
 
-/// Mirrors `spacewasm_c_api/include/config.rs`, the limits `WasmSequencer` validates against.
-const MAX_CONTROL_FRAMES: usize = 64;
-const MAX_STACK_DEPTH: usize = 256;
+/// The `DecoderStack` `WasmSequencer` validates against: `spacewasm_c_api/include/config.rs`
+/// up to 0.7.1, and the same lengths passed to `spacewasm_load_module` since.
+const DECODER: spacewasm_tools::DecoderLimits = spacewasm_tools::DecoderLimits {
+    max_control_frames: 64,
+    max_stack_depth: 256,
+};
 
 /// A code page holds 256 16-bit words of resolved instructions.
 const CODE_PAGE_WORDS: usize = 256;
@@ -73,6 +76,33 @@ pub struct Validated {
     pub usage: alloc::Usage,
 }
 
+/// Decode `bytes` as the on-board interpreter would and record, for every compiled
+/// instruction, its first IR word and the module offset of its opcode.
+///
+/// IR words count from the module's first. On board other modules may have compiled
+/// before it, so a PC from there must first be made relative to where its code starts.
+pub fn ir_map(bytes: &[u8], limits: &Limits) -> Result<spacewasm_tools::IrMap> {
+    // Configured before anything allocates, as for a load: the replay decodes through the
+    // same process-global allocator.
+    tracker().configure(limits.page_size);
+    let shared = host::context(limits, None);
+    let hosts = spacewasm::Vec::from_array([host::module(&shared)])
+        .map_err(|err| anyhow!("could not register the host module: {err:?}"))?;
+    spacewasm_tools::ir_map(bytes, compiler_options(limits), hosts, DECODER)
+        .map_err(|err| anyhow!("{err}"))
+}
+
+/// What `WasmSequencerHelpers.cpp` builds its `spacewasm_compiler_options_t` from.
+fn compiler_options(limits: &Limits) -> CompilerOptions {
+    CompilerOptions::new(
+        // Growth is bounded by the guest pool instead.
+        true,
+        // `None` would accept modules that fail on board with ERR_POSSIBLE_BACKPATCH_CYCLE.
+        Some(abi::MAX_BACKPATCH_ITERATIONS),
+        limits.max_code_pages,
+    )
+}
+
 /// Load `bytes`, measure what that cost, and throw the module away.
 ///
 /// This is `fprime-wasm verify`: everything the on-board interpreter checks before the
@@ -99,17 +129,20 @@ pub fn load(bytes: Vec<u8>, limits: &Limits, shared: &host::Ctx) -> Result<Loade
     // Read before `bytes` is consumed: the names `spacewasm` discards are what a link
     // failure has to name.
     let static_view = wasm::read(&bytes).map_err(|err| anyhow!("{err:#}"))?;
+    // Only looked at if the decoder refuses the module, but `bytes` is consumed by then.
+    // An older interpreter's refusal has to be found first: this decoder would accept it.
+    let unsupported = match limits.fprime.older_interpreter() {
+        Some(release) => match spacewasm_tools::find_unsupported_in(&bytes, release) {
+            Some(unsupported) => return Err(unsupported_error(&unsupported, limits)),
+            None => None,
+        },
+        None => spacewasm_tools::find_unsupported(&bytes),
+    };
 
     tracker().configure(limits.page_size);
 
-    let mut code = CodeBuilder::new(CompilerOptions {
-        // Matches `WasmSequencerHelpers.cpp`; growth is bounded by the guest pool instead.
-        allow_memory_grow: true,
-        // `None` would accept modules that fail on board with ERR_POSSIBLE_BACKPATCH_CYCLE.
-        max_backpatch_iterations: Some(abi::MAX_BACKPATCH_ITERATIONS),
-        max_code_pages: limits.max_code_pages,
-    })
-    .map_err(|err| anyhow!("could not allocate the code page table: {err:?}"))?;
+    let mut code = CodeBuilder::new(compiler_options(limits))
+        .map_err(|err| anyhow!("could not allocate the code page table: {err:?}"))?;
 
     let mut engine = Engine::new(
         limits.stack_size,
@@ -125,16 +158,21 @@ pub fn load(bytes: Vec<u8>, limits: &Limits, shared: &host::Ctx) -> Result<Loade
     ));
 
     let mut source = super::stream::Bytes::new(bytes);
-    let module = spacewasm::Module::new::<MAX_CONTROL_FRAMES, MAX_STACK_DEPTH>(
-        "sequence",
-        &mut source,
-        &mut engine.store,
-        &mut code,
-        spacewasm::Rc::new(alloc::Guest::new(std::rc::Rc::clone(&guest_pool)))
-            .map_err(|err| anyhow!("could not allocate the memory allocator: {err:?}"))?
-            .into_wasm_memory_allocator(),
-    )
-    .map_err(|err| link_error(err, &static_view))?;
+    let memory = spacewasm::Rc::new(alloc::Guest::new(std::rc::Rc::clone(&guest_pool)))
+        .map_err(|err| anyhow!("could not allocate the memory allocator: {err:?}"))?
+        .into_wasm_memory_allocator();
+    let module = DECODER
+        .with_stack(|stack| {
+            spacewasm::Module::new(
+                "sequence",
+                &mut source,
+                &mut engine.store,
+                &mut code,
+                stack,
+                memory,
+            )
+        })
+        .map_err(|err| link_error(err, &static_view, unsupported))?;
 
     let declared_memory = match &module.memory {
         Some(MemoryKind::Owned(memory)) => {

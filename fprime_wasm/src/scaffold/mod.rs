@@ -20,5 +20,8 @@ pub const DEFAULT_STACK_SIZE: usize = 512;
 /// Sequence `init` creates when none is named.
 pub const DEFAULT_SEQUENCE: &str = "startup";
 
+/// The Cargo `linker` a project uses: this binary, which links through `spacewasm_tools`.
+pub const LINKER: &str = "fprime-wasm";
+
 /// Where a copied dictionary goes, relative to the crate root.
 pub const DICTIONARY_DIR: &str = "dictionary";

@@ -11,7 +11,7 @@
 //! pull request and the merge base and compares the two.
 //!
 //! What it measures is already optimised: the release link step pipes each module
-//! through `wasm-opt`, by way of the linker wrapper named in `.cargo/config.toml`.
+//! through `wasm-opt`, by way of the `fprime-wasm` linker named in `.cargo/config.toml`.
 //! So a release build leaves the flyable artefact in the target directory and this
 //! only has to read it.
 

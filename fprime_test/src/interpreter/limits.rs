@@ -1,6 +1,7 @@
 //! The configuration a module is loaded and run under.
 
 use crate::abi;
+use crate::fprime::Fprime;
 
 /// The limits a deployment sets: what `fprime-wasm verify` sizes a module against, and
 /// what a sequence test runs it under.
@@ -9,6 +10,8 @@ use crate::abi;
 /// and `WasmSequencerSpacewasmConfig.h`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Limits {
+    /// The F Prime that flies, whose `spacewasm` decides which instructions load.
+    pub fprime: Fprime,
     /// `WASM_SEQ_SPACEWASM_PAGE_SIZE`. Bounds the largest single allocation.
     pub page_size: usize,
     /// `Config::heapPages`, in units of `page_size`.
@@ -36,6 +39,7 @@ pub struct Limits {
 impl Default for Limits {
     fn default() -> Self {
         Limits {
+            fprime: Fprime::latest(),
             page_size: 8192,
             heap_pages: 8,
             guest_memory: 8192,

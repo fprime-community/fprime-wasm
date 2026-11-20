@@ -25,6 +25,7 @@
 //! * [`interpreter`] — a `spacewasm` interpreter standing in for the on-board one, loading and
 //!   running one module at a time
 //! * [`config`] — `sequencer.toml`, the limits a run is held to
+//! * [`fprime`] — the F Prime release that flies, and so its `spacewasm`
 //! * [`wasm`] — a static read of a module, for what `spacewasm` discards
 //! * [`project`] — the sequence crate, and where its modules land
 //! * [`describe`] — recorded calls and outcomes, as words
@@ -37,6 +38,7 @@ pub mod abi;
 pub mod case;
 pub mod config;
 pub mod describe;
+pub mod fprime;
 pub mod interpreter;
 pub mod locate;
 pub(crate) mod plan;

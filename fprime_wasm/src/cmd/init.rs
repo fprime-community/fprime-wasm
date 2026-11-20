@@ -3,6 +3,7 @@
 use super::cli::Init;
 use super::dictionary;
 use anyhow::{Context, Result, bail};
+use fprime_test::fprime::Fprime;
 use fprime_test::project::TARGET;
 use fprime_wasm::scaffold::{self, DependencySpec, Plan, Written};
 use std::path::Path;
@@ -47,12 +48,18 @@ pub fn run(args: &Init) -> Result<()> {
         dictionary: dictionary::resolve(&root, args.dictionary.as_deref())?,
         dependency: dependency_spec(args.crate_version.as_deref(), args.local.as_deref())?,
         stack_size: args.stack_size,
+        fprime: args.fprime_version.unwrap_or_else(Fprime::latest),
     };
 
     // Rendered first so a bad template fails before any file is written.
     let files = plan.files()?;
 
-    println!("Creating {} in {}", plan.name, root.display());
+    println!(
+        "Creating {} in {}, for {}",
+        plan.name,
+        root.display(),
+        plan.fprime
+    );
     for file in &files {
         let outcome = scaffold::write(&root, file)?;
         println!(

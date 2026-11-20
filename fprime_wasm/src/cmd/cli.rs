@@ -1,6 +1,7 @@
 //! The command line: every flag, and the only place clap appears.
 
 use clap::{Args, Parser, Subcommand};
+use fprime_test::fprime::Fprime;
 use fprime_wasm::scaffold::{DEFAULT_SEQUENCE, DEFAULT_STACK_SIZE};
 use std::path::PathBuf;
 
@@ -29,6 +30,8 @@ pub enum Command {
     Test(Test),
     /// Load compiled sequences on the on-board interpreter and size them.
     Verify(Verify),
+    /// Resolve a backtrace, or positions in a sequence, to source lines.
+    Backtrace(Backtrace),
 }
 
 #[derive(Args)]
@@ -53,6 +56,12 @@ pub struct Init {
     /// Guest stack to reserve, in bytes.
     #[arg(long, default_value_t = DEFAULT_STACK_SIZE)]
     pub stack_size: usize,
+
+    /// The F Prime the sequences fly on, e.g. `4.4.0`. Its `spacewasm` release decides
+    /// which instructions the compiler and `wasm-opt` may emit. Defaults to the newest
+    /// this tool knows.
+    #[arg(long, value_name = "VERSION", value_parser = parse_fprime)]
+    pub fprime_version: Option<Fprime>,
 
     /// Depend on the `fprime_*` crates at this version instead of the tool's own.
     #[arg(long, conflicts_with = "local")]
@@ -127,8 +136,92 @@ pub struct Verify {
     pub limits: Option<PathBuf>,
 }
 
+#[derive(Args)]
+#[command(group(clap::ArgGroup::new("position").required(true).args(["offset", "pc"])))]
+pub struct Backtrace {
+    /// A sequence of the crate in the current directory, or a `.sym` file.
+    pub sequence: String,
+
+    /// Byte offsets into the uplinked `.wasm`, from its first byte. Hex with `0x`. Several,
+    /// comma-separated, are a backtrace: innermost first.
+    #[arg(long, value_parser = parse_number, value_delimiter = ',', num_args = 1..)]
+    pub offset: Vec<u64>,
+
+    /// Program counters, as the on-board interpreter reports them. Hex with `0x`. Several,
+    /// comma-separated, are a backtrace, innermost first. Needs F Prime 4.5.0 or later.
+    #[arg(long, value_parser = parse_number, value_delimiter = ',', num_args = 1..)]
+    pub pc: Vec<u64>,
+
+    /// The `.wasm` that flew, checked against the one the symbols were built with.
+    /// Defaults to the one beside the `.sym`.
+    #[arg(long, value_name = "PATH")]
+    pub module: Option<PathBuf>,
+
+    /// Look in the debug build rather than the release build.
+    #[arg(long)]
+    pub debug: bool,
+
+    /// Limits the PC was taken under, which decide the IR layout. Defaults as for
+    /// `verify`.
+    #[arg(long, value_name = "PATH")]
+    pub limits: Option<PathBuf>,
+}
+
+fn parse_fprime(text: &str) -> Result<Fprime, String> {
+    Fprime::parse(text).map_err(|err| format!("{err:#}"))
+}
+
+fn parse_number(text: &str) -> Result<u64, String> {
+    let parsed = match text.strip_prefix("0x").or_else(|| text.strip_prefix("0X")) {
+        Some(hex) => u64::from_str_radix(hex, 16),
+        None => text.parse(),
+    };
+    parsed.map_err(|err| format!("`{text}` is not a number: {err}"))
+}
+
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn numbers_parse_in_decimal_and_hex() {
+        assert_eq!(super::parse_number("170"), Ok(170));
+        assert_eq!(super::parse_number("0xaa"), Ok(170));
+        assert!(super::parse_number("aa").is_err());
+    }
+
+    #[test]
+    fn pcs_take_a_list_or_repeat() {
+        use clap::Parser;
+        let parse = |args: &[&str]| match Cli::try_parse_from(args).expect("parses").command {
+            Command::Backtrace(backtrace) => backtrace.pc,
+            _ => unreachable!(),
+        };
+        let listed = parse(&["fprime-wasm", "backtrace", "seq", "--pc", "0x10,4,0x30"]);
+        assert_eq!(listed, [0x10, 4, 0x30]);
+        let repeated = parse(&["fprime-wasm", "backtrace", "seq", "--pc", "1", "--pc", "2"]);
+        assert_eq!(repeated, [1, 2]);
+    }
+
+    #[test]
+    fn init_takes_an_fprime_version() {
+        use clap::Parser;
+        let init = |args: &[&str]| match Cli::try_parse_from(args).map(|cli| cli.command) {
+            Ok(Command::Init(init)) => Ok(init.fprime_version),
+            Ok(_) => unreachable!(),
+            Err(err) => Err(err),
+        };
+        let fprime = init(&["fprime-wasm", "init", "--fprime-version", "4.4.0"])
+            .expect("parses")
+            .expect("given");
+        assert_eq!(fprime.spacewasm.to_string(), "0.7.1");
+        assert!(init(&["fprime-wasm", "init", "--fprime-version", "4.3.0"]).is_err());
+    }
+
+    #[test]
+    fn a_position_is_required() {
+        use clap::Parser;
+        assert!(Cli::try_parse_from(["fprime-wasm", "backtrace", "seq"]).is_err());
+    }
+
     use super::*;
 
     #[test]

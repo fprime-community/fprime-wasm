@@ -1,6 +1,7 @@
 //! `sequencer.toml`: the configuration a project is loaded and run under.
 
 use crate::abi;
+use crate::fprime::Fprime;
 use crate::interpreter::Limits;
 use crate::project::Project;
 use anyhow::{Context, Result};
@@ -43,6 +44,10 @@ pub struct Loaded {
 /// An explicit path that cannot be read is fatal — it is an instruction. A project
 /// with no [`FILE`] is not: projects created before it existed still verify.
 pub fn load(explicit: Option<&Path>, project: Option<&Project>) -> Result<Loaded> {
+    with_fprime(load_file(explicit, project)?, project.map(Project::root))
+}
+
+fn load_file(explicit: Option<&Path>, project: Option<&Project>) -> Result<Loaded> {
     match (explicit, project) {
         (Some(path), _) => read(path, path),
         (None, Some(project)) => {
@@ -64,7 +69,15 @@ pub fn load(explicit: Option<&Path>, project: Option<&Project>) -> Result<Loaded
 /// macro checks the same join at compile time, so this only fires if the file went away
 /// between building and running.
 pub fn load_named(root: &Path, named: &Path) -> Result<Loaded> {
-    read(&root.join(named), named)
+    with_fprime(read(&root.join(named), named)?, Some(root))
+}
+
+/// The F Prime release is the project's, not `sequencer.toml`'s: the linker needs it too.
+fn with_fprime(mut loaded: Loaded, root: Option<&Path>) -> Result<Loaded> {
+    if let Some(fprime) = Fprime::configured(root)? {
+        loaded.limits.fprime = fprime;
+    }
+    Ok(loaded)
 }
 
 fn defaults() -> Loaded {
@@ -88,6 +101,7 @@ fn read(path: &Path, named: &Path) -> Result<Loaded> {
 pub fn parse(text: &str) -> Result<Limits> {
     let file: File = toml_edit::de::from_str(text)?;
     Ok(Limits {
+        fprime: Fprime::latest(),
         page_size: file.constants.page_size,
         heap_pages: file.config.heap_pages,
         guest_memory: file.config.guest_memory,
