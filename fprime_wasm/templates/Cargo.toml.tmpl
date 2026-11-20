@@ -32,5 +32,7 @@ lto = true
 opt-level = "s"
 codegen-units = 1
 panic = "abort"
-debug = false
-strip = true
+# Does not change the code: the linker moves it into `<seq>.sym`, for
+# `fprime-wasm backtrace`, and uplinks a module without it.
+debug = true
+strip = false

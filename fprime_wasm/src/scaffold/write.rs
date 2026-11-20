@@ -31,7 +31,7 @@ pub fn write(root: &Path, file: &File) -> Result<Written> {
     Ok(Written::Created)
 }
 
-/// Cargo runs `.cargo/wasm-link` directly, so it needs the executable bit.
+/// A file Cargo runs directly needs the executable bit.
 #[cfg(unix)]
 fn set_executable(path: &Path) -> Result<()> {
     use std::os::unix::fs::PermissionsExt;
@@ -120,7 +120,7 @@ mod tests {
         use std::os::unix::fs::PermissionsExt;
         let root = temporary(line!());
 
-        for (name, executable) in [("wasm-link", true), ("config.toml", false)] {
+        for (name, executable) in [("tool", true), ("config.toml", false)] {
             let file = File {
                 path: PathBuf::from(".cargo").join(name),
                 contents: "#!/bin/sh\n".into(),

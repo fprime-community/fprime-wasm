@@ -14,7 +14,11 @@ rust-version.workspace = true
 anyhow = "1.0.104"
 fprime_core = { path = "../fprime_core", version = "=0.0.0" }
 fprime_dictionary = { path = "../fprime_dictionary", version = "=0.0.0" }
-spacewasm = "0.7.1"
+# `ir-map` (`CompilerOptions::pc_ir_callback`): the IR replay `backtrace --pc` uses.
+# Exact, and the same release as `spacewasm_tools`: it is the interpreter replayed.
+spacewasm = { version = "=0.8.0-rc.2", features = ["ir-map"] }
+# The symbol file, the IR replay and the feature table, shared with the `spacewasm` CLI.
+spacewasm_tools = { version = "=0.8.0-rc.2", default-features = false }
 toml_edit = { version = "0.25.15", features = ["serde"] }
 wasmparser = { version = "0.259", default-features = false }
 serde = { version = "1.0.228", features = ["derive"] }

@@ -57,7 +57,8 @@ fn joined(blocks: &[Block]) -> String {
 /// of the configuration, not because loading measured it.
 pub fn limits_line(limits: &Limits, source: &str) -> String {
     format!(
-        "Limits ({source}): memory {} B, heap {}, code {}, operand stack {}, page {} B",
+        "Limits ({source}): {}, memory {} B, heap {}, code {}, operand stack {}, page {} B",
+        limits.fprime,
         limits.guest_memory,
         plural(u64::from(limits.heap_pages), "page"),
         plural(limits.max_code_pages as u64, "page"),
@@ -328,6 +329,7 @@ mod tests {
         let line = limits_line(&Limits::default(), "sequencer.toml");
         assert!(line.starts_with("Limits (sequencer.toml):"), "{line}");
         assert!(line.contains("memory 8192 B"), "{line}");
+        assert!(line.contains("(spacewasm 0.8.0)"), "{line}");
     }
 
     #[test]

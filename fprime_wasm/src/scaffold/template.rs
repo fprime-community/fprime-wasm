@@ -49,13 +49,6 @@ pub const SEQUENCER: Template = Template::plain(
     include_str!("../../templates/sequencer.toml.tmpl"),
 );
 
-/// The release linker, named here so the generated cargo config can be held to the
-/// path it is actually written at.
-pub const WASM_LINK: Template = Template::program(
-    ".cargo/wasm-link",
-    include_str!("../../templates/wasm-link.tmpl"),
-);
-
 /// Everything `init` writes, in the order it reports them.
 pub const PROJECT: &[Template] = &[
     Template::plain(
@@ -66,7 +59,6 @@ pub const PROJECT: &[Template] = &[
         ".cargo/config.toml",
         include_str!("../../templates/cargo-config.toml.tmpl"),
     ),
-    WASM_LINK,
     SEQUENCER,
     Template::plain("build.rs", include_str!("../../templates/build.rs.tmpl")),
     Template::plain("src/lib.rs", include_str!("../../templates/lib.rs.tmpl")),
@@ -96,6 +88,9 @@ pub const KEYS: &[&str] = &[
     "dictionary",
     "dictionary_slashes",
     "crate_version",
+    "target_features",
+    "fprime_version",
+    "spacewasm_version",
 ];
 
 /// Substitutes `{{key}}` occurrences in `text`.

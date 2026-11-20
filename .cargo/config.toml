@@ -1,11 +1,18 @@
 [target.wasm32v1-none]
-# rust-lld + wasm-opt for release builds
-linker = ".cargo/wasm-link"
+# `spacewasm`, from `cargo install spacewasm_tools`: `rust-lld`, then for release builds
+# `wasm-opt` held to exactly the proposals that release of the interpreter implements,
+# splitting the debug info into `<bin>.sym` and validating the result.
+linker = "spacewasm"
 rustflags = [
+    # `spacewasm features --rustc`: the same set, for the compiler.
     "-Ctarget-cpu=mvp",
-    "-Ctarget-feature=+mutable-globals",
-    # TODO(tumbar) We do not support this in spacewasm yet
-    # "-Ctarget-feature=+bulk-memory",
+    "-Ctarget-feature=+mutable-globals,+sign-ext,+nontrapping-fptoint,-bulk-memory,-reference-types,-multivalue,-extended-const,-simd128,-tail-call",
     "-Clink-args=-zstack-size=512",
     "-Clink-arg=--page-size=1",
 ]
+
+[env]
+# Optimisation only; the feature set is the linker's to choose.
+SPACEWASM_OPT = "--low-memory-unused --converge -Os"
+# Sizes are measured here, so an unoptimised module must fail the build, not slip by.
+SPACEWASM_WASM_OPT_REQUIRED = "1"

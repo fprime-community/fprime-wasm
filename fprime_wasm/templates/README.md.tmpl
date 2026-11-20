@@ -7,13 +7,16 @@ F Prime sequences for this deployment, compiled to WebAssembly and run on board 
 
 1. Install Rust: https://doc.rust-lang.org/cargo/getting-started/installation.html
 
-2. Install Wasm target and optional optimizer
+2. Install the Wasm target, `fprime-wasm`, and the optional optimizer. `fprime-wasm` is
+   also the linker: it optimises for the interpreter, and splits each sequence's
+   debug info into a `.sym` kept on the ground
 
 ```shell
 rustup target add {{target}}
+cargo binstall fprime-wasm
 
 # (optional) for optimizing `.wasm` binaries for size
-cargo install wasm-opt
+cargo binstall wasm-opt
 ```
 
 ## Building

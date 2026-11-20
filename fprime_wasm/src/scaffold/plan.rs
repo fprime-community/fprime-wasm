@@ -3,6 +3,7 @@
 use super::manifest::{DependencySpec, repoint_at_checkout};
 use super::template;
 use anyhow::{Context, Result};
+use fprime_test::fprime::Fprime;
 use fprime_test::project::TARGET;
 use std::path::{Path, PathBuf};
 
@@ -26,6 +27,8 @@ pub struct Plan {
     /// How to depend on `fprime_core` and `fprime_build`.
     pub dependency: DependencySpec,
     pub stack_size: usize,
+    /// The F Prime the sequences fly on.
+    pub fprime: Fprime,
 }
 
 impl Plan {
@@ -42,6 +45,13 @@ impl Plan {
             ("sequence", self.sequence.clone()),
             ("target", TARGET.to_string()),
             ("stack_size", self.stack_size.to_string()),
+            ("fprime_version", self.fprime.version.to_string()),
+            ("spacewasm_version", self.fprime.spacewasm.to_string()),
+            // Every instruction that F Prime's interpreter implements, and nothing else.
+            (
+                "target_features",
+                spacewasm_tools::rustc_target_features_for(self.fprime.spacewasm),
+            ),
             ("dictionary", self.dictionary.display().to_string()),
             // Avoids an invalid escape in the embedded Rust string literal.
             (
@@ -111,6 +121,7 @@ fn render_for_sequence(body: &str, lib_name: &str, name: &str) -> Result<String>
 
 #[cfg(test)]
 mod tests {
+    use super::super::LINKER;
     use super::super::fixture::{file, manifest, plan};
     use super::*;
     use fprime_test::project::WASM_FEATURE;
@@ -128,7 +139,6 @@ mod tests {
             vec![
                 "Cargo.toml",
                 ".cargo/config.toml",
-                ".cargo/wasm-link",
                 "sequencer.toml",
                 "build.rs",
                 "src/lib.rs",
@@ -234,7 +244,9 @@ mod tests {
         assert_eq!(profile["panic"].as_str(), Some("abort"));
         assert_eq!(profile["opt-level"].as_str(), Some("s"));
         assert_eq!(profile["lto"].as_bool(), Some(true));
-        assert_eq!(profile["strip"].as_bool(), Some(true));
+        // The linker takes the debug info out of the module and into `<seq>.sym`.
+        assert_eq!(profile["debug"].as_bool(), Some(true));
+        assert_eq!(profile["strip"].as_bool(), Some(false));
     }
 
     #[test]
@@ -293,57 +305,78 @@ mod tests {
     }
 
     #[test]
-    fn cargo_config_wires_release_linker() {
+    fn cargo_config_links_through_fprime_wasm() {
         let config: toml_edit::DocumentMut = file(&plan(), ".cargo/config.toml")
             .parse()
             .expect("valid TOML");
-        assert_eq!(
-            config["target"][TARGET]["linker"].as_str(),
-            Some(template::WASM_LINK.path)
+        assert_eq!(config["target"][TARGET]["linker"].as_str(), Some(LINKER));
+    }
+
+    /// The compiler gets the interpreter's feature set too, not only `wasm-opt`.
+    #[test]
+    fn rustflags_carry_the_interpreter_feature_set() {
+        let config: toml_edit::DocumentMut = file(&plan(), ".cargo/config.toml")
+            .parse()
+            .expect("valid TOML");
+        let flags: Vec<&str> = config["target"][TARGET]["rustflags"]
+            .as_array()
+            .expect("rustflags is an array")
+            .iter()
+            .filter_map(|flag| flag.as_str())
+            .collect();
+        // The fixture's F Prime is the newest, whose interpreter is this tool's own.
+        let features = format!(
+            "-Ctarget-feature={}",
+            spacewasm_tools::rustc_target_features()
         );
+        assert!(flags.contains(&features.as_str()), "{flags:?}");
+        assert!(features.contains("+sign-ext"), "{features}");
     }
 
+    /// F Prime 4.4.0 flies spacewasm 0.7.1, which predates sign-extension: the compiler
+    /// must not emit it, and the linker is told which release to hold `wasm-opt` to.
     #[test]
-    fn release_linker_pins_feature_set() {
-        let script = file(&plan(), ".cargo/wasm-link");
-        for flag in [
-            "--mvp-features",
-            "--enable-mutable-globals",
-            "--enable-custom-page-sizes",
-        ] {
-            assert!(script.contains(flag), "{flag} missing from:\n{script}");
-        }
-        assert!(script.contains("rust-lld"), "{script}");
-        assert!(script.contains("*/release/*"), "{script}");
+    fn an_older_fprime_gets_its_own_interpreter_features() {
+        let plan = Plan {
+            fprime: Fprime::parse("4.4.0").unwrap(),
+            ..plan()
+        };
+        let config: toml_edit::DocumentMut = file(&plan, ".cargo/config.toml")
+            .parse()
+            .expect("valid TOML");
+        assert_eq!(config["env"]["FPRIME_VERSION"].as_str(), Some("4.4.0"));
+        let flags = config["target"][TARGET]["rustflags"].to_string();
+        assert!(flags.contains("-sign-ext"), "{flags}");
+        assert!(flags.contains("-nontrapping-fptoint"), "{flags}");
     }
 
+    /// The feature set is the linker's: `wasm-opt` adds post-MVP instructions the
+    /// interpreter rejects unless held to it, and a project naming its own would drift
+    /// from the release it flies on.
     #[test]
-    fn missing_optimiser_does_not_fail_build() {
-        let script = file(&plan(), ".cargo/wasm-link");
-        let (_, after) = script
-            .split_once("command -v wasm-opt")
-            .expect("the script should probe for wasm-opt");
-        let branch = after
-            .split_once("fi\n")
-            .expect("the probe should be an if block")
-            .0;
+    fn optimiser_flags_leave_the_feature_set_to_the_linker() {
+        let config: toml_edit::DocumentMut = file(&plan(), ".cargo/config.toml")
+            .parse()
+            .expect("valid TOML");
+        let opt = config["env"]["SPACEWASM_OPT"]
+            .as_str()
+            .expect("the optimiser flags are set");
+        assert!(opt.split_whitespace().any(|f| f == "-Os"), "{opt}");
         assert!(
-            branch.contains("exit 0"),
-            "a missing wasm-opt must warn and continue:\n{branch}"
+            !opt.contains("--enable-") && !opt.contains("--mvp-features"),
+            "{opt}"
+        );
+        // A project without `wasm-opt` still builds, warned and unoptimised.
+        assert!(
+            config["env"].get("SPACEWASM_WASM_OPT_REQUIRED").is_none(),
+            "{config}"
         );
     }
 
     #[test]
-    fn only_release_linker_is_executable() {
+    fn nothing_scaffolded_is_executable() {
         for file in plan().files().expect("templates render") {
-            let expected = file.path == PathBuf::from(".cargo").join("wasm-link");
-            assert_eq!(
-                file.executable,
-                expected,
-                "{} should{} be executable",
-                file.path.display(),
-                if expected { "" } else { " not" }
-            );
+            assert!(!file.executable, "{} is executable", file.path.display());
         }
     }
 

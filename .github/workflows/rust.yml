@@ -29,9 +29,14 @@ jobs:
           rustup default stable
           rustup target add wasm32v1-none
 
-      # The wasm build below is a release build, so the linker wrapper runs the
-      # optimiser and needs it present.
+      # The wasm build below is a release build, so the linker runs the optimiser
+      # and needs it present.
       - uses: ./.github/actions/binaryen
+
+      # The linker `.cargo/config.toml` names. The workspace builds for the newest
+      # interpreter, so the published release does; `fprime-wasm` links older ones.
+      - name: Install spacewasm
+        run: cargo install spacewasm_tools --version 0.8.0-rc.2 --locked
 
       - uses: actions/cache@v4
         with:
@@ -92,6 +97,11 @@ jobs:
           rustup target add wasm32v1-none
 
       - uses: ./.github/actions/binaryen
+
+      # The linker `.cargo/config.toml` names. The workspace builds for the newest
+      # interpreter, so the published release does; `fprime-wasm` links older ones.
+      - name: Install spacewasm
+        run: cargo install spacewasm_tools --version 0.8.0-rc.2 --locked
 
       - uses: actions/cache@v4
         with:

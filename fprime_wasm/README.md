@@ -5,7 +5,7 @@ projects.
 
 ```shell
 cargo binstall fprime-wasm   # prebuilt binary. `cargo install fprime-wasm` builds from source
-cargo binstall wasm-opt
+cargo binstall wasm-opt      # (optional) optimises release builds
 ```
 
 ## `init`
@@ -18,6 +18,22 @@ fprime-wasm init
 ```
 
 Scaffolds a sequence crate with all the supporting boilerplate.
+
+`--fprime-version` names the F Prime the sequences will fly on, which decides
+the release of `spacewasm`, the on-board interpreter, and so which WebAssembly
+features the build may use. It defaults to the newest `fprime-wasm` knows.
+
+| F Prime | spacewasm |
+| ------- | --------- |
+| 4.4.x   | 0.7.1     |
+| 4.5.0+  | 0.8.0     |
+
+It is written to `.cargo/config.toml` as `[env] FPRIME_VERSION`, beside the
+`-Ctarget-feature` for that release. To move a project to another F Prime,
+change both: the line `fprime-wasm init --fprime-version <new>` would write, or
+`spacewasm features --release <spacewasm> --rustc`. The linker, `test` and
+`verify` hold the sequences to `FPRIME_VERSION`'s interpreter, and name the
+instruction and the fix if the rustflags let one through that it lacks.
 
 [VS Code](https://code.visualstudio.com) is the recommended editor for
 a generated sequences project.
@@ -47,6 +63,50 @@ scaffolded `.cargo/config.toml`: it would apply to `cargo test` too, and a
 `wasm32v1-none` test binary cannot be built at all because libtest needs `std`.
 Leaving the host as the default target is what lets a sequence project have
 ordinary host tests. `--debug` builds the unoptimised modules.
+
+Each release `<seq>.wasm` comes with a `<seq>.sym`. Uplink the `.wasm`, keep the
+`.sym` on the ground: it holds the debug info the uplinked module is stripped of,
+an exact copy of that module, and `wasm-opt`'s map from each optimised byte back
+to the one it was compiled from. `debug = true` in `[profile.release]` is what
+puts the debug info there; it does not change the code.
+
+The split is done by the linker, which the scaffolded `.cargo/config.toml` names:
+`fprime-wasm` itself, linking through
+[`spacewasm_tools`](https://github.com/nasa/spacewasm) exactly as its `spacewasm`
+binary would. It runs `rust-lld`, then `wasm-opt` with exactly the features the
+interpreter `FPRIME_VERSION` flies implements, plus the optimisation flags in
+`[env] SPACEWASM_OPT`, and validates the result against the same interpreter
+`verify` and `test` run. Without `wasm-opt` on the PATH the build warns and leaves
+the modules unoptimised. A project made before this names `linker = "spacewasm"`;
+change it to `"fprime-wasm"`, or keep `spacewasm_tools` installed.
+
+## `backtrace`
+
+```shell
+fprime-wasm backtrace example --offset 0xaa
+```
+
+```
+0xaa:
+  fprime_core::tlm::telemetry
+      at fprime_core/src/tlm.rs:14:9
+  <example::Tlm::CdhCoreEvents>::EventsDropped
+      at target/wasm32v1-none/release/build/example-…/out/dictionary.rs:561:68
+  main
+      at crates/example/src/bin/example.rs:16:47
+```
+
+Names the source line, inlined callers included, at a byte offset into the
+uplinked module. The sequence can also be given as a path to its `.sym`.
+`--module` names the `.wasm` that actually flew; it must be byte-identical to
+the copy in the `.sym`, so a symbol file from another build is refused rather
+than naming plausible but wrong lines.
+
+`--pc` takes interpreter program counters instead, as `spacewasm_backtrace`
+reports them: IR words from the module's first, innermost first. It replays the
+load to find the instruction each belongs to. A sequence paused in a host call
+reports the `call` itself. PCs need spacewasm 0.8.0 (F Prime 4.5.0) on board;
+for 4.4.x, use `--offset`.
 
 ## `test`
 

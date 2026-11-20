@@ -77,6 +77,12 @@ pub fn validate(bytes: Vec<u8>, limits: &Limits) -> Result<Validated> {
     load::validate(bytes, limits)
 }
 
+/// Decode one module and map its IR back to bytecode offsets, against `fprime_v1`.
+pub fn ir_map(bytes: &[u8], limits: &Limits) -> Result<spacewasm_tools::IrMap> {
+    let _guard = lock();
+    load::ir_map(bytes, limits)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

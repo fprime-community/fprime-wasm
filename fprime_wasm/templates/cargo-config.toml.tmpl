@@ -1,11 +1,14 @@
 [target.{{target}}]
-# `rust-lld`, then `wasm-opt` for size-optimized bins.
-linker = ".cargo/wasm-link"
+# `fprime-wasm` itself, linking as `spacewasm` from `spacewasm_tools` would: `rust-lld`,
+# then for release builds `wasm-opt` held to exactly the proposals the interpreter on
+# board implements, splitting the debug info into `<seq>.sym` and validating the result.
+linker = "fprime-wasm"
 
 rustflags = [
-    # `spacewasm` feature-set
+    # `spacewasm features --release {{spacewasm_version}} --rustc`: the interpreter's
+    # feature set, for the compiler. Change it with `FPRIME_VERSION` below.
     "-Ctarget-cpu=mvp",
-    "-Ctarget-feature=+mutable-globals",
+    "-Ctarget-feature={{target_features}}",
 
     # Guest stack, reserved at the bottom of linear memory.
     "-Clink-arg=-zstack-size={{stack_size}}",
@@ -13,3 +16,13 @@ rustflags = [
     # One-byte pages, from the custom-page-sizes proposal.
     "-Clink-arg=--page-size=1",
 ]
+
+[env]
+# The F Prime the sequences fly on, which decides the interpreter (spacewasm
+# {{spacewasm_version}}) the linker, `fprime-wasm test` and `verify` hold them to.
+FPRIME_VERSION = "{{fprime_version}}"
+
+# Optimisation only; the feature set is the linker's to choose. Without `wasm-opt`
+# installed the build warns and the modules are left unoptimised; set
+# `SPACEWASM_WASM_OPT_REQUIRED = "1"` to fail instead.
+SPACEWASM_OPT = "--low-memory-unused --converge -Os"

@@ -17,14 +17,18 @@ inside a Wasm interpreter.
 
 1. Install Rust: https://doc.rust-lang.org/cargo/getting-started/installation.html
 
-2. Get the Wasm Rust target:
+2. Get the Wasm Rust target, and optionally `wasm-opt` (from
+   [binaryen](https://github.com/WebAssembly/binaryen)) for optimising release builds:
 
 ```shell
 rustup target add wasm32v1-none
-cargo binstall wasm-opt # (optional) for optimizing --release builds
+cargo binstall wasm-opt
 ```
 
-3. Install the tool. With
+3. Install the tool. It is also the linker a project builds through: it runs
+   `rust-lld`, then `wasm-opt` held to the interpreter's features, splits the
+   debug info into a symbol file and validates the result, so nothing else needs
+   installing. With
    [`cargo binstall`](https://github.com/cargo-bins/cargo-binstall) this
    downloads a prebuilt binary from the
    [releases](https://github.com/fprime-community/fprime-wasm/releases); plain
@@ -74,5 +78,7 @@ cargo build --release --features wasm
 ```
 
 `spacewasm`, the on-board interpreter, only implements WebAssembly 1.0 plus
-`mutable-globals` and `custom-page-sizes`. `.cargo/wasm-link` pins `wasm-opt` to
-that same set, and `fprime-wasm verify` checks the result loads.
+a few post-MVP proposals. The linker holds `wasm-opt` to exactly that release's
+set, `.cargo/config.toml` holds `rustc` to it, and `fprime-wasm verify` checks the
+result loads. The workspace builds for the newest release; a project scaffolded
+with `fprime-wasm init --fprime-version` builds for the one its F Prime flies.

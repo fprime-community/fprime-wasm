@@ -21,6 +21,8 @@ path = "src/cmd/main.rs"
 [dependencies]
 fprime_dictionary = { path = "../fprime_dictionary", version = "=0.0.0" }
 fprime_test = { path = "../fprime_test", version = "=0.0.0" }
+# The linker, and `backtrace`'s symbol files; see `fprime_test`'s dependency on it.
+spacewasm_tools = { version = "=0.8.0-rc.2", default-features = false }
 anyhow = "1.0.104"
 clap = { version = "4.6.7", features = ["derive"] }
 toml_edit = { version = "0.25.15", features = ["serde"] }

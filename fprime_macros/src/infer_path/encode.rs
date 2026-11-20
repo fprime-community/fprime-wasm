@@ -7,7 +7,7 @@ use fprime_dictionary::konst::{ENCODE_SUFFIX, SIZE_SUFFIX};
 use fprime_dictionary::naming::{konst_path, split_qualified_name, type_label};
 use fprime_dictionary::{Command, TypeDefinition, TypeName};
 use proc_macro2::{Group, Span, TokenStream};
-use quote::quote;
+use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::{Expr, Lit, Member, Path as SynPath, UnOp};
 
@@ -95,7 +95,7 @@ impl Lower for Encode<'_> {
         match self.symbols.buffer(command, args) {
             Ok(buffer) => Rewrite::Call(buffer.block(
                 &chain.written_call(),
-                quote! { unsafe { fprime_core::command(&__FPRIME_CMD) } },
+                quote_spanned! { chain.scaffold => unsafe { fprime_core::command(&__FPRIME_CMD) } },
             )),
             // Left to the run-time accessor, which encodes the same command, so the reason is
             // not worth reporting. Skipping still walks the arguments for a nested command.

@@ -11,6 +11,7 @@ pub fn plan() -> Plan {
         dictionary: PathBuf::from("dictionary/RefTopologyDictionary.json"),
         dependency: DependencySpec::Version("1.2.3".into()),
         stack_size: DEFAULT_STACK_SIZE,
+        fprime: fprime_test::fprime::Fprime::latest(),
     }
 }
 
