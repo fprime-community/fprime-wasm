@@ -46,7 +46,6 @@ impl Plan {
             ("target", TARGET.to_string()),
             ("stack_size", self.stack_size.to_string()),
             ("fprime_version", self.fprime.version.to_string()),
-            ("spacewasm_version", self.fprime.spacewasm.to_string()),
             // Every instruction that F Prime's interpreter implements, and nothing else.
             (
                 "target_features",

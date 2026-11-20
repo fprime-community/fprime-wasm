@@ -1,28 +1,22 @@
 [target.{{target}}]
-# `fprime-wasm` itself, linking as `spacewasm` from `spacewasm_tools` would: `rust-lld`,
-# then for release builds `wasm-opt` held to exactly the proposals the interpreter on
-# board implements, splitting the debug info into `<seq>.sym` and validating the result.
+# Builds each sequence for the on-board interpreter, and writes its `.sym`.
 linker = "fprime-wasm"
 
 rustflags = [
-    # `spacewasm features --release {{spacewasm_version}} --rustc`: the interpreter's
-    # feature set, for the compiler. Change it with `FPRIME_VERSION` below.
+    # The WebAssembly features F Prime {{fprime_version}}'s interpreter supports. Change them
+    # together with FPRIME_VERSION below.
     "-Ctarget-cpu=mvp",
     "-Ctarget-feature={{target_features}}",
 
-    # Guest stack, reserved at the bottom of linear memory.
+    # Guest stack size, in bytes.
     "-Clink-arg=-zstack-size={{stack_size}}",
 
-    # One-byte pages, from the custom-page-sizes proposal.
     "-Clink-arg=--page-size=1",
 ]
 
 [env]
-# The F Prime the sequences fly on, which decides the interpreter (spacewasm
-# {{spacewasm_version}}) the linker, `fprime-wasm test` and `verify` hold them to.
+# The F Prime release the sequences fly on.
 FPRIME_VERSION = "{{fprime_version}}"
 
-# Optimisation only; the feature set is the linker's to choose. Without `wasm-opt`
-# installed the build warns and the modules are left unoptimised; set
-# `SPACEWASM_WASM_OPT_REQUIRED = "1"` to fail instead.
+# How `wasm-opt` optimises release builds, if it is installed.
 SPACEWASM_OPT = "--low-memory-unused --converge -Os"

@@ -147,10 +147,8 @@ pub struct Backtrace {
     #[arg(long, value_parser = parse_number, value_delimiter = ',', num_args = 1..)]
     pub offset: Vec<u64>,
 
-    /// Interpreter program counters, in IR words from the module's first, as
-    /// `spacewasm_backtrace` reports them. Hex with `0x`. Several, comma-separated, are a
-    /// backtrace: innermost first, then each caller's `call`. A sequence paused in a host
-    /// call reports that `call` first.
+    /// Program counters, as the on-board interpreter reports them. Hex with `0x`. Several,
+    /// comma-separated, are a backtrace, innermost first. Needs F Prime 4.5.0 or later.
     #[arg(long, value_parser = parse_number, value_delimiter = ',', num_args = 1..)]
     pub pc: Vec<u64>,
 

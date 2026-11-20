@@ -90,7 +90,6 @@ pub const KEYS: &[&str] = &[
     "crate_version",
     "target_features",
     "fprime_version",
-    "spacewasm_version",
 ];
 
 /// Substitutes `{{key}}` occurrences in `text`.

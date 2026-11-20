@@ -18,22 +18,18 @@ inside a Wasm interpreter.
 1. Install Rust: https://doc.rust-lang.org/cargo/getting-started/installation.html
 
 2. Get the Wasm Rust target, and optionally `wasm-opt` (from
-   [binaryen](https://github.com/WebAssembly/binaryen)) for optimising release builds:
+   [binaryen](https://github.com/WebAssembly/binaryen)) for smaller release builds:
 
 ```shell
 rustup target add wasm32v1-none
 cargo binstall wasm-opt
 ```
 
-3. Install the tool. It is also the linker a project builds through: it runs
-   `rust-lld`, then `wasm-opt` held to the interpreter's features, splits the
-   debug info into a symbol file and validates the result, so nothing else needs
-   installing: `fprime-wasm verify` and `fprime-wasm backtrace` cover what a
-   sequence author needs from the `spacewasm` CLI. With
+3. Install `fprime-wasm`, which is all a sequence project needs. With
    [`cargo binstall`](https://github.com/cargo-bins/cargo-binstall) this
    downloads a prebuilt binary from the
    [releases](https://github.com/fprime-community/fprime-wasm/releases); plain
-   `cargo install` always compiles from source, which takes a few minutes:
+   `cargo install` compiles from source, which takes a few minutes:
 
 ```shell
 cargo binstall fprime-wasm   # prebuilt
@@ -48,13 +44,13 @@ building from source on anything else.
 
 ```shell
 mkdir my-sequences && cd my-sequences
-fprime-wasm init          # asks for the deployment's JSON dictionary
+fprime-wasm init --fprime-version 4.4.0   # asks for the deployment's JSON dictionary
 fprime-wasm test
 fprime-wasm verify
 ```
 
 See [`fprime_wasm/README.md`](fprime_wasm/README.md) for what `init`, `add`,
-`build`, `test` and `verify` do.
+`build`, `test`, `verify` and `backtrace` do.
 
 [VS Code](https://code.visualstudio.com) is the recommended editor for
 a generated sequences project.
@@ -79,12 +75,6 @@ cd crates/example
 cargo build --release --features wasm
 ```
 
-`.cargo/config.toml` names this checkout's `target/debug/fprime-wasm` as the
-linker, so a change to it is what the sequences are built with, and nothing
-needs installing. Rebuild it after changing `fprime_wasm` or `fprime_test`.
-
-`spacewasm`, the on-board interpreter, only implements WebAssembly 1.0 plus
-a few post-MVP proposals. The linker holds `wasm-opt` to exactly that release's
-set, `.cargo/config.toml` holds `rustc` to it, and `fprime-wasm verify` checks the
-result loads. The workspace builds for the newest release; a project scaffolded
-with `fprime-wasm init --fprime-version` builds for the one its F Prime flies.
+`.cargo/config.toml` builds the sequences with this checkout's own
+`fprime-wasm`, so build it first, and again after changing `fprime_wasm` or
+`fprime_test`. The workspace targets the newest on-board interpreter.

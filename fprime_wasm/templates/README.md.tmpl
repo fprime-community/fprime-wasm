@@ -7,15 +7,14 @@ F Prime sequences for this deployment, compiled to WebAssembly and run on board 
 
 1. Install Rust: https://doc.rust-lang.org/cargo/getting-started/installation.html
 
-2. Install the Wasm target, `fprime-wasm`, and the optional optimizer. `fprime-wasm` is
-   also the linker: it optimises for the interpreter, and splits each sequence's
-   debug info into a `.sym` kept on the ground
+2. Install the Wasm target, `fprime-wasm`, and optionally `wasm-opt` for smaller
+   sequences:
 
 ```shell
 rustup target add {{target}}
 cargo binstall fprime-wasm
 
-# (optional) for optimizing `.wasm` binaries for size
+# optional
 cargo binstall wasm-opt
 ```
 
@@ -25,12 +24,12 @@ cargo binstall wasm-opt
 fprime-wasm build
 ```
 
-Builds `.wasm` binaries to `target/{{target}}/release/*.wasm`.
-These binaries can be uplinked and executed on-board using the WasmSequencer.
+Builds each sequence to `target/{{target}}/release/<sequence>.wasm`, for the
+F Prime release named by `FPRIME_VERSION` in `.cargo/config.toml` ({{fprime_version}}).
 
-> ![NOTE]
-> `fprime-wasm build/test` are wrappers around the Cargo tool and will
-> select the proper target/features needed.
+Uplink the `.wasm`. Keep the `<sequence>.sym` beside it on the ground: it is what
+`fprime-wasm backtrace` needs to turn a position the sequence reports back into a
+source line, and it only matches the `.wasm` built with it.
 
 ## Adding a sequence
 
@@ -57,25 +56,30 @@ Builds the sequences, then runs every test in `tests/`.
 fprime-wasm verify
 ```
 
-Load each module into the on-board Wasm interpreter, without running it, and size what
-that cost against the `sequencer.toml` limits. This is equivalent to the `LOAD` command
-on-board to validate the sequence and make sure it _can_ load.
+Loads each sequence as the on-board `WasmSequencer` would, without running it, and
+checks it fits the limits in `sequencer.toml`: the ground equivalent of the `LOAD`
+command.
 
 ### Limits
 
-`sequencer.toml` holds the default set of memory settings of the WasmSequencer. These
-settings may be tuned to match your project's settings. Note that some of these settings
-are mapped to per-sequencer-instance settings and therefore multiple `.toml` files may
-be needed to model each instance.
-
-Sequence limit files should be in the root directory.
-The default `sequencer.toml` can be overriden per test with:
+`sequencer.toml` holds the `WasmSequencer` defaults; change them to match the
+deployment. Some are per sequencer instance, so a deployment with several instances
+can keep one file per instance, in the project root. A test picks one with:
 
 ```rust
 #[fprime_test(sequence = "{{sequence}}", limits = "sequencer-payload.toml")]
 ```
 
 `fprime-wasm verify --limits <path>` sizes against one the same way.
+
+## Debugging a sequence that flew
+
+```shell
+fprime-wasm backtrace {{sequence}} --pc <pc>,<pc>,...
+```
+
+Names the source lines for the program counters the on-board interpreter reports.
+`--offset` takes byte offsets into the `.wasm` instead.
 
 ## Dictionary
 
