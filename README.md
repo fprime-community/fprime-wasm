@@ -36,8 +36,9 @@ cargo binstall fprime-wasm   # prebuilt
 cargo install fprime-wasm    # from source
 ```
 
-Prebuilt binaries are published for Linux (`x86_64`, `aarch64`), macOS (Intel
-and Apple silicon) and Windows (`x86_64`). `cargo binstall` falls back to
+Prebuilt binaries are published for Linux, macOS and Windows, each on `x86_64`
+and `aarch64`. The Linux ones are static (`musl`), so they run on any
+distribution. `cargo binstall` falls back to
 building from source on anything else.
 
 ## Starting a project
