@@ -1,8 +1,4 @@
 [target.wasm32v1-none]
-# This checkout's own `fprime-wasm`, as a scaffolded project's linker is: `rust-lld`, then
-# for release builds `wasm-opt` held to exactly the proposals the interpreter implements,
-# splitting the debug info into `<bin>.sym` and validating the result. Relative to the
-# workspace root, so `cargo build -p fprime-wasm` first.
 linker = "target/debug/fprime-wasm"
 rustflags = [
     # `spacewasm features --rustc`: the same set, for the compiler.
