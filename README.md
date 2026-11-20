@@ -28,7 +28,8 @@ cargo binstall wasm-opt
 3. Install the tool. It is also the linker a project builds through: it runs
    `rust-lld`, then `wasm-opt` held to the interpreter's features, splits the
    debug info into a symbol file and validates the result, so nothing else needs
-   installing. With
+   installing: `fprime-wasm verify` and `fprime-wasm backtrace` cover what a
+   sequence author needs from the `spacewasm` CLI. With
    [`cargo binstall`](https://github.com/cargo-bins/cargo-binstall) this
    downloads a prebuilt binary from the
    [releases](https://github.com/fprime-community/fprime-wasm/releases); plain
@@ -72,10 +73,15 @@ Besides the six published crates, `crates/` holds what exercises them:
 host build of the workspace skips their sequence bins:
 
 ```shell
+cargo build -p fprime-wasm   # the linker the sequences build through
 cargo test --workspace
 cd crates/example
 cargo build --release --features wasm
 ```
+
+`.cargo/config.toml` names this checkout's `target/debug/fprime-wasm` as the
+linker, so a change to it is what the sequences are built with, and nothing
+needs installing. Rebuild it after changing `fprime_wasm` or `fprime_test`.
 
 `spacewasm`, the on-board interpreter, only implements WebAssembly 1.0 plus
 a few post-MVP proposals. The linker holds `wasm-opt` to exactly that release's

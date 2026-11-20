@@ -80,6 +80,10 @@ interpreter `FPRIME_VERSION` flies implements, plus the optimisation flags in
 the modules unoptimised. A project made before this names `linker = "spacewasm"`;
 change it to `"fprime-wasm"`, or keep `spacewasm_tools` installed.
 
+The rest of the `spacewasm` CLI (`split`, `lower`, `trace`, `run`) is for working
+on the interpreter, not on sequences, and is not needed here. It installs
+separately: `cargo binstall spacewasm_tools`.
+
 ## `backtrace`
 
 ```shell

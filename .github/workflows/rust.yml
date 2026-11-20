@@ -33,11 +33,6 @@ jobs:
       # and needs it present.
       - uses: ./.github/actions/binaryen
 
-      # The linker `.cargo/config.toml` names. The workspace builds for the newest
-      # interpreter, so the published release does; `fprime-wasm` links older ones.
-      - name: Install spacewasm
-        run: cargo install spacewasm_tools --version 0.8.0-rc.2 --locked
-
       - uses: actions/cache@v4
         with:
           path: |
@@ -46,6 +41,11 @@ jobs:
             target
           key: test-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: test-${{ runner.os }}-
+
+      # The linker `.cargo/config.toml` names: this checkout's own, so a change to it
+      # is what builds the sequences below.
+      - name: Build the linker
+        run: cargo build -p fprime-wasm
 
       - name: Test the host crates
         run: cargo test -p fprime_dictionary -p fprime_build -p fprime_macros -p wasm_size -p fprime-wasm -p fprime_test
@@ -98,11 +98,6 @@ jobs:
 
       - uses: ./.github/actions/binaryen
 
-      # The linker `.cargo/config.toml` names. The workspace builds for the newest
-      # interpreter, so the published release does; `fprime-wasm` links older ones.
-      - name: Install spacewasm
-        run: cargo install spacewasm_tools --version 0.8.0-rc.2 --locked
-
       - uses: actions/cache@v4
         with:
           path: |
@@ -112,6 +107,11 @@ jobs:
             base-target
           key: size-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: size-${{ runner.os }}-
+
+      # The linker `.cargo/config.toml` names: this checkout's own, so a change to it
+      # is what builds the sequences below.
+      - name: Build the linker
+        run: cargo build -p fprime-wasm
 
       - name: Measure this revision
         run: cargo run -q -p wasm_size -- measure --json head.json

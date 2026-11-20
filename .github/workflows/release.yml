@@ -31,19 +31,19 @@ jobs:
         with:
           cache-bin: false
 
-      # The release profile links the Wasm crates through `spacewasm`, which
+      # The release profile links the Wasm crates through `fprime-wasm`, which
       # runs the optimiser.
       - uses: ./.github/actions/binaryen
-
-      # The linker `.cargo/config.toml` names. The workspace builds for the newest
-      # interpreter, so the published release does; `fprime-wasm` links older ones.
-      - name: Install spacewasm
-        run: cargo install spacewasm_tools --version 0.8.0-rc.2 --locked
 
       - name: Inject version from tag
         uses: ./.github/actions/inject-version
         with:
           version: ${{ github.ref_name }}
+
+      # The linker `.cargo/config.toml` names: this checkout's own, so a change to it
+      # is what builds the sequences below.
+      - name: Build the linker
+        run: cargo build -p fprime-wasm
 
       - name: Build the sequences
         # Cheap, and it is the only thing that proves the released fprime_core,
