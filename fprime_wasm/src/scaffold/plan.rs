@@ -365,7 +365,7 @@ mod tests {
             !opt.contains("--enable-") && !opt.contains("--mvp-features"),
             "{opt}"
         );
-        // A project without `wasm-opt` still builds, warned and unoptimised.
+        // The linker requires its bundled `wasm-opt` itself; a project need not.
         assert!(
             config["env"].get("SPACEWASM_WASM_OPT_REQUIRED").is_none(),
             "{config}"

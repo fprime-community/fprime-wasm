@@ -1,6 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "fprime_*"]
+# Templates for the `fprime-wasm-opt-<platform>` crates, rendered by its `package.sh`.
+exclude = ["fprime_wasm_opt"]
 
 # The version is a placeholder that `.github/workflows/release.yml` rewrites from
 # the release tag. It stays `0.0.0` on `main` so nothing in the tree claims to be

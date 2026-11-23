@@ -5,7 +5,6 @@ sequence projects.
 
 ```shell
 cargo binstall fprime-wasm   # or `cargo install fprime-wasm` to build from source
-cargo binstall wasm-opt      # optional: smaller release builds
 ```
 
 ## `init`

@@ -167,6 +167,12 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "clap",
+ "fprime-wasm-opt-aarch64-linux",
+ "fprime-wasm-opt-arm64-macos",
+ "fprime-wasm-opt-arm64-windows",
+ "fprime-wasm-opt-x86_64-linux",
+ "fprime-wasm-opt-x86_64-macos",
+ "fprime-wasm-opt-x86_64-windows",
  "fprime_dictionary",
  "fprime_test",
  "serde",
@@ -174,6 +180,42 @@ dependencies = [
  "spacewasm_tools",
  "toml_edit 0.25.15+spec-1.1.0",
 ]
+
+[[package]]
+name = "fprime-wasm-opt-aarch64-linux"
+version = "133.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f04f157380725becfa94728384f22ac93c007054327bb830d04153528118e7b"
+
+[[package]]
+name = "fprime-wasm-opt-arm64-macos"
+version = "133.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f117557ee949096fb6272fb362921f29ae766fd0542ae011b55f232adfe7e7de"
+
+[[package]]
+name = "fprime-wasm-opt-arm64-windows"
+version = "133.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "655a5b7d8b2ea1aa0b651d04c370b190e27a5b3f00d0bae137d4aefd445251af"
+
+[[package]]
+name = "fprime-wasm-opt-x86_64-linux"
+version = "133.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb7224fad96a139ac4298f94f34bd9b59554c3e6bb63980dc63425f892b39588"
+
+[[package]]
+name = "fprime-wasm-opt-x86_64-macos"
+version = "133.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d0c5b903adac8ba2b292131849ed5ecb33d6efa28231027404a62af9eb0637f"
+
+[[package]]
+name = "fprime-wasm-opt-x86_64-windows"
+version = "133.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21fa93e606b553291052147b419e43f4611ec2b71fb002a14bd86508a007086b"
 
 [[package]]
 name = "fprime_build"

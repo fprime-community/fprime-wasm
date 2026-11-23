@@ -52,10 +52,6 @@ jobs:
         with:
           cache-bin: false
 
-      # The release profile links the Wasm crates through `fprime-wasm`, which
-      # runs the optimiser.
-      - uses: ./.github/actions/binaryen
-
       - name: Inject version from tag
         uses: ./.github/actions/inject-version
         with:
@@ -431,3 +427,19 @@ jobs:
             echo "::error::cargo binstall installed fprime-wasm $reported, expected $version."
             exit 1
           fi
+
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: source
+
+      - name: Build a project with the embedded wasm-opt
+        # The first release link writes out the `wasm-opt` the binary embeds, and
+        # fails if it cannot.
+        run: |
+          set -euo pipefail
+          rustup target add wasm32v1-none
+          fprime-wasm init project --dictionary source/fprime_dictionary/src/test/RefTopologyDictionary.json
+          cd project
+          fprime-wasm build
+          ls ~/.cache/fprime-wasm/binaryen/*/bin/wasm-opt
