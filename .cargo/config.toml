@@ -11,5 +11,3 @@ rustflags = [
 [env]
 # Optimisation only; the feature set is the linker's to choose.
 SPACEWASM_OPT = "--low-memory-unused --converge -Os"
-# Sizes are measured here, so an unoptimised module must fail the build, not slip by.
-SPACEWASM_WASM_OPT_REQUIRED = "1"

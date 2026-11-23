@@ -9,6 +9,7 @@ mod dictionary;
 mod init;
 mod test;
 mod verify;
+mod wasm_opt;
 
 use clap::Parser;
 use cli::{Cli, Command};
@@ -45,6 +46,10 @@ fn main() -> ExitCode {
 
 /// Link for the F Prime `[env] FPRIME_VERSION` names, which Cargo passes down through rustc.
 fn link(args: &[std::ffi::OsString]) -> ExitCode {
+    if let Err(err) = wasm_opt::select_for_link(args) {
+        eprintln!("error: {err:#}");
+        return ExitCode::FAILURE;
+    }
     let release = match fprime_test::fprime::Fprime::configured(None) {
         Ok(fprime) => fprime.and_then(|fprime| fprime.older_interpreter()),
         Err(err) => {

@@ -1,0 +1,8 @@
+//! binaryen `{{binaryen}}`'s `wasm-opt` for {{platform}}, unmodified.
+
+/// The binaryen release.
+pub const BINARYEN: &str = "{{binaryen}}";
+
+/// Each file, by its path in the release; the first is `wasm-opt`.
+pub const FILES: &[(&str, &[u8])] = &[
+{{files}}];

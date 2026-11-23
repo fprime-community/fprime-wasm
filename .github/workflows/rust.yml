@@ -29,10 +29,6 @@ jobs:
           rustup default stable
           rustup target add wasm32v1-none
 
-      # The wasm build below is a release build, so the linker runs the optimiser
-      # and needs it present.
-      - uses: ./.github/actions/binaryen
-
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
@@ -95,8 +91,6 @@ jobs:
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
           rustup target add wasm32v1-none
-
-      - uses: ./.github/actions/binaryen
 
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:

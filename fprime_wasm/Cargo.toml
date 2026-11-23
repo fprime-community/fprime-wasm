@@ -28,3 +28,19 @@ clap = { version = "4.6.7", features = ["derive"] }
 toml_edit = { version = "0.25.15", features = ["serde"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
+
+# binaryen's `wasm-opt`, embedded so a release link runs the one this release was tested
+# with. Built by `fprime_wasm_opt/package.sh`; one per host, each `cfg` matching one in
+# `src/cmd/wasm_opt.rs`. `=` so a new binaryen is a deliberate bump.
+[target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
+fprime-wasm-opt-x86_64-linux = "=133.0.0"
+[target.'cfg(all(target_os = "linux", target_arch = "aarch64"))'.dependencies]
+fprime-wasm-opt-aarch64-linux = "=133.0.0"
+[target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
+fprime-wasm-opt-arm64-macos = "=133.0.0"
+[target.'cfg(all(target_os = "macos", target_arch = "x86_64"))'.dependencies]
+fprime-wasm-opt-x86_64-macos = "=133.0.0"
+[target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
+fprime-wasm-opt-x86_64-windows = "=133.0.0"
+[target.'cfg(all(target_os = "windows", target_arch = "aarch64"))'.dependencies]
+fprime-wasm-opt-arm64-windows = "=133.0.0"

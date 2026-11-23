@@ -17,12 +17,10 @@ inside a Wasm interpreter.
 
 1. Install Rust: https://doc.rust-lang.org/cargo/getting-started/installation.html
 
-2. Get the Wasm Rust target, and optionally `wasm-opt` (from
-   [binaryen](https://github.com/WebAssembly/binaryen)) for smaller release builds:
+2. Get the Wasm Rust target:
 
 ```shell
 rustup target add wasm32v1-none
-cargo binstall wasm-opt
 ```
 
 3. Install `fprime-wasm`, which is all a sequence project needs. With
@@ -40,6 +38,11 @@ Prebuilt binaries are published for Linux, macOS and Windows, each on `x86_64`
 and `aarch64`. The Linux ones are static (`musl`), so they run on any
 distribution. `cargo binstall` falls back to
 building from source on anything else.
+
+`fprime-wasm` carries its own `wasm-opt`, the binaryen release it was tested
+with, and every release build runs it, never one on the `PATH`. The first
+release build writes it out to the user cache directory. Set
+`SPACEWASM_WASM_OPT` to the path of a different one to run that instead.
 
 ## Starting a project
 
